@@ -4,7 +4,7 @@ function normMode(v) {
 
 const MODE = normMode(import.meta.env.VITE_MODE);
 
-const DEV_URL = import.meta.env.VITE_API_URL_DEV || "https://apidev.corazondemigrante.com";
+const DEV_URL = import.meta.env.VITE_API_URL_DEV || "https://api.corazondemigrante.com";
 const PROD_URL = import.meta.env.VITE_API_URL_PROD || "https://api.corazondemigrante.com";
 
 export const API_URL = DEV_URL;
