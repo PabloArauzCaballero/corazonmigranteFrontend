@@ -1,1 +1,0 @@
-export const FILE_SERVER_NAME = "public_assets";
