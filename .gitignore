@@ -1,72 +1,12 @@
-# =========================
-# Dependencies
-# =========================
-node_modules/
-
-# =========================
-# Build outputs
-# =========================
-dist/
-dist-ssr/
-build/
-out/
-
-# =========================
-# Env files (NO subir)
-# =========================
+node_modules
+.next
+out
+dist
+coverage
+playwright-report
+test-results
 .env
-.env.*
-!.env.example
-
-# =========================
-# Logs
-# =========================
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# =========================
-# Runtime / cache
-# =========================
-.vite/
-.cache/
-.eslintcache
-*.local
-
-# =========================
-# Testing / coverage
-# =========================
-coverage/
-.nyc_output/
-playwright-report/
-test-results/
-cypress/videos/
-cypress/screenshots/
-
-# =========================
-# OS / Editor
-# =========================
+.env.local
+.env.*.local
 .DS_Store
-Thumbs.db
-
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/launch.json
-
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# =========================
-# Deploy platforms
-# =========================
-.vercel/
-.netlify/
+*.log
