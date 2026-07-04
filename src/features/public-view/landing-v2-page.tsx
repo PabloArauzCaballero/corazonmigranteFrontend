@@ -37,7 +37,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 
 type IconName = string | number | undefined;
 
-const hiddenPublicLabels = /^(proceso|booking|cita|citas)$/i;
+const hiddenPublicLabels = /^(proceso|agendar|booking|cita|citas)$/i;
 const hiddenPublicHrefs = /(booking|paciente|terapeuta|admin|#proceso)/i;
 
 function iconFor(name: IconName, className = "h-5 w-5") {
@@ -187,9 +187,11 @@ function SectionBadge({ badge }: { badge?: LandingV2IconText }) {
 
 function Navbar({
   content,
+  landing,
   phone,
 }: {
   content: LandingV2Content;
+  landing: NormalizedPublicLanding;
   phone?: string;
 }) {
   const links = publicLinks(content);
@@ -197,6 +199,10 @@ function Navbar({
   const formattedPhone = formatContactPhone(phone);
   const signUp = content.navbar?.cta_sign_up;
   const login = content.navbar?.cta_login;
+  const brandIcon = content.navbar?.brand?.icon;
+  const brandLogo = typeof brandIcon === "number" || /^\d+$/.test(String(brandIcon ?? ""))
+    ? resolveV2Image({ id_ui: brandIcon }, landing)
+    : undefined;
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#17372f]/10 bg-[#fbf8f3]/90 backdrop-blur-2xl">
@@ -206,8 +212,16 @@ function Navbar({
           className="group flex min-w-0 items-center gap-3 font-bold"
           aria-label="Ir al inicio"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-[#17372f]/10 bg-white text-primary shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
-            {iconFor(content.navbar?.brand?.icon || content.footer?.brand?.icon || "favorite", "h-6 w-6")}
+          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#17372f]/10 bg-white text-primary shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
+            {brandLogo ? (
+              <img
+                src={brandLogo}
+                alt={brand}
+                className="h-full w-full object-contain p-1.5"
+              />
+            ) : (
+              iconFor(content.navbar?.brand?.icon || content.footer?.brand?.icon || "favorite", "h-6 w-6")
+            )}
           </span>
           <span className="truncate leading-tight text-[#172b27]">
             {brand}
@@ -1009,7 +1023,7 @@ export function LandingV2Page({
   return (
     <div className="min-h-screen bg-[#fbf8f3] text-[#172b27]">
       <ScrollProgress />
-      <Navbar content={content} phone={phone} />
+      <Navbar content={content} landing={landing} phone={phone} />
       <main>
         <PresentationSection content={content} landing={landing} phone={phone} />
         <Hero content={content} phone={phone} />

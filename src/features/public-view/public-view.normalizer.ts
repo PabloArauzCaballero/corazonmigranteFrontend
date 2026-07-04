@@ -950,6 +950,9 @@ export function normalizePublicLandingResponse(
 ): NormalizedPublicLanding {
   const raw = unwrapData(payload);
   const record = asRecord(raw);
+  const rootContent = asRecord(record.content);
+  const nestedData = asRecord(record.data);
+  const nestedContent = asRecord(nestedData.content);
 
   if (record.publicView || record.public_view) {
     return normalizePublicView(
@@ -969,17 +972,18 @@ export function normalizePublicLandingResponse(
     return normalizePublicView(record, payload);
   }
 
-  if (isRecord(record.content)) {
+  if (Object.keys(rootContent).length > 0) {
     const uiById = normalizeUiById(
       record.uiById ?? record.ui_by_id ?? record.data ?? record.assets,
     );
-    return normalizeLegacyContent(asRecord(record.content), uiById, payload);
+    return normalizeLegacyContent(rootContent, uiById, payload);
   }
 
-  if (isRecord(record.data) && isRecord(record.data.content)) {
-    const data = asRecord(record.data);
-    const uiById = normalizeUiById(data.uiById ?? data.ui_by_id ?? data.assets);
-    return normalizeLegacyContent(asRecord(data.content), uiById, payload);
+  if (Object.keys(nestedContent).length > 0) {
+    const uiById = normalizeUiById(
+      nestedData.uiById ?? nestedData.ui_by_id ?? nestedData.assets,
+    );
+    return normalizeLegacyContent(nestedContent, uiById, payload);
   }
 
   if (

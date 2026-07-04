@@ -40,6 +40,20 @@ if (endpoints.includes('"api/') || endpoints.includes("'api/")) {
   throw new Error("Hay endpoints sin slash inicial.");
 }
 
+
+const homePage = readFileSync(join(root, "src/app/page.tsx"), "utf8");
+if (homePage.includes('"use client"') || homePage.includes("'use client'")) {
+  throw new Error("La home pública no puede ser client-only: debe renderizar la landing desde backend en el primer HTML.");
+}
+if (homePage.includes("useEffect") || homePage.includes("Cargando página principal")) {
+  throw new Error("La home pública no debe quedar como pantalla de carga persistente.");
+}
+
+const nextConfig = readFileSync(join(root, "next.config.ts"), "utf8");
+if (/output\s*:\s*["']export["']/.test(nextConfig)) {
+  throw new Error('output: "export" rompe el render inicial de la landing pública configurable.');
+}
+
 const publicViewApi = readFileSync(join(root, "src/features/public-view/public-view.api.ts"), "utf8");
 for (const expected of [
   "/api/v1/public-views/:id",
