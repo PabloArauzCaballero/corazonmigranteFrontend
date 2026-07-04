@@ -19,7 +19,9 @@
     "test:integration:backend": "jest tests/integration/backend-contract.test.ts --runInBand --forceExit",
     "test:ci": "yarn lint && yarn typecheck && yarn test:unit && yarn test:smoke",
     "test:all": "yarn test:ci && yarn test:integration:backend",
-    "dev:4173": "next dev -p 4173"
+    "dev:4173": "next dev -p 4173",
+    "build:cloudflare": "next build",
+    "build:server": "next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -61,7 +63,8 @@
     "prettier": "^3.7.4",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "eslint-plugin-react": "^7.37.5"
   },
   "packageManager": "yarn@4.9.2"
 }

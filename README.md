@@ -147,3 +147,13 @@ NEXT_PUBLIC_PUBLIC_VIEW_SLUG=inicio
 ```
 
 Si el backend no devuelve la vista configurada, la landing muestra un error claro y no renderiza contenido inventado.
+
+## Cloudflare Pages
+
+Para Cloudflare Pages usar:
+
+- Build command: `yarn build`
+- Build output directory: `out`
+- Framework preset: `Next.js (Static HTML Export)`
+
+No usar `dist`; Next.js con `output: "export"` genera `out`.
