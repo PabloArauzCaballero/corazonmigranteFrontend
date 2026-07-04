@@ -14,6 +14,10 @@ function trimSlashes(value: string) {
 }
 
 function apiBaseUrl() {
+  if (!env.NEXT_PUBLIC_API_BASE_URL) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL no está configurado. Revisa .env.local.");
+  }
+
   return env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, "");
 }
 

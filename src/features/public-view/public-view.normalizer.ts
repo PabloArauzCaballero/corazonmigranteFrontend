@@ -275,6 +275,20 @@ function numberedContainers(
   prefix: string,
   uiById: Record<number, UiElementAsset>,
 ) {
+  const numberedField = (
+    container: Record<string, unknown>,
+    field: string,
+    suffix: string,
+  ) => {
+    const direct = container[`${field}_${suffix}`];
+    if (direct !== undefined) return direct;
+
+    const ending = `_${suffix}`;
+    return Object.entries(container).find(
+      ([key]) => key.startsWith(`${field}_`) && key.endsWith(ending),
+    )?.[1];
+  };
+
   const entries = Object.entries(record)
     .filter(([key]) => key.startsWith(prefix))
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
@@ -284,18 +298,18 @@ function numberedContainers(
       return cardFrom(
         {
           title:
-            container[`titulo_${suffix}`] ??
+            numberedField(container, "titulo", suffix) ??
             container.titulo ??
             container.title ??
             container.nombre,
           body:
-            container[`parrafo_${suffix}`] ??
+            numberedField(container, "parrafo", suffix) ??
             container.parrafo ??
             container.body ??
             container.descripcion ??
             container.description,
           label:
-            container[`etiqueta_${suffix}`] ??
+            numberedField(container, "etiqueta", suffix) ??
             container.label ??
             container.badge,
           image:

@@ -8,7 +8,7 @@ const optionalUrl = z.preprocess(
 const envSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().min(1).default("Corazón Migrante"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:4173"),
-  NEXT_PUBLIC_API_BASE_URL: optionalUrl.default("http://localhost:3000"),
+  NEXT_PUBLIC_API_BASE_URL: optionalUrl,
   NEXT_PUBLIC_CMS_LIBRARY_SLUG: z.string().min(1).default("biblioteca"),
   NEXT_PUBLIC_PUBLIC_VIEW_SLUG: z.string().min(1).default("1"),
   NEXT_PUBLIC_PUBLIC_VIEW_ID: z.string().optional(),
