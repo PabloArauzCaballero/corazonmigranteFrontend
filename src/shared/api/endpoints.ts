@@ -27,7 +27,7 @@ export const ENDPOINTS = {
     adminList: `${API_PREFIX}/appointments/admin/list`,
     updateStatus: `${API_PREFIX}/appointments/:appointmentId/status`,
     /**
-     * PENDIENTE_BACKEND_CM: el backend actual no expone todavía este contrato.
+     * PENDIENTE_SERVICIO_CM: el sistema actual no expone todavía este contrato.
      * Debe crearse para permitir que ADMIN/SUPER_ADMIN/THERAPIST agenden para un paciente concreto
      * sin convertir al actor autenticado en paciente.
      */
@@ -73,7 +73,7 @@ export const ENDPOINTS = {
   },
   editorial: {
     /**
-     * Alias frontend del módulo Biblioteca. Se apoya en el CMS real del backend:
+     * Alias aplicación del módulo Biblioteca. Se apoya en el Contenido administrable:
      * GET /api/v1/public/pages/:slug + POST /api/v1/admin/cms/pages + POST /api/v1/admin/cms/pages/:pageId/elements.
      */
     publicPage: `${API_PREFIX}/public/pages/:slug`,
@@ -107,12 +107,12 @@ export const ENDPOINTS = {
     accountsCreate: `${API_PREFIX}/admin/accounting/accounts`,
     accountsUpdate: `${API_PREFIX}/admin/accounting/accounts/:accountId`,
     accountsDelete: `${API_PREFIX}/admin/accounting/accounts/:accountId`,
-    // PENDIENTE_CM_BACKEND_ACCOUNTING_COST_CENTERS_LIST: backend actual solo tiene POST.
+    // PENDIENTE_CM_SERVICIO_ACCOUNTING_COST_CENTERS_LIST: sistema actual solo tiene POST.
     costCentersList: `${API_PREFIX}/admin/accounting/cost-centers`,
     costCentersCreate: `${API_PREFIX}/admin/accounting/cost-centers`,
     costCentersUpdate: `${API_PREFIX}/admin/accounting/cost-centers/:costCenterId`,
     costCentersDelete: `${API_PREFIX}/admin/accounting/cost-centers/:costCenterId`,
-    // PENDIENTE_CM_BACKEND_ACCOUNTING_TRANSACTIONS_LIST: backend actual solo tiene POST.
+    // PENDIENTE_CM_SERVICIO_ACCOUNTING_TRANSACTIONS_LIST: sistema actual solo tiene POST.
     transactionsList: `${API_PREFIX}/admin/accounting/transactions`,
     transactionsBatchCreate: `${API_PREFIX}/admin/accounting/transactions/batch`,
     transactionSaleCreate: `${API_PREFIX}/admin/accounting/transactions`

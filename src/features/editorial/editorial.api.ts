@@ -121,7 +121,7 @@ export function getHeroFromPage(page: CmsPage): EditorialHero {
     subtitle: getContentString(
       content,
       ["subtitle", "subtitulo", "description", "descripcion"],
-      "Guías, lecturas y orientación psicoeducativa gestionadas desde el CMS real de Corazón Migrante."
+      "Guías, lecturas y orientación psicoeducativa preparadas por Corazón Migrante."
     ),
     imageUrl: resolveImageUrl(content, fileServer.editorialHeroImageUrl),
     imageAlt: getContentString(content, ["imageAlt", "alt", "imagenAlt"], page.title || "Corazón Migrante"),
@@ -137,9 +137,30 @@ export function getResourcesFromPage(page: CmsPage) {
     .map(mapResourceFromElement);
 }
 
+function publicCmsPageFallbacks(slug: string) {
+  const normalizedSlug = slug.trim() || "biblioteca";
+  const legacyId = normalizedSlug === "biblioteca" ? "2" : normalizedSlug === "inicio" ? "1" : undefined;
+  const paths = [replacePathParam(ENDPOINTS.cms.publicPage, "slug", normalizedSlug)];
+
+  if (legacyId) paths.push(replacePathParam(ENDPOINTS.publicUi.publicViewById, "id", legacyId));
+
+  return [...new Set(paths)];
+}
+
 export async function getPublicCmsPage(slug: string): Promise<CmsPage> {
-  const payload = await apiRequest<unknown>(replacePathParam(ENDPOINTS.cms.publicPage, "slug", slug), { auth: false });
-  return mapCmsPage(payload);
+  const paths = publicCmsPageFallbacks(slug);
+  let lastError: unknown;
+
+  for (const path of paths) {
+    try {
+      const payload = await apiRequest<unknown>(path, { auth: false });
+      return mapCmsPage(payload);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error(`No se pudo cargar la página pública ${slug}.`);
 }
 
 export async function createCmsPage(input: CreateCmsPageInput): Promise<CmsPage> {

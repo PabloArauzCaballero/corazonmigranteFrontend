@@ -2,7 +2,7 @@ import { env } from "@/config/env";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
-import { buildQueryString, type BackendListQuery } from "@/shared/api/query";
+import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
 
 export type PublicContentRow = {
   id: string;
@@ -11,7 +11,7 @@ export type PublicContentRow = {
   status: "activo" | "inactivo" | "pendiente" | "bloqueado";
 };
 
-type PublicContentQuery = BackendListQuery & {
+type PublicContentQuery = SistemaListQuery & {
   slug?: string;
 };
 

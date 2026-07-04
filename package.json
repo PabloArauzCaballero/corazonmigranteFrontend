@@ -21,7 +21,8 @@
     "test:all": "yarn test:ci && yarn test:integration:backend",
     "dev:4173": "next dev -p 4173",
     "build:cloudflare": "next build",
-    "build:server": "next build"
+    "build:server": "next build",
+    "check:public-endpoints": "node scripts/check-public-endpoints.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

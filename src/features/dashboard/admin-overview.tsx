@@ -25,10 +25,10 @@ export function AdminOverview() {
 
   return (
     <div className="grid gap-5 md:grid-cols-4">
-      <StatCard label="Solicitudes" value={statValue(requests.data, requests.isError)} description="Total leído desde el backend." />
-      <StatCard label="Usuarios" value={statValue(users.data, users.isError)} description="Total leído desde el backend." />
-      <StatCard label="Servicios" value={statValue(services.data, services.isError)} description="Total leído desde el backend." />
-      <StatCard label="Transacciones" value={statValue(transactions.data, transactions.isError)} description="Total leído desde el backend." />
+      <StatCard label="Solicitudes" value={statValue(requests.data, requests.isError)} description="Total leído desde el sistema." />
+      <StatCard label="Usuarios" value={statValue(users.data, users.isError)} description="Total leído desde el sistema." />
+      <StatCard label="Servicios" value={statValue(services.data, services.isError)} description="Total leído desde el sistema." />
+      <StatCard label="Transacciones" value={statValue(transactions.data, transactions.isError)} description="Total leído desde el sistema." />
     </div>
   );
 }

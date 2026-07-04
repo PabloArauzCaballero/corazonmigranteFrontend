@@ -11,7 +11,7 @@ export default function TermsPage() {
       <Card className="mt-8">
         <CardContent className="prose prose-stone max-w-none p-8">
           <p>La plataforma facilita solicitudes, gestión y seguimiento de citas. No debe interpretarse como servicio de emergencia ni diagnóstico automático.</p>
-          <p><strong>PENDIENTE_CM:</strong> Confirmar condiciones finales de atención, cancelaciones, pagos, reprogramaciones y soporte.</p>
+          <p>Estamos preparando las condiciones finales de atención, cancelaciones, pagos, reprogramaciones y soporte.</p>
         </CardContent>
       </Card>
     </section>

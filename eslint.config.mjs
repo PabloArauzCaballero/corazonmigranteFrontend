@@ -8,10 +8,22 @@ const __dirname = dirname(__filename);
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    ignores: [".next/**", ".yarn/**", ".pnp.*", "node_modules/**", "coverage/**", "playwright-report/**", "test-results/**", "next-env.d.ts"]
+    ignores: [
+      ".next/**",
+      ".swc/**",
+      ".yarn/**",
+      ".pnp.*",
+      "node_modules/**",
+      "out/**",
+      "dist/**",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
+      "next-env.d.ts"
+    ]
   },
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "error",

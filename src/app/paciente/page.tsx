@@ -9,8 +9,8 @@ export default function PatientDashboardPage() {
     <div className="grid gap-8">
       <PageHeader title="Mi portal" description="Resumen de tu proceso y próximos pasos dentro de Corazón Migrante." />
       <div className="grid gap-5 md:grid-cols-3">
-        <StatCard label="Próxima cita" value="Pendiente" description="Se actualizará cuando el backend confirme disponibilidad." />
-        <StatCard label="Solicitudes" value="0" description="Las solicitudes deben venir paginadas desde el backend." />
+        <StatCard label="Próxima cita" value="Pendiente" description="Se actualizará cuando el sistema confirme disponibilidad." />
+        <StatCard label="Solicitudes" value="0" description="Las solicitudes se muestran con paginación real." />
         <StatCard label="Estado" value="Activo" description="Estado visual local, pendiente de contrato real." />
       </div>
       <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -20,7 +20,7 @@ export default function PatientDashboardPage() {
             {[
               { icon: CalendarCheck, title: "Citas", text: "Consulta y gestiona tus solicitudes." },
               { icon: HeartHandshake, title: "Acompañamiento", text: "Revisa información de tu proceso." },
-              { icon: MessageSquare, title: "Mensajes", text: "Pendiente de confirmar con backend." }
+              { icon: MessageSquare, title: "Mensajes", text: "Pendiente de activar en el sistema." }
             ].map((item) => (
               <div className="rounded-2xl border bg-background p-4" key={item.title}>
                 <item.icon className="h-6 w-6 text-primary" />

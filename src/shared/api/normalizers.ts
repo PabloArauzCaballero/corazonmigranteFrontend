@@ -1,4 +1,4 @@
-import type { BackendListQuery } from "@/shared/api/query";
+import type { SistemaListQuery } from "@/shared/api/query";
 
 export type PaginatedResult<T> = {
   items: T[];
@@ -61,7 +61,7 @@ function findArray(payload: unknown): unknown[] {
   return [];
 }
 
-export function normalizePaginatedResponse<T>(payload: unknown, mapper: (item: unknown, index: number) => T, query: BackendListQuery = {}): PaginatedResult<T> {
+export function normalizePaginatedResponse<T>(payload: unknown, mapper: (item: unknown, index: number) => T, query: SistemaListQuery = {}): PaginatedResult<T> {
   const sourceItems = findArray(payload);
   const items = sourceItems.map(mapper);
   const record = isRecord(payload) ? payload : {};

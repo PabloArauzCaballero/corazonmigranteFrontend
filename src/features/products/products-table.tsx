@@ -22,7 +22,7 @@ export function CatalogTable({ kind }: { kind: CatalogKind }) {
   const [page, setPage] = useState(1);
   const query = useQuery({ queryKey: ["catalog", kind, { page, pageSize: PAGE_SIZE }], queryFn: () => catalogLoaders[kind]({ page, pageSize: PAGE_SIZE }) });
 
-  if (query.isLoading) return <LoadingState title="Consultando catálogo en el backend" />;
+  if (query.isLoading) return <LoadingState title="Consultando catálogo" />;
   if (query.isError) return <ErrorState title="No se pudo cargar el catálogo" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
 
   return query.data ? (

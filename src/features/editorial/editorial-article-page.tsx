@@ -41,7 +41,7 @@ export function EditorialArticlePage({ slug }: { slug: string }) {
     return (
       <main className="container py-12">
         <Button asChild variant="ghost" className="mb-8"><Link href="/biblioteca"><ArrowLeft className="h-4 w-4" /> Volver a biblioteca</Link></Button>
-        <EmptyState title="Recurso no encontrado" description="El backend cargó la página CMS, pero no hay un elemento activo con este slug/código." />
+        <EmptyState title="Recurso no encontrado" description="La biblioteca cargó correctamente, pero no hay un recurso activo con este enlace." />
       </main>
     );
   }

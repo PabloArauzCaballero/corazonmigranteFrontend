@@ -17,7 +17,7 @@ export function TherapistAgendaTable() {
     queryFn: () => listTherapistAgenda({ page, pageSize: PAGE_SIZE })
   });
 
-  if (query.isLoading) return <LoadingState title="Consultando agenda asignada en el backend" />;
+  if (query.isLoading) return <LoadingState title="Consultando agenda asignada en el sistema" />;
   if (query.isError) return <ErrorState title="No se pudo cargar la agenda" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
 
   return query.data ? (
@@ -26,7 +26,7 @@ export function TherapistAgendaTable() {
         data={query.data.items}
         getRowKey={(row) => row.id}
         emptyTitle="Sin citas asignadas"
-        emptyDescription="El backend no devolvió citas para la agenda del terapeuta en esta página."
+        emptyDescription="No hay citas para la agenda del terapeuta en esta página."
         columns={[
           { key: "date", header: "Fecha", render: (row) => row.date },
           { key: "time", header: "Hora", render: (row) => row.time },

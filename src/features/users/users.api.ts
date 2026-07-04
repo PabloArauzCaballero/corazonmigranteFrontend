@@ -1,7 +1,7 @@
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
-import { buildQueryString, type BackendListQuery } from "@/shared/api/query";
+import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
 import { ROLES, type UserRole } from "@/shared/auth/roles";
 import type { AdminUser, AdminUserStatus } from "@/features/users/users.types";
 
@@ -21,7 +21,7 @@ export function mapUser(item: unknown, index: number): AdminUser {
   };
 }
 
-export async function listUsers(query: BackendListQuery = {}): Promise<PaginatedResult<AdminUser>> {
+export async function listUsers(query: SistemaListQuery = {}): Promise<PaginatedResult<AdminUser>> {
   const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${buildQueryString(query)}`);
   return normalizePaginatedResponse(payload, mapUser, query);
 }

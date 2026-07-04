@@ -1,4 +1,4 @@
-export type BackendListQuery = {
+export type SistemaListQuery = {
   search?: string;
   page?: number;
   pageSize?: number;
@@ -7,7 +7,9 @@ export type BackendListQuery = {
   sortDir?: "asc" | "desc";
 };
 
-export function buildQueryString(params: BackendListQuery & Record<string, string | number | undefined> = {}) {
+export type RemoteListQuery = SistemaListQuery;
+
+export function buildQueryString(params: SistemaListQuery & Record<string, string | number | undefined> = {}) {
   const searchParams = new URLSearchParams();
   const search = params.search?.trim();
 

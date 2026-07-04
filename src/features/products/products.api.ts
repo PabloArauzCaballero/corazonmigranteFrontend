@@ -1,7 +1,7 @@
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
-import { buildQueryString, type BackendListQuery } from "@/shared/api/query";
+import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
 
 export type CatalogRow = {
   id: string;
@@ -22,12 +22,12 @@ export function mapCatalogRow(defaultType: string) {
   };
 }
 
-export async function listApproaches(query: BackendListQuery = {}): Promise<PaginatedResult<CatalogRow>> {
+export async function listApproaches(query: SistemaListQuery = {}): Promise<PaginatedResult<CatalogRow>> {
   const payload = await apiRequest<unknown>(`${ENDPOINTS.products.approachesList}${buildQueryString(query)}`);
   return normalizePaginatedResponse(payload, mapCatalogRow("Enfoque"), query);
 }
 
-export async function listServices(query: BackendListQuery = {}): Promise<PaginatedResult<CatalogRow>> {
+export async function listServices(query: SistemaListQuery = {}): Promise<PaginatedResult<CatalogRow>> {
   const payload = await apiRequest<unknown>(`${ENDPOINTS.products.productsList}${buildQueryString(query)}`);
   return normalizePaginatedResponse(payload, mapCatalogRow("Servicio"), query);
 }

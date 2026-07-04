@@ -38,10 +38,10 @@ export function UsersTable() {
             setPage(1);
           }}
         />
-        <p className="mt-2 text-xs text-muted-foreground">La búsqueda, paginación y filtros se envían al backend; no se filtra sobre datos parciales en memoria.</p>
+        <p className="mt-2 text-xs text-muted-foreground">La búsqueda, paginación y filtros se procesan con datos completos.</p>
       </div>
 
-      {query.isLoading ? <LoadingState title="Consultando usuarios en el backend" /> : null}
+      {query.isLoading ? <LoadingState title="Consultando usuarios" /> : null}
       {query.isError ? <ErrorState title="No se pudieron cargar los usuarios" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}
       {query.data ? (
         <>

@@ -107,12 +107,12 @@ export function EditorialAdminPage() {
         <div className="grid gap-0 lg:grid-cols-[1fr_0.72fr]">
           <div className="space-y-7 p-7 md:p-10">
             <div className="inline-flex items-center gap-2 border border-teal-900/20 bg-teal-900/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-teal-900">
-              <Layers3 className="h-4 w-4" aria-hidden="true" /> CMS real del backend
+              <Layers3 className="h-4 w-4" aria-hidden="true" /> Contenido administrable
             </div>
             <div className="space-y-3">
               <h1 className="font-serif text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">Biblioteca editorial profesional</h1>
               <p className="max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-                Este módulo usa los contratos reales: crear página, agregar elementos CMS y subir archivos por `/api/v1/files`. No usa endpoints de artículos que no existen en tu backend.
+                Este módulo permite crear páginas, agregar secciones y subir archivos públicos desde una administración centralizada.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -123,7 +123,7 @@ export function EditorialAdminPage() {
           <div className="border-t border-slate-200 bg-[#f7f4ef] p-7 lg:border-l lg:border-t-0 md:p-10">
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <Card className="rounded-none border-slate-200 bg-white shadow-none"><CardHeader><CardDescription>Slug CMS</CardDescription><CardTitle>{pageSlug}</CardTitle></CardHeader></Card>
-              <Card className="rounded-none border-slate-200 bg-white shadow-none"><CardHeader><CardDescription>Estado backend</CardDescription><CardTitle>{pageQuery.data ? <CmsPageStatusBadge status={pageQuery.data.status} /> : "No cargado"}</CardTitle></CardHeader></Card>
+              <Card className="rounded-none border-slate-200 bg-white shadow-none"><CardHeader><CardDescription>Estado de publicación</CardDescription><CardTitle>{pageQuery.data ? <CmsPageStatusBadge status={pageQuery.data.status} /> : "No cargado"}</CardTitle></CardHeader></Card>
               <Card className="rounded-none border-slate-200 bg-white shadow-none"><CardHeader><CardDescription>Bloques visibles</CardDescription><CardTitle>{resources.length}</CardTitle></CardHeader></Card>
             </div>
           </div>
@@ -136,7 +136,7 @@ export function EditorialAdminPage() {
         <Card className="rounded-none border-slate-200 bg-white shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FilePlus2 className="h-5 w-5" /> Página CMS</CardTitle>
-            <CardDescription>Crea la página `biblioteca` si todavía no existe. El backend no expone listado admin de páginas, por eso se carga por slug público.</CardDescription>
+            <CardDescription>Crea la página `biblioteca` si todavía no existe. El contenido se carga por slug público.</CardDescription>
           </CardHeader>
           <CardContent>
             <form
@@ -160,7 +160,7 @@ export function EditorialAdminPage() {
         <Card className="rounded-none border-slate-200 bg-white shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FileImage className="h-5 w-5" /> Agregar recurso con imagen</CardTitle>
-            <CardDescription>La imagen puede venir como URL pública del servidor de archivos o como upload CMS. Si el backend/GCS devuelve `objectKey`, se construye con `NEXT_PUBLIC_FILE_SERVER_PUBLIC_ASSETS_BASE_URL`.</CardDescription>
+            <CardDescription>La imagen puede venir como URL pública o como archivo subido desde el administrador.</CardDescription>
           </CardHeader>
           <CardContent>
             <form

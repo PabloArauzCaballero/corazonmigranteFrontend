@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | Corazón Migrante"
   },
   description: "Acompañamiento psicológico y emocional para personas migrantes y sus familias.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:4173"),
   openGraph: {
     title: "Corazón Migrante",
     description: "Un espacio de acompañamiento emocional humano, seguro y profesional.",

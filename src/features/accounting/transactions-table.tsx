@@ -14,7 +14,7 @@ export function TransactionsTable() {
   const [page, setPage] = useState(1);
   const query = useQuery({ queryKey: ["transactions", { page, pageSize: PAGE_SIZE }], queryFn: () => listTransactions({ page, pageSize: PAGE_SIZE }) });
 
-  if (query.isLoading) return <LoadingState title="Consultando transacciones en el backend" />;
+  if (query.isLoading) return <LoadingState title="Consultando transacciones" />;
   if (query.isError) return <ErrorState title="No se pudieron cargar las transacciones" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
 
   return query.data ? (

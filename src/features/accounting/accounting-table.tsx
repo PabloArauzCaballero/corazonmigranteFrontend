@@ -14,7 +14,7 @@ export function AccountingTable({ resource }: { resource: AccountingResource }) 
   const [page, setPage] = useState(1);
   const query = useQuery({ queryKey: ["accounting", resource, { page, pageSize: PAGE_SIZE }], queryFn: () => listAccountingRows(resource, { page, pageSize: PAGE_SIZE }) });
 
-  if (query.isLoading) return <LoadingState title="Consultando contabilidad en el backend" />;
+  if (query.isLoading) return <LoadingState title="Consultando contabilidad" />;
   if (query.isError) return <ErrorState title="No se pudo cargar la información contable" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
 
   return query.data ? (

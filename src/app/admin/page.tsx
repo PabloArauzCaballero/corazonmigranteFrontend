@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
       <Card>
         <CardContent className="flex items-start gap-4 p-6 text-sm leading-6 text-muted-foreground">
           <Activity className="mt-1 h-5 w-5 shrink-0 text-primary" />
-          Todas las tablas administrativas consultan el backend con filtros, búsqueda, ordenamiento y paginación real. Esto evita listas incompletas y datos inventados en el frontend.
+          Todas las tablas administrativas usan filtros, búsqueda, ordenamiento y paginación real. Esto evita listas incompletas y datos inventados.
         </CardContent>
       </Card>
     </div>

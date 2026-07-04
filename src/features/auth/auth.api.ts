@@ -3,7 +3,7 @@ import { ENDPOINTS } from "@/shared/api/endpoints";
 import { normalizeSession, type LegacySessionInput, type NormalizedSession } from "@/shared/auth/session";
 import type { LoginInput, RegisterPatientInput } from "@/features/auth/auth.schemas";
 
-type BackendLoginResponse = LegacySessionInput | { accessToken?: string; token?: string; user?: LegacySessionInput };
+type SistemaLoginResponse = LegacySessionInput | { accessToken?: string; token?: string; user?: LegacySessionInput };
 
 function splitFullName(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -13,7 +13,7 @@ function splitFullName(fullName: string) {
 }
 
 export async function login(input: LoginInput): Promise<NormalizedSession> {
-  const response = await apiRequest<BackendLoginResponse>(ENDPOINTS.auth.login, {
+  const response = await apiRequest<SistemaLoginResponse>(ENDPOINTS.auth.login, {
     method: "POST",
     body: {
       email: input.email,

@@ -15,7 +15,7 @@ export function PublicContentTable() {
   const [page, setPage] = useState(1);
   const query = useQuery({ queryKey: ["public-content", { page, pageSize: PAGE_SIZE }], queryFn: () => listPublicContent({ page, pageSize: PAGE_SIZE }) });
 
-  if (query.isLoading) return <LoadingState title="Consultando contenido público en el backend" />;
+  if (query.isLoading) return <LoadingState title="Consultando contenido público en el sistema" />;
   if (query.isError) return <ErrorState title="No se pudo cargar el contenido público" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
 
   return query.data ? (

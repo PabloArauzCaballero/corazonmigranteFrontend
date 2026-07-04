@@ -29,7 +29,7 @@ export function RegisterPatientForm() {
       <CardContent>
         {mutation.isSuccess ? (
           <div className="rounded-2xl bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
-            Tu solicitud fue registrada. Ingresa con tu cuenta cuando el backend confirme el flujo final de activación.
+            Tu solicitud fue registrada. Ingresa con tu cuenta cuando el equipo confirme la activación.
           </div>
         ) : (
           <form className="grid gap-5" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>

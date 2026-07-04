@@ -33,7 +33,7 @@ export type LegacySessionInput = {
   permissions?: string[];
 };
 
-const BACKEND_ROLE_MAP: Record<string, UserRole> = {
+const SERVICE_ROLE_MAP: Record<string, UserRole> = {
   PATIENT: "PACIENTE",
   PACIENTE: "PACIENTE",
   THERAPIST: "TERAPEUTA",
@@ -48,7 +48,7 @@ export function normalizeRole(input: LegacySessionInput): UserRole {
   const roles = Array.isArray(input.roles) ? input.roles : [];
   const rawCandidates = [input.role, input.rol, ...roles].map((value) => String(value ?? "").trim().toUpperCase()).filter(Boolean);
   for (const rawRole of rawCandidates) {
-    const mapped = BACKEND_ROLE_MAP[rawRole];
+    const mapped = SERVICE_ROLE_MAP[rawRole];
     if (mapped) return mapped;
   }
   if (input.is_super_admin) return "SUPER_ADMIN";
@@ -62,17 +62,17 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-type BackendSessionEnvelope = LegacySessionInput & {
-  data?: BackendSessionEnvelope;
+type SistemaSessionEnvelope = LegacySessionInput & {
+  data?: SistemaSessionEnvelope;
   user?: LegacySessionInput;
   accessToken?: string;
   refreshToken?: string;
   token?: string;
 };
 
-function unwrapSessionInput(input: BackendSessionEnvelope): LegacySessionInput {
+function unwrapSessionInput(input: SistemaSessionEnvelope): LegacySessionInput {
   if (isObjectRecord(input.data)) {
-    return unwrapSessionInput(input.data as BackendSessionEnvelope);
+    return unwrapSessionInput(input.data as SistemaSessionEnvelope);
   }
 
   if (input.user) {
@@ -82,7 +82,7 @@ function unwrapSessionInput(input: BackendSessionEnvelope): LegacySessionInput {
   return input;
 }
 
-export function normalizeSession(input: BackendSessionEnvelope): NormalizedSession {
+export function normalizeSession(input: SistemaSessionEnvelope): NormalizedSession {
   const unwrapped = unwrapSessionInput(input);
   const role = normalizeRole(unwrapped);
   const permissions: Permission[] = ROLE_PERMISSIONS[role];

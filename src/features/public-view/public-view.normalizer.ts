@@ -149,6 +149,16 @@ function normalizeUiById(raw: unknown): Record<number, UiElementAsset> {
   return out;
 }
 
+
+function phoneFrom(...values: unknown[]) {
+  for (const value of values) {
+    const record = asRecord(value);
+    const phone = asString(value) ?? asString(record.phone ?? record.telefono ?? record.whatsapp ?? record.whatsApp ?? record.contactPhone ?? record.contact_phone ?? record.numero_contacto);
+    if (phone) return phone;
+  }
+  return undefined;
+}
+
 function resolveUiAsset(uiById: Record<number, UiElementAsset>, idUi: unknown) {
   const id = toNumber(idUi);
   if (!id) return undefined;
@@ -250,7 +260,7 @@ function normalizeOldPageJson(raw: Record<string, unknown>, uiById: Record<numbe
     hero,
     sections,
     footer: normalizeFooter(raw.footer),
-    phone: asString(raw.telefono),
+    phone: phoneFrom(raw.telefono, raw.phone, raw.whatsapp, raw.contacto, raw.contact),
     uiById,
     raw
   };
@@ -277,7 +287,7 @@ function normalizeLegacyContent(content: Record<string, unknown>, uiById: Record
     hero: normalizeHero(content.hero, uiById, pageTitle),
     sections,
     footer: normalizeFooter(content.footer),
-    phone: asString(content.telefono ?? content.phone),
+    phone: phoneFrom(content.telefono, content.phone, content.whatsapp, content.contacto, content.contact, content.navbar, content.footer),
     uiById,
     raw
   };
@@ -352,7 +362,7 @@ function normalizeCmsPage(page: Record<string, unknown>, raw: unknown): Normaliz
     hero,
     sections,
     footer: footerContent,
-    phone: asString(page.phone ?? asRecord(contentOf("footer")).phone),
+    phone: phoneFrom(page.phone, page.telefono, page.whatsapp, contentOf("navbar"), contentOf("footer"), contentOf("contacto"), contentOf("contact")),
     uiById,
     raw
   };

@@ -14,7 +14,7 @@ export function PatientAppointmentsTable() {
   const [page, setPage] = useState(1);
   const query = useQuery({ queryKey: ["patient-appointments", { page, pageSize: PAGE_SIZE }], queryFn: () => listPatientAppointments({ page, pageSize: PAGE_SIZE }) });
 
-  if (query.isLoading) return <LoadingState title="Consultando tus citas en el backend" />;
+  if (query.isLoading) return <LoadingState title="Consultando tus citas en el sistema" />;
   if (query.isError) return <ErrorState title="No se pudieron cargar tus citas" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
 
   return query.data ? (

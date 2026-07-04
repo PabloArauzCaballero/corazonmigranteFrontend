@@ -5,11 +5,11 @@ import { PageHeader } from "@/shared/ui/page-header";
 export default function PatientProfilePage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Perfil" description="Datos básicos visibles. La edición completa debe usar contrato real del backend." />
+      <PageHeader title="Perfil" description="Datos básicos visibles. La edición completa se realiza con validación del sistema." />
       <ProfileCard />
       <Card>
         <CardContent className="p-6 text-sm leading-6 text-muted-foreground">
-          PENDIENTE_CM: confirmar campos editables, validaciones, documentación sensible y reglas de actualización para pacientes.
+          La edición de perfil se habilitará con validaciones de seguridad y protección de información sensible.
         </CardContent>
       </Card>
     </div>

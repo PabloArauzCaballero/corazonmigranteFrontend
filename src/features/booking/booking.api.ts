@@ -90,9 +90,9 @@ export async function createPatientBooking(input: PatientBookingInput) {
   });
 }
 
-export async function createManagedBooking(input: ManagedBookingInput) {
+export async function createManagedBooking(_input: ManagedBookingInput) {
   throw new ApiError(
-    `PENDIENTE_BACKEND_CM: el frontend recibió patientUserId=${input.patientUserId}, pero el backend actual solo permite POST ${ENDPOINTS.appointments.createMine} con rol PATIENT y toma patientUserId desde el JWT. Se requiere ${ENDPOINTS.appointments.createForPatient} o contrato equivalente para ADMIN/THERAPIST.`,
+    `La creación operativa de citas para pacientes concretos todavía no está habilitada para este rol.`,
     501
   );
 }

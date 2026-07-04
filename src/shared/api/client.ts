@@ -20,7 +20,7 @@ function apiBaseUrl() {
 
     if (isLocalFrontendOrigin) {
       throw new ApiError(
-        "NEXT_PUBLIC_API_BASE_URL está apuntando al frontend. Este proyecto corre por defecto en 4173; configura el backend en otro puerto, por ejemplo NEXT_PUBLIC_API_BASE_URL=http://localhost:3000.",
+        "NEXT_PUBLIC_API_BASE_URL está apuntando al frontend. Este proyecto corre por defecto en 4173; configura la API en otro puerto, por ejemplo NEXT_PUBLIC_API_BASE_URL=http://localhost:3000.",
         500
       );
     }
@@ -40,6 +40,15 @@ function extractErrorMessage(payload: unknown) {
     if (typeof message === "string") return message;
   }
 
+  if (typeof payload === "object" && payload !== null && "error" in payload) {
+    const error = (payload as { error: unknown }).error;
+    if (typeof error === "object" && error !== null && "message" in error) {
+      const message = (error as { message: unknown }).message;
+      if (Array.isArray(message)) return message.join(" ");
+      if (typeof message === "string") return message;
+    }
+  }
+
   if (typeof payload === "object" && payload !== null && "data" in payload) {
     const data = (payload as { data: unknown }).data;
     if (typeof data === "object" && data !== null && "message" in data) {
@@ -49,7 +58,7 @@ function extractErrorMessage(payload: unknown) {
     }
   }
 
-  return "Error de comunicación con el servidor";
+  return "No se pudo completar la comunicación con el servicio";
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {

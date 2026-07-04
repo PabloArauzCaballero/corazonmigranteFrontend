@@ -14,12 +14,21 @@ function PublicViewLoading() {
       <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-4xl place-items-center">
         <div className="w-full rounded-[2.25rem] border border-[#e3d8cb] bg-white/86 p-8 text-center shadow-[0_30px_90px_rgba(23,43,39,0.10)] backdrop-blur md:p-10">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
-          <h1 className="mt-5 text-2xl font-black tracking-tight md:text-4xl">Cargando vista pública</h1>
-          <p className="mt-3 text-sm leading-6 text-[#625e57]">Estamos obteniendo el contenido configurado desde el backend.</p>
+          <h1 className="mt-5 text-2xl font-black tracking-tight md:text-4xl">Cargando página principal</h1>
+          <p className="mt-3 text-sm leading-6 text-[#625e57]">Estamos preparando la experiencia pública de Corazón Migrante.</p>
         </div>
       </section>
     </main>
   );
+}
+
+
+function publicFriendlyMessage(message: string) {
+  if (/NEXT_PUBLIC|endpoint|fetch failed|ECONN|stack|backend|servidor|service unavailable|network/i.test(message)) {
+    return "La página no está disponible en este momento. Intenta nuevamente en unos segundos.";
+  }
+
+  return message;
 }
 
 function PublicViewError({
@@ -42,20 +51,22 @@ function PublicViewError({
               <AlertTriangle className="h-6 w-6" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700">Vista pública no disponible</p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">No se pudo cargar la landing configurable desde el backend.</h1>
-              <p className="mt-5 text-base leading-7 text-[#625e57]">{message}</p>
-              {status ? <p className="mt-3 text-sm font-semibold text-[#625e57]">HTTP {status}</p> : null}
-              <div className="mt-5 break-all rounded-2xl border border-[#e3d8cb] bg-[#fbf8f3] p-4 font-mono text-xs text-[#625e57]">{endpoint}</div>
+              <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700">Página no disponible</p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">No se pudo cargar la página principal.</h1>
+              <p className="mt-5 text-base leading-7 text-[#625e57]">{publicFriendlyMessage(message)}</p>
+              {process.env.NODE_ENV !== "production" && status ? <p className="mt-3 text-sm font-semibold text-[#625e57]">HTTP {status}</p> : null}
+              {process.env.NODE_ENV !== "production" ? (
+                <div className="mt-5 break-all rounded-2xl border border-[#e3d8cb] bg-[#fbf8f3] p-4 font-mono text-xs text-[#625e57]">{endpoint}</div>
+              ) : null}
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button className="rounded-2xl" onClick={onRetry} type="button">
                   <RefreshCw className="h-4 w-4" aria-hidden="true" /> Reintentar
                 </Button>
                 <Button asChild className="rounded-2xl" variant="outline">
-                  <Link href="/admin/vistas-publicas">Ir a Vistas públicas</Link>
+                  <Link href="/biblioteca">Ir a la biblioteca</Link>
                 </Button>
               </div>
-              <p className="mt-6 text-xs leading-5 text-[#8a8176]">Esta pantalla no usa contenido de relleno. La home solo se renderiza cuando el backend devuelve la vista pública configurada.</p>
+              <p className="mt-6 text-xs leading-5 text-[#8a8176]">Estamos ajustando el contenido público para mostrar una experiencia clara y segura.</p>
             </div>
           </div>
         </div>
@@ -76,7 +87,7 @@ export default function HomePage() {
         setResult({
           ok: false,
           endpoint: "cliente",
-          message: error instanceof Error ? error.message : "No se pudo cargar la vista pública configurada.",
+          message: error instanceof Error ? error.message : "No se pudo cargar la página principal.",
           details: error
         });
       });
@@ -96,7 +107,7 @@ export default function HomePage() {
           setResult({
             ok: false,
             endpoint: "cliente",
-            message: error instanceof Error ? error.message : "No se pudo cargar la vista pública configurada.",
+            message: error instanceof Error ? error.message : "No se pudo cargar la página principal.",
             details: error
           });
         }

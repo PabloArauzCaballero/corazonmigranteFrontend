@@ -43,7 +43,7 @@ export function BookingAuthWall() {
       <Card className="mx-auto max-w-3xl">
         <CardHeader>
           <CardTitle>Reserva protegida</CardTitle>
-          <CardDescription>Tu sesión está activa. Continúa desde tu portal de paciente para que el backend use tu identidad del JWT.</CardDescription>
+          <CardDescription>Tu sesión está activa. Continúa desde tu portal de paciente para registrar la solicitud de forma segura.</CardDescription>
         </CardHeader>
         <CardContent><Button asChild><Link href="/paciente/booking">Ir a reservar mi cita</Link></Button></CardContent>
       </Card>
@@ -80,7 +80,7 @@ export function BookingAuthWall() {
         <Badge className="w-fit" variant="secondary">Requiere sesión</Badge>
         <CardTitle>Para reservar necesitas iniciar sesión</CardTitle>
         <CardDescription>
-          El backend no debe aceptar reservas anónimas. La cita de paciente se crea con el JWT del paciente autenticado; admin o terapeuta deben trabajar sobre un paciente concreto.
+          Para proteger tu información, las reservas requieren una sesión activa. Admins y terapeutas trabajan sobre pacientes concretos desde sus portales.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-3">
@@ -91,7 +91,7 @@ export function BookingAuthWall() {
   );
 }
 
-export function PatientBookingForm({ title = "Reservar mi cita", description = "La solicitud se registra para el paciente autenticado. El frontend no envía patientUserId porque el backend toma la identidad desde el JWT." }: PatientBookingFormProps) {
+export function PatientBookingForm({ title = "Reservar mi cita", description = "La solicitud se registra con la identidad de tu sesión activa." }: PatientBookingFormProps) {
   const products = useQuery({ queryKey: ["booking", "products"], queryFn: listBookingProducts });
   const form = useForm<PatientBookingInput>({
     resolver: zodResolver(patientBookingSchema),
@@ -118,7 +118,7 @@ export function PatientBookingForm({ title = "Reservar mi cita", description = "
 
   const mutation = useMutation({ mutationFn: createPatientBooking });
 
-  if (products.isLoading) return <LoadingState title="Consultando servicios reales del backend" />;
+  if (products.isLoading) return <LoadingState title="Consultando servicios disponibles" />;
   if (products.isError) return <ErrorState title="No se pudo consultar el catálogo" description={humanizeApiError(products.error)} actionLabel="Reintentar" onAction={() => void products.refetch()} />;
 
   return (
@@ -131,15 +131,15 @@ export function PatientBookingForm({ title = "Reservar mi cita", description = "
       <CardContent>
         {mutation.isSuccess ? (
           <div className="rounded-2xl bg-emerald-50 p-6 text-emerald-900">
-            <p className="font-semibold">Solicitud registrada en backend</p>
-            <p className="mt-2 text-sm leading-6">La cita queda en estado solicitado y será gestionada según el flujo del backend.</p>
+            <p className="font-semibold">Solicitud registrada</p>
+            <p className="mt-2 text-sm leading-6">La cita queda en estado solicitado y será gestionada por el equipo correspondiente.</p>
           </div>
         ) : (
           <form className="grid gap-5" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
             <div className="grid gap-2">
               <Label htmlFor="therapistUserId">ID del terapeuta</Label>
               <Input id="therapistUserId" placeholder="UUID del terapeuta" {...form.register("therapistUserId")} />
-              <p className="text-xs leading-5 text-muted-foreground">PENDIENTE_CM: reemplazar este campo por selector cuando el backend exponga listado de terapeutas disponibles.</p>
+              <p className="text-xs leading-5 text-muted-foreground">Ingresa el identificador del terapeuta asignado. Próximamente se podrá seleccionarlo desde una lista.</p>
               {form.formState.errors.therapistUserId ? <p className="text-sm text-destructive">{form.formState.errors.therapistUserId.message}</p> : null}
             </div>
             <div className="grid gap-2">
@@ -200,7 +200,7 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
         <Badge className="w-fit" variant="secondary">Booking por {actorLabel}</Badge>
         <CardTitle>Agendar cita para un paciente concreto</CardTitle>
         <CardDescription>
-          Esta vista ya exige paciente concreto, terapeuta, servicio y horario. No crea datos locales ni datos inventados. Falta que el backend exponga el endpoint de creación por paciente para admin/terapeuta.
+          Esta vista exige paciente concreto, terapeuta, servicio y horario. No crea datos locales ni datos inventados.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -238,10 +238,10 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
             <Textarea id="managedNotes" {...form.register("notesForTherapist")} />
           </div>
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            PENDIENTE_BACKEND_CM: el backend actual documenta creación de citas con `POST /api/v1/appointments`, pero está restringido a paciente autenticado. Para esta vista se necesita un contrato que reciba `patientUserId` y autorice ADMIN/SUPER_ADMIN/THERAPIST.
+            Esta acción requiere autorización operativa para crear citas a nombre de un paciente concreto.
           </div>
           {mutation.isError ? <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{humanizeApiError(mutation.error)}</p> : null}
-          <Button type="submit" variant="outline">Validar contrato de backend</Button>
+          <Button type="submit" variant="outline">Validar disponibilidad</Button>
         </form>
       </CardContent>
     </Card>

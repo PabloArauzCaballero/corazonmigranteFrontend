@@ -2,7 +2,7 @@ import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { ApiError } from "@/shared/api/errors";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
-import { buildQueryString, type BackendListQuery } from "@/shared/api/query";
+import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
 
 export type AccountingRow = {
   id: string;
@@ -50,10 +50,10 @@ export function mapTransactionRow(item: unknown, index: number): TransactionRow 
   };
 }
 
-export async function listAccountingRows(resource: AccountingResource, query: BackendListQuery = {}): Promise<PaginatedResult<AccountingRow>> {
+export async function listAccountingRows(resource: AccountingResource, query: SistemaListQuery = {}): Promise<PaginatedResult<AccountingRow>> {
   if (resource === "costCenters") {
     throw new ApiError(
-      "PENDIENTE_CM_BACKEND_ACCOUNTING_COST_CENTERS_LIST: el backend actual solo expone POST /api/v1/admin/accounting/cost-centers; falta GET para listar centros de costo.",
+      "El listado de centros de costo todavía no está disponible. Revisa la configuración administrativa antes de continuar.",
       501
     );
   }
@@ -62,9 +62,9 @@ export async function listAccountingRows(resource: AccountingResource, query: Ba
   return normalizePaginatedResponse(payload, mapAccountingRow, query);
 }
 
-export async function listTransactions(_query: BackendListQuery = {}): Promise<PaginatedResult<TransactionRow>> {
+export async function listTransactions(_query: SistemaListQuery = {}): Promise<PaginatedResult<TransactionRow>> {
   throw new ApiError(
-    "PENDIENTE_CM_BACKEND_ACCOUNTING_TRANSACTIONS_LIST: el backend actual solo expone POST /api/v1/admin/accounting/transactions; falta GET para listar transacciones.",
+    "El listado de transacciones todavía no está disponible. Revisa la configuración administrativa antes de continuar.",
     501
   );
 }

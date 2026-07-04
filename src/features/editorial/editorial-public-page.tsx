@@ -78,8 +78,8 @@ export function EditorialPublicPage() {
               <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-white/80">
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Confianza clínica
               </div>
-              <h2 className="max-w-md font-serif text-3xl font-bold leading-tight md:text-4xl">Contenido administrado desde CMS y archivos del servidor.</h2>
-              <p className="mt-3 max-w-md text-sm leading-6 text-white/80">Sin contenido local de negocio: si el backend no publica bloques, la biblioteca lo informa de forma transparente.</p>
+              <h2 className="max-w-md font-serif text-3xl font-bold leading-tight md:text-4xl">Recursos de apoyo para acompañar procesos migrantes.</h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-white/80">Lecturas, guías y orientación presentadas de forma clara para familias y pacientes.</p>
             </div>
           </div>
         </div>
@@ -92,16 +92,16 @@ export function EditorialPublicPage() {
         </div>
         <div className="flex items-start gap-3">
           <BookOpen className="mt-1 h-5 w-5 text-teal-800" aria-hidden="true" />
-          <div><p className="font-semibold">CMS real</p><p className="text-sm leading-6 text-slate-600">Lee `/api/v1/public/pages/{pageSlug}` del backend.</p></div>
+          <div><p className="font-semibold">Contenido actualizado</p><p className="text-sm leading-6 text-slate-600">Recursos publicados desde el equipo de Corazón Migrante.</p></div>
         </div>
         <div className="flex items-start gap-3">
           <HeartHandshake className="mt-1 h-5 w-5 text-teal-800" aria-hidden="true" />
-          <div><p className="font-semibold">Acción clara</p><p className="text-sm leading-6 text-slate-600">Reserva protegida para paciente autenticado.</p></div>
+          <div><p className="font-semibold">Acción clara</p><p className="text-sm leading-6 text-slate-600">Acceso directo para agendar y continuar el acompañamiento.</p></div>
         </div>
       </section>
 
       <section className="container py-12 md:py-16">
-        {pageQuery.isLoading ? <LoadingState title="Consultando biblioteca en el backend" /> : null}
+        {pageQuery.isLoading ? <LoadingState title="Cargando biblioteca emocional" /> : null}
         {pageQuery.isError ? (
           <ErrorState title="No se pudo cargar la biblioteca" description={humanizeApiError(pageQuery.error)} actionLabel="Reintentar" onAction={() => void pageQuery.refetch()} />
         ) : null}
@@ -110,10 +110,10 @@ export function EditorialPublicPage() {
             <CardContent className="grid gap-8 p-0 md:grid-cols-[0.8fr_1fr]">
               {hero?.imageUrl ? <img src={hero.imageUrl} alt="Biblioteca sin contenidos publicados" className="h-full min-h-80 w-full object-cover" /> : null}
               <div className="flex flex-col justify-center p-8 md:p-12">
-                <EmptyState title="Todavía no hay recursos publicados" description="Crea la página CMS y agrega elementos activos desde el panel administrativo. La vista no usa datos locales ni contenidos falsos." />
+                <EmptyState title="Estamos preparando nuevos recursos" description="Pronto encontrarás guías y lecturas para acompañar procesos migrantes con mayor claridad." />
                 <div className="mt-6">
                   <Button asChild variant="outline" className="rounded-none">
-                    <Link href="/admin/contenido/editorial">Configurar CMS</Link>
+                    <Link href="/">Volver al inicio</Link>
                   </Button>
                 </div>
               </div>

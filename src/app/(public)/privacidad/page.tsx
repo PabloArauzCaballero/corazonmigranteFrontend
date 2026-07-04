@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <Card className="mt-8">
         <CardContent className="prose prose-stone max-w-none p-8">
           <p>Corazón Migrante debe tratar los datos personales con cuidado, finalidad clara y acceso restringido según rol.</p>
-          <p><strong>PENDIENTE_CM:</strong> Confirmar texto legal final, jurisdicción, responsable del tratamiento, plazos de conservación y mecanismo de ejercicio de derechos.</p>
+          <p>Estamos preparando el texto legal final con información clara sobre protección de datos, conservación y canales de atención.</p>
         </CardContent>
       </Card>
     </section>

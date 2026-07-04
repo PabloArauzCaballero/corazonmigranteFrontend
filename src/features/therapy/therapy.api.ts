@@ -1,7 +1,7 @@
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
-import { buildQueryString, type BackendListQuery } from "@/shared/api/query";
+import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
 
 export type AppointmentRequestRow = {
   id: string;
@@ -50,7 +50,7 @@ export function mapPatientAppointment(item: unknown, index: number): PatientAppo
   };
 }
 
-export async function listAppointmentRequests(query: BackendListQuery = {}): Promise<PaginatedResult<AppointmentRequestRow>> {
+export async function listAppointmentRequests(query: SistemaListQuery = {}): Promise<PaginatedResult<AppointmentRequestRow>> {
   const payload = await apiRequest<unknown>(`${ENDPOINTS.therapy.appointmentRequests}${buildQueryString(query)}`);
   return normalizePaginatedResponse(payload, mapAppointmentRequest, query);
 }
@@ -67,12 +67,12 @@ export function mapTherapistAgenda(item: unknown, index: number): TherapistAgend
   };
 }
 
-export async function listPatientAppointments(query: BackendListQuery = {}): Promise<PaginatedResult<PatientAppointmentRow>> {
+export async function listPatientAppointments(query: SistemaListQuery = {}): Promise<PaginatedResult<PatientAppointmentRow>> {
   const payload = await apiRequest<unknown>(`${ENDPOINTS.therapy.patientAppointments}${buildQueryString(query)}`);
   return normalizePaginatedResponse(payload, mapPatientAppointment, query);
 }
 
-export async function listTherapistAgenda(query: BackendListQuery = {}): Promise<PaginatedResult<TherapistAgendaRow>> {
+export async function listTherapistAgenda(query: SistemaListQuery = {}): Promise<PaginatedResult<TherapistAgendaRow>> {
   const payload = await apiRequest<unknown>(`${ENDPOINTS.therapy.therapistAgenda}${buildQueryString(query)}`);
   return normalizePaginatedResponse(payload, mapTherapistAgenda, query);
 }

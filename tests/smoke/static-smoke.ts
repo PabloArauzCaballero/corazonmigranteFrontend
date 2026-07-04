@@ -7,6 +7,7 @@ const requiredFiles = [
   "src/features/public-view/public-view.api.ts",
   "src/features/public-view/public-view.normalizer.ts",
   "src/features/public-view/public-landing-page.tsx",
+  "src/app/(public)/biblioteca/page.tsx",
   "src/app/(public)/booking/page.tsx",
   "src/app/paciente/booking/page.tsx",
   "src/app/admin/booking/page.tsx",
