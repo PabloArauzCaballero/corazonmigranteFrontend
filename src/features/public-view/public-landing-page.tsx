@@ -28,6 +28,8 @@ import {
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
+import { LandingV2Page } from "@/features/public-view/landing-v2-page";
+import { extractLandingV2 } from "@/features/public-view/landing-v2.mapper";
 
 const hiddenPublicLabels = /^(proceso|agendar|booking|cita|citas)$/i;
 const hiddenPublicHrefs = /(booking|paciente|terapeuta|admin|#proceso)/i;
@@ -607,7 +609,7 @@ function Footer({
   );
 }
 
-export function PublicLandingPage({
+function GenericPublicLandingPage({
   landing,
 }: {
   landing: NormalizedPublicLanding;
@@ -657,4 +659,20 @@ export function PublicLandingPage({
       <FloatingContact phone={phone} />
     </div>
   );
+}
+
+
+export function PublicLandingPage({
+  landing,
+}: {
+  landing: NormalizedPublicLanding;
+}) {
+  const landingV2 = extractLandingV2(landing.raw);
+  const phone = resolveContactPhone(landingV2?.telefono ?? landingV2?.phone ?? landing.phone);
+
+  if (landingV2) {
+    return <LandingV2Page content={landingV2} landing={landing} phone={phone} />;
+  }
+
+  return <GenericPublicLandingPage landing={landing} />;
 }

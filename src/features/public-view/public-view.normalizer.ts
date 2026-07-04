@@ -33,6 +33,7 @@ function parseJsonMaybe(value: unknown): unknown {
 
 function asString(value: unknown): string | undefined {
   if (value === null || value === undefined) return undefined;
+  if (typeof value === "object") return undefined;
   const text = String(value).trim();
   return text ? text : undefined;
 }
@@ -275,20 +276,6 @@ function numberedContainers(
   prefix: string,
   uiById: Record<number, UiElementAsset>,
 ) {
-  const numberedField = (
-    container: Record<string, unknown>,
-    field: string,
-    suffix: string,
-  ) => {
-    const direct = container[`${field}_${suffix}`];
-    if (direct !== undefined) return direct;
-
-    const ending = `_${suffix}`;
-    return Object.entries(container).find(
-      ([key]) => key.startsWith(`${field}_`) && key.endsWith(ending),
-    )?.[1];
-  };
-
   const entries = Object.entries(record)
     .filter(([key]) => key.startsWith(prefix))
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
@@ -298,18 +285,18 @@ function numberedContainers(
       return cardFrom(
         {
           title:
-            numberedField(container, "titulo", suffix) ??
+            container[`titulo_${suffix}`] ??
             container.titulo ??
             container.title ??
             container.nombre,
           body:
-            numberedField(container, "parrafo", suffix) ??
+            container[`parrafo_${suffix}`] ??
             container.parrafo ??
             container.body ??
             container.descripcion ??
             container.description,
           label:
-            numberedField(container, "etiqueta", suffix) ??
+            container[`etiqueta_${suffix}`] ??
             container.label ??
             container.badge,
           image:
@@ -403,7 +390,7 @@ function sectionFrom(
       `section-${index + 1}`,
     code,
     label: firstString(record.label, record.etiqueta),
-    badge: firstString(record.badge, record.kicker),
+    badge: textFromIconText(record.badge ?? record.kicker),
     title,
     subtitle,
     body,
@@ -527,12 +514,20 @@ function normalizeFooter(raw: unknown): NormalizedPublicLanding["footer"] {
   return { note, columns: columns.length > 0 ? columns : undefined };
 }
 
+function textFromIconText(value: unknown): string | undefined {
+  const direct = asString(value);
+  if (direct) return direct;
+  const record = asRecord(value);
+  return firstString(record.text, record.label, record.title, record.titulo);
+}
+
 function normalizeNavbar(
   raw: unknown,
   _uiById: Record<number, UiElementAsset>,
   pageTitle?: string,
 ): LandingNavbar {
   const record = readContentContainer(raw);
+  const brandRecord = asRecord(record.brand);
   const logo = asRecord(record.logo);
   const links = asArray(record.links ?? record.items ?? record.menu)
     .map((item) => linkFrom(item))
@@ -541,6 +536,9 @@ function normalizeNavbar(
   return {
     brand:
       firstString(
+        brandRecord.label,
+        brandRecord.title,
+        brandRecord.name,
         record.brand,
         record.title,
         record.titulo,
@@ -549,11 +547,27 @@ function normalizeNavbar(
       ) ?? "Corazón Migrante",
     tagline: firstString(record.tagline, record.subtitle, record.subtitulo),
     logoIdUi:
-      firstString(record.logoIdUi, record.logo_id_ui, logo.id_ui, logo.idUi) ??
-      null,
+      firstString(
+        record.logoIdUi,
+        record.logo_id_ui,
+        logo.id_ui,
+        logo.idUi,
+        brandRecord.icon,
+      ) ?? null,
     links,
-    cta: linkFrom(record.cta ?? record.primaryCta ?? record.primary_cta),
-    adminCta: linkFrom(record.adminCta ?? record.admin_cta),
+    cta: linkFrom(
+      record.cta_sign_up ??
+        record.ctaSignUp ??
+        record.cta ??
+        record.primaryCta ??
+        record.primary_cta,
+    ),
+    adminCta: linkFrom(
+      record.cta_login ??
+        record.ctaLogin ??
+        record.adminCta ??
+        record.admin_cta,
+    ),
   };
 }
 
@@ -567,6 +581,7 @@ function normalizeHero(
     record.title,
     record.titulo,
     record.titulo_principal,
+    record.title_line_1,
     record.heading,
     pageTitle,
   );
@@ -574,15 +589,17 @@ function normalizeHero(
     record.subtitle,
     record.subtitulo,
     record.subtitulo_principal,
+    record.title_line_2,
     record.parrafo_2_0,
-    record.description,
-    record.descripcion,
     record.text,
   );
   const description =
+    record.lead ??
     record.descriptionList ??
     record.description_list ??
     record.descripcion_lista ??
+    record.description ??
+    record.descripcion ??
     record.bullets ??
     record.lista ??
     record.puntos;
@@ -592,11 +609,11 @@ function normalizeHero(
   );
   if (!title && !subtitle && !image?.src) return undefined;
   return {
-    badge: firstString(record.badge, record.kicker, record.etiqueta),
+    badge: textFromIconText(record.badge ?? record.kicker ?? record.etiqueta),
     eyebrow: firstString(record.eyebrow, record.preTitulo, record.pretitulo),
     title,
     subtitle,
-    description: Array.isArray(description)
+    description: Array.isArray(parseJsonMaybe(description))
       ? asStringArray(description)
       : asString(description),
     primaryCta: linkFrom(
