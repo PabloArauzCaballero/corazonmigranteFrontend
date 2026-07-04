@@ -44,8 +44,7 @@ export function EditorialArticleCard({ resource, priority = false }: { resource:
               {resource.readTimeLabel}
             </span>
           </div>
-          <Link href={`/biblioteca/${resource.slug}`} className="inline-flex items-center gap-2 text-sm font-bold text-teal-800 underline-offset-4 hover:underline">
-            Leer recurso <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          <Link href={`/biblioteca/recurso?slug=${encodeURIComponent(resource.slug)}`} className="inline-flex items-center gap-2 text-sm font-bold text-teal-800 underline-offset-4 hover:underline">            Leer recurso <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
       </div>
