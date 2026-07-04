@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import { clearClientSession, persistClientSession, readClientSession } from "@/shared/auth/cookies";
 import type { NormalizedSession } from "@/shared/auth/session";
 
@@ -14,13 +14,8 @@ type SessionContextValue = {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSessionState] = useState<NormalizedSession | null>(null);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    setSessionState(readClientSession());
-    setIsReady(true);
-  }, []);
+  const [session, setSessionState] = useState<NormalizedSession | null>(() => readClientSession());
+  const isReady = true;
 
   const value = useMemo<SessionContextValue>(
     () => ({

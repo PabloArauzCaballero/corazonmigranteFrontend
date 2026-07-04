@@ -7,14 +7,19 @@
     "node": ">=20.18.0"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev-auto-port.mjs",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/start.mjs",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "test:smoke": "tsx tests/smoke/static-smoke.ts",
-    "test:e2e": "playwright test"
+    "test": "jest --passWithNoTests",
+    "test:unit": "jest tests/unit --runInBand --forceExit",
+    "test:integration:backend": "jest tests/integration/backend-contract.test.ts --runInBand --forceExit",
+    "test:ci": "yarn lint && yarn typecheck && yarn test:unit && yarn test:smoke",
+    "test:all": "yarn test:ci && yarn test:integration:backend",
+    "dev:4173": "next dev -p 4173"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -27,7 +32,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.561.0",
-    "next": "^15.5.9",
+    "next": "15.5.9",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.68.0",
@@ -36,18 +41,27 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@playwright/test": "^1.57.0",
+    "@next/eslint-plugin-next": "15.5.9",
     "@tailwindcss/forms": "^0.5.11",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.39.2",
     "eslint-config-next": "^15.5.9",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "postcss": "^8.5.6",
     "prettier": "^3.7.4",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "yarn@4.9.2"
 }

@@ -1,26 +1,37 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { listAppointmentRequests, type AppointmentRequestRow } from "@/features/therapy/therapy.api";
+import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { DataTable } from "@/shared/ui/data-table";
+import { DataTable, PaginationBar } from "@/shared/ui/data-table";
+import { ErrorState, LoadingState } from "@/shared/ui/state";
 
-const requests = [
-  { id: "s-1", paciente: "Paciente Demo", servicio: "Orientación inicial", fecha: "2026-07-02 15:00", estado: "solicitada" },
-  { id: "s-2", paciente: "Paciente Demo 2", servicio: "Acompañamiento", fecha: "2026-07-03 10:00", estado: "pendiente" }
-];
+const PAGE_SIZE = 20;
 
 export function RequestsTable() {
-  return (
-    <DataTable
-      data={requests}
-      getRowKey={(row) => row.id}
-      columns={[
-        { key: "paciente", header: "Paciente", render: (row) => <span className="font-semibold">{row.paciente}</span> },
-        { key: "servicio", header: "Servicio", render: (row) => row.servicio },
-        { key: "fecha", header: "Fecha", render: (row) => row.fecha },
-        { key: "estado", header: "Estado", render: (row) => <Badge variant="warning">{row.estado}</Badge> },
-        { key: "acciones", header: "Acciones", render: () => <Button size="sm" variant="outline">Revisar</Button> }
-      ]}
-    />
-  );
+  const [page, setPage] = useState(1);
+  const query = useQuery({ queryKey: ["appointment-requests", { page, pageSize: PAGE_SIZE }], queryFn: () => listAppointmentRequests({ page, pageSize: PAGE_SIZE }) });
+
+  if (query.isLoading) return <LoadingState title="Consultando solicitudes en el backend" />;
+  if (query.isError) return <ErrorState title="No se pudieron cargar las solicitudes" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
+
+  return query.data ? (
+    <div className="grid gap-4">
+      <DataTable<AppointmentRequestRow>
+        data={query.data.items}
+        getRowKey={(row) => row.id}
+        columns={[
+          { key: "patient", header: "Paciente", render: (row) => <span className="font-semibold">{row.patient}</span> },
+          { key: "service", header: "Servicio", render: (row) => row.service },
+          { key: "date", header: "Fecha", render: (row) => row.date },
+          { key: "status", header: "Estado", render: (row) => <Badge variant={row.status === "pendiente" ? "warning" : "secondary"}>{row.status}</Badge> },
+          { key: "actions", header: "Acciones", render: () => <Button size="sm" variant="outline">Revisar</Button> }
+        ]}
+      />
+      <PaginationBar page={query.data.page} totalPages={query.data.totalPages} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(query.data.totalPages, current + 1))} />
+    </div>
+  ) : null;
 }

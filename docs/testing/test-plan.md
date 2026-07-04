@@ -1,24 +1,33 @@
 # Plan de pruebas
 
-## Comandos
+## Unitarias
 ```bash
-npm install
-npm run lint
-npm run typecheck
-npm run build
-npm run test:smoke
+yarn test:unit
 ```
 
-## Smoke actual
-`npm run test:smoke` valida existencia de rutas, documentación y archivos críticos.
+Cubren:
+- normalización de sesión y roles backend/frontend;
+- cliente API con bearer token real de sesión;
+- normalización de respuestas paginadas;
+- bloqueo de fixtures/mocks de negocio dentro de `src`.
 
-## Playwright
-Se incluye configuración base y test e2e mínimo. Para ejecutarlo:
+## CI local
 ```bash
-npm run dev
-npx playwright install chromium
-npm run test:e2e
+yarn test:ci
 ```
 
-## PENDIENTE_CM
-Con backend real, agregar pruebas de login, permisos, filtros server-side, booking y errores 401/403/422.
+Ejecuta lint, typecheck, unitarias y smoke estático.
+
+## Integración backend real
+```bash
+BACKEND_INTEGRATION_BASE_URL=http://localhost:3000 yarn test:integration:backend
+```
+
+Esta prueba falla si no se configura backend real. No usa mockups.
+
+Valida:
+- `/api/v1/health`;
+- `/api/v1/therapy/products`;
+- `/api/v1/booking/availability` con parámetros inválidos, esperando validación real del backend;
+- `POST /api/v1/appointments` sin JWT, esperando 401/403 para confirmar que booking no es público;
+- login inválido contra backend.

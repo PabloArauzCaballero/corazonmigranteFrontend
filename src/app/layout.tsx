@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { AppProviders } from "@/app/providers";
 import "@/app/globals.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: {
     default: "Corazón Migrante",

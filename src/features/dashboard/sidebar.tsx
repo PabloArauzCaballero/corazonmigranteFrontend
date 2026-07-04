@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Files, HeartPulse, Home, LayoutDashboard, LogOut, Package, ReceiptText, UserCog, UserRound, UsersRound } from "lucide-react";
+import { BookOpen, CalendarDays, Files, HeartPulse, Home, LayoutDashboard, LogOut, Package, ReceiptText, UserCog, UserRound, UsersRound } from "lucide-react";
 import { clearClientSession } from "@/shared/auth/cookies";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -16,22 +16,26 @@ export type SidebarItem = {
 export const patientNav: SidebarItem[] = [
   { href: "/paciente", label: "Resumen", icon: Home },
   { href: "/paciente/citas", label: "Mis citas", icon: CalendarDays },
+  { href: "/paciente/booking", label: "Reservar cita", icon: HeartPulse },
   { href: "/paciente/perfil", label: "Perfil", icon: UserRound }
 ];
 
 export const therapistNav: SidebarItem[] = [
   { href: "/terapeuta", label: "Resumen", icon: LayoutDashboard },
   { href: "/terapeuta/agenda", label: "Agenda", icon: CalendarDays },
+  { href: "/terapeuta/booking", label: "Agendar paciente", icon: HeartPulse },
   { href: "/terapeuta/perfil", label: "Perfil", icon: UserRound }
 ];
 
 export const adminNav: SidebarItem[] = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard },
   { href: "/admin/solicitudes", label: "Solicitudes", icon: CalendarDays },
+  { href: "/admin/booking", label: "Nueva cita", icon: HeartPulse },
   { href: "/admin/usuarios", label: "Usuarios", icon: UsersRound },
   { href: "/admin/productos/enfoques", label: "Enfoques", icon: HeartPulse },
   { href: "/admin/productos/servicios", label: "Servicios", icon: Package },
   { href: "/admin/vistas-publicas", label: "Vistas públicas", icon: Files },
+  { href: "/admin/contenido/editorial", label: "Contenido", icon: BookOpen },
   { href: "/admin/contabilidad", label: "Contabilidad", icon: ReceiptText },
   { href: "/admin/contabilidad/cuentas", label: "Cuentas", icon: UserCog }
 ];

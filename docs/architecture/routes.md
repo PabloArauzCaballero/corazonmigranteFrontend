@@ -4,23 +4,26 @@
 - `/`: landing.
 - `/login`: login paciente.
 - `/registro`: registro paciente.
-- `/booking`: solicitud de cita pública.
+- `/booking`: puerta de acceso. No muestra formulario público; redirige conceptualmente según sesión.
 - `/privacidad`: política de privacidad base.
 - `/terminos`: términos base.
-- `/admin/login`: login administrativo/terapeuta.
+- `/admin/login`: login administrativo.
 
 ## Paciente
 - `/paciente`: dashboard paciente.
+- `/paciente/booking`: reserva de cita para el paciente autenticado.
 - `/paciente/citas`: citas del paciente.
 - `/paciente/perfil`: perfil del paciente.
 
 ## Terapeuta
 - `/terapeuta`: dashboard terapeuta.
 - `/terapeuta/agenda`: agenda asignada.
+- `/terapeuta/booking`: preparación de cita para paciente concreto. Requiere contrato backend pendiente.
 - `/terapeuta/perfil`: perfil profesional.
 
 ## Admin
 - `/admin`: dashboard operativo.
+- `/admin/booking`: preparación de cita para paciente concreto. Requiere contrato backend pendiente.
 - `/admin/solicitudes`: solicitudes de cita.
 - `/admin/usuarios`: usuarios.
 - `/admin/productos/enfoques`: enfoques terapéuticos.

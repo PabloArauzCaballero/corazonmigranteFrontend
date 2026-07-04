@@ -1,21 +1,19 @@
-import { isDemoMode } from "@/config/env";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { normalizeSession, type LegacySessionInput, type NormalizedSession } from "@/shared/auth/session";
 import type { LoginInput, RegisterPatientInput } from "@/features/auth/auth.schemas";
 
-export async function login(input: LoginInput): Promise<NormalizedSession> {
-  if (isDemoMode) {
-    return normalizeSession({
-      id: "demo-user",
-      full_name: input.roleHint === "PACIENTE" ? "Paciente Demo" : "Equipo Demo",
-      email: input.email,
-      role: input.roleHint ?? "PACIENTE",
-      token: "demo-token"
-    });
-  }
+type BackendLoginResponse = LegacySessionInput | { accessToken?: string; token?: string; user?: LegacySessionInput };
 
-  const response = await apiRequest<LegacySessionInput>(ENDPOINTS.auth.login, {
+function splitFullName(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const firstName = parts.shift() ?? fullName.trim();
+  const lastName = parts.join(" ") || "No especificado";
+  return { firstName, lastName };
+}
+
+export async function login(input: LoginInput): Promise<NormalizedSession> {
+  const response = await apiRequest<BackendLoginResponse>(ENDPOINTS.auth.login, {
     method: "POST",
     body: {
       email: input.email,
@@ -28,18 +26,19 @@ export async function login(input: LoginInput): Promise<NormalizedSession> {
 }
 
 export async function registerPatient(input: RegisterPatientInput) {
-  if (isDemoMode) {
-    return { ok: true };
-  }
-
-  return apiRequest<{ ok: boolean }>(ENDPOINTS.auth.registerPatient, {
+  const { firstName, lastName } = splitFullName(input.fullName);
+  return apiRequest<{ id: string; email: string; status: string }>(ENDPOINTS.auth.registerPatient, {
     method: "POST",
     body: {
-      nombre: input.fullName,
+      firstName,
+      lastName,
       email: input.email,
       password: input.password,
-      pais_actual: input.country,
-      motivo_consulta: input.reason
+      country: input.country,
+      city: input.city,
+      phone: input.phone,
+      occupation: input.occupation,
+      reason: input.reason
     },
     auth: false
   });

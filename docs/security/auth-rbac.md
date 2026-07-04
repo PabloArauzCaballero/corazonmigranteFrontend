@@ -1,20 +1,26 @@
 # Auth y RBAC
 
-## Roles normalizados
+## Roles frontend canónicos
 - `PACIENTE`
 - `TERAPEUTA`
 - `ADMIN`
 - `SUPER_ADMIN`
 - `CONTADOR`
 
-## Permisos centralizados
-Ver `src/shared/auth/roles.ts`.
+## Roles backend mapeados
+- `PATIENT` -> `PACIENTE`
+- `THERAPIST` -> `TERAPEUTA`
+- `ACCOUNTANT` -> `CONTADOR`
+- `ADMIN` -> `ADMIN`
+- `SUPER_ADMIN` -> `SUPER_ADMIN`
 
-## Reglas
-- Paciente no accede a `/admin` ni `/terapeuta`.
-- Terapeuta accede a `/terapeuta` y, de forma temporal, al layout admin solo si el negocio lo conserva para solicitudes asignadas.
-- Contabilidad debe requerir permiso `accounting:read` o `accounting:manage`.
-- Rol incorrecto produce `403` humano.
+## Booking
+- `PACIENTE` tiene `booking:create` y puede usar `/paciente/booking`.
+- `ADMIN`, `SUPER_ADMIN` y `TERAPEUTA` tienen `booking:create_for_patient`, pero la acción queda bloqueada por falta de endpoint backend definitivo.
+- `CONTADOR` no puede crear citas.
 
-## RIESGO_CM
-El backend anterior mezcla flags como `is_admin`, `is_super_admin`, `is_terapeuta`, `is_accounter`. La normalización está centralizada para evitar inconsistencias.
+## Reglas de seguridad
+- El frontend no envía `actorUserId`.
+- El booking de paciente no envía `patientUserId`; el backend toma el paciente desde el JWT.
+- No hay booking anónimo.
+- Las pruebas de integración verifican que `POST /api/v1/appointments` no permita reservas anónimas.

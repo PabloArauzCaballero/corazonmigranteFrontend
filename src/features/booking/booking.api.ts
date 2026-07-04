@@ -1,44 +1,98 @@
-import { isDemoMode } from "@/config/env";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-import type { BookingInput } from "@/features/booking/booking.schemas";
+import { ApiError } from "@/shared/api/errors";
+import { buildScheduledStartAt, type ManagedBookingInput, type PatientBookingInput } from "@/features/booking/booking.schemas";
+import { buildQueryString } from "@/shared/api/query";
+import { getNumber, getString, isRecord, normalizePaginatedResponse } from "@/shared/api/normalizers";
 
-export type BookingBootstrap = {
-  services: Array<{ id: string; name: string; description: string }>;
-  availability: Array<{ date: string; times: string[] }>;
+export type BookingProduct = {
+  id: string;
+  name: string;
+  description: string;
+  durationMinutes: number;
+  price: number;
+  currency: string;
 };
 
-export async function getBookingBootstrap(): Promise<BookingBootstrap> {
-  if (isDemoMode) return demoBookingBootstrap;
-  return apiRequest<BookingBootstrap>(ENDPOINTS.therapy.bookingBootstrap, { auth: false });
+export type AvailabilitySlot = {
+  scheduledStartAt: string;
+  scheduledEndAt?: string;
+  label: string;
+};
+
+function unwrapPayload(payload: unknown) {
+  if (isRecord(payload) && "data" in payload) return payload.data;
+  return payload;
 }
 
-export async function createBooking(input: BookingInput) {
-  if (isDemoMode) return { ok: true, id: "demo-booking" };
-  return apiRequest<{ ok: boolean; id: string }>(ENDPOINTS.therapy.createAppointment, {
+export function mapBookingProduct(item: unknown, index: number): BookingProduct {
+  const record = isRecord(item) ? item : {};
+  return {
+    id: getString(record, ["id", "productId", "product_id", "producto_id", "uuid"], `producto-${index + 1}`),
+    name: getString(record, ["name", "nombre", "title", "titulo"], "Servicio sin nombre"),
+    description: getString(record, ["description", "descripcion", "shortDescription", "descripcion_corta"], ""),
+    durationMinutes: getNumber(record, ["durationMinutes", "duration_minutes", "duracion_minutos"], 50),
+    price: getNumber(record, ["price", "precio", "baseSessionPrice"], 0),
+    currency: getString(record, ["currency", "moneda"], "BOB")
+  };
+}
+
+export function mapAvailabilitySlot(item: unknown, index: number): AvailabilitySlot {
+  const record = isRecord(item) ? item : {};
+  const scheduledStartAt = getString(record, ["scheduledStartAt", "startAt", "start", "fecha_hora", "dateTime", "datetime"], `slot-${index + 1}`);
+  return {
+    scheduledStartAt,
+    scheduledEndAt: getString(record, ["scheduledEndAt", "endAt", "end"], ""),
+    label: getString(record, ["label", "time", "hora"], scheduledStartAt)
+  };
+}
+
+function normalizeAvailability(payload: unknown): AvailabilitySlot[] {
+  const source = unwrapPayload(payload);
+  if (Array.isArray(source)) return source.map(mapAvailabilitySlot);
+  if (isRecord(source)) {
+    const candidates = [source.items, source.slots, source.availability, source.disponibilidad, source.data];
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) return candidate.map(mapAvailabilitySlot);
+    }
+  }
+  return [];
+}
+
+export async function listBookingProducts() {
+  const payload = await apiRequest<unknown>(`${ENDPOINTS.products.productsPublicList}${buildQueryString({ page: 1, pageSize: 100 })}`, { auth: false });
+  return normalizePaginatedResponse(payload, mapBookingProduct, { page: 1, pageSize: 100 }).items;
+}
+
+export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
+  const query = buildQueryString({
+    therapistUserId: input.therapistUserId,
+    productId: input.productId,
+    from: input.from,
+    to: input.to,
+    timezone: input.timezone
+  });
+  const payload = await apiRequest<unknown>(`${ENDPOINTS.booking.availability}${query}`, { auth: false });
+  return normalizeAvailability(payload);
+}
+
+export async function createPatientBooking(input: PatientBookingInput) {
+  return apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createMine, {
     method: "POST",
     body: {
-      nombre: input.fullName,
-      email: input.email,
-      pais_actual: input.country,
-      producto_id: input.serviceId,
-      fecha_preferida: input.preferredDate,
-      hora_preferida: input.preferredTime,
-      notas: input.notes
+      therapistUserId: input.therapistUserId,
+      productId: input.productId,
+      scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
+      timezone: input.timezone,
+      notesForTherapist: input.notesForTherapist
     },
-    auth: false
+    auth: true
   });
 }
 
-export const demoBookingBootstrap: BookingBootstrap = {
-  services: [
-    { id: "orientacion", name: "Orientación inicial", description: "Primer espacio para entender la necesidad y orientar el proceso." },
-    { id: "acompanamiento", name: "Acompañamiento psicológico", description: "Sesiones de continuidad según disponibilidad profesional." },
-    { id: "familia", name: "Orientación familiar", description: "Apoyo para procesos de adaptación y vínculos familiares." }
-  ],
-  availability: [
-    { date: "2026-07-02", times: ["09:00", "15:00", "18:30"] },
-    { date: "2026-07-03", times: ["10:00", "16:00"] },
-    { date: "2026-07-06", times: ["08:30", "14:00", "19:00"] }
-  ]
-};
+export async function createManagedBooking(input: ManagedBookingInput) {
+  throw new ApiError(
+    `PENDIENTE_BACKEND_CM: el frontend recibió patientUserId=${input.patientUserId}, pero el backend actual solo permite POST ${ENDPOINTS.appointments.createMine} con rol PATIENT y toma patientUserId desde el JWT. Se requiere ${ENDPOINTS.appointments.createForPatient} o contrato equivalente para ADMIN/THERAPIST.`,
+    501
+  );
+}

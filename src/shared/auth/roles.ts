@@ -12,15 +12,16 @@ export const PERMISSIONS = [
   "accounting:manage",
   "profile:read",
   "profile:update",
-  "booking:create"
+  "booking:create",
+  "booking:create_for_patient"
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   PACIENTE: ["profile:read", "profile:update", "booking:create"],
-  TERAPEUTA: ["profile:read", "profile:update", "therapy:read_assigned"],
-  ADMIN: ["admin:read", "users:manage", "therapy:manage", "products:manage", "public_content:manage"],
+  TERAPEUTA: ["profile:read", "profile:update", "therapy:read_assigned", "booking:create_for_patient"],
+  ADMIN: ["admin:read", "users:manage", "therapy:manage", "products:manage", "public_content:manage", "booking:create_for_patient"],
   SUPER_ADMIN: [
     "admin:read",
     "users:manage",
@@ -30,7 +31,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "accounting:read",
     "accounting:manage",
     "profile:read",
-    "profile:update"
+    "profile:update",
+    "booking:create_for_patient"
   ],
   CONTADOR: ["admin:read", "accounting:read", "accounting:manage", "profile:read", "profile:update"]
 };

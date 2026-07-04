@@ -3,8 +3,14 @@ import { join } from "node:path";
 
 const root = process.cwd();
 const requiredFiles = [
-  "src/app/(public)/page.tsx",
+  "src/app/page.tsx",
+  "src/features/public-view/public-view.api.ts",
+  "src/features/public-view/public-view.normalizer.ts",
+  "src/features/public-view/public-landing-page.tsx",
   "src/app/(public)/booking/page.tsx",
+  "src/app/paciente/booking/page.tsx",
+  "src/app/admin/booking/page.tsx",
+  "src/app/terapeuta/booking/page.tsx",
   "src/app/paciente/page.tsx",
   "src/app/terapeuta/page.tsx",
   "src/app/admin/page.tsx",
@@ -31,6 +37,20 @@ if (!pending.includes("PENDIENTE_CM")) {
 const endpoints = readFileSync(join(root, "src/shared/api/endpoints.ts"), "utf8");
 if (endpoints.includes('"api/') || endpoints.includes("'api/")) {
   throw new Error("Hay endpoints sin slash inicial.");
+}
+
+const publicViewApi = readFileSync(join(root, "src/features/public-view/public-view.api.ts"), "utf8");
+for (const expected of [
+  "/api/v1/public-views/:id",
+  "/api/v1/public-views/:id/elements/:code",
+  "/api/v1/public/pages/by-id/:id",
+  "/api/v1/public/pages/:slug",
+  "/api/v1/public/pages/:slug/elements/:code",
+  "/api/v1/public/page-elements/"
+]) {
+  if (!publicViewApi.includes(expected)) {
+    throw new Error(`Falta endpoint público configurable: ${expected}`);
+  }
 }
 
 console.log("Smoke estático OK: rutas, documentación y endpoints críticos existen.");

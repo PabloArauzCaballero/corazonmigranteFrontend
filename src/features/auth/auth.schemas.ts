@@ -13,6 +13,9 @@ export const registerPatientSchema = z.object({
   email: z.string().email("Ingresa un correo válido."),
   password: z.string().min(8, "Usa al menos 8 caracteres."),
   country: z.string().min(2, "Indica tu país actual."),
+  city: z.string().optional(),
+  phone: z.string().optional(),
+  occupation: z.string().optional(),
   reason: z.string().min(10, "Cuéntanos brevemente el motivo de consulta.")
 });
 

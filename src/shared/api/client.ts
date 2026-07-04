@@ -11,11 +11,45 @@ function apiBaseUrl() {
   if (!env.NEXT_PUBLIC_API_BASE_URL) {
     throw new ApiError("NEXT_PUBLIC_API_BASE_URL no está configurado. Revisa .env.local.", 500);
   }
-  return env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, "");
+
+  const baseUrl = env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, "");
+
+  if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+    const currentOrigin = window.location.origin.replace(/\/$/, "");
+    const isLocalFrontendOrigin = currentOrigin === baseUrl && /localhost|127\.0\.0\.1/.test(window.location.hostname);
+
+    if (isLocalFrontendOrigin) {
+      throw new ApiError(
+        "NEXT_PUBLIC_API_BASE_URL está apuntando al frontend. Este proyecto corre por defecto en 4173; configura el backend en otro puerto, por ejemplo NEXT_PUBLIC_API_BASE_URL=http://localhost:3000.",
+        500
+      );
+    }
+  }
+
+  return baseUrl;
 }
 
 function normalizePath(path: string) {
   return path.startsWith("/") ? path : `/${path}`;
+}
+
+function extractErrorMessage(payload: unknown) {
+  if (typeof payload === "object" && payload !== null && "message" in payload) {
+    const message = (payload as { message: unknown }).message;
+    if (Array.isArray(message)) return message.join(" ");
+    if (typeof message === "string") return message;
+  }
+
+  if (typeof payload === "object" && payload !== null && "data" in payload) {
+    const data = (payload as { data: unknown }).data;
+    if (typeof data === "object" && data !== null && "message" in data) {
+      const message = (data as { message: unknown }).message;
+      if (Array.isArray(message)) return message.join(" ");
+      if (typeof message === "string") return message;
+    }
+  }
+
+  return "Error de comunicación con el servidor";
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -47,8 +81,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const payload: unknown = contentType.includes("application/json") ? await response.json().catch(() => null) : await response.text().catch(() => null);
 
   if (!response.ok) {
-    const message = typeof payload === "object" && payload !== null && "message" in payload ? String((payload as { message: unknown }).message) : "Error de comunicación con el servidor";
-    throw new ApiError(message, response.status, payload);
+    throw new ApiError(extractErrorMessage(payload), response.status, payload);
   }
 
   return payload as T;
