@@ -22,15 +22,6 @@ function PublicViewLoading() {
   );
 }
 
-
-function publicFriendlyMessage(message: string) {
-  if (/NEXT_PUBLIC|endpoint|fetch failed|ECONN|stack|backend|servidor|service unavailable|network/i.test(message)) {
-    return "La página no está disponible en este momento. Intenta nuevamente en unos segundos.";
-  }
-
-  return message;
-}
-
 function PublicViewError({
   message,
   endpoint,
@@ -53,7 +44,7 @@ function PublicViewError({
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700">Página no disponible</p>
               <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">No se pudo cargar la página principal.</h1>
-              <p className="mt-5 text-base leading-7 text-[#625e57]">{publicFriendlyMessage(message)}</p>
+              <p className="mt-5 text-base leading-7 text-[#625e57]">{message}</p>
               {process.env.NODE_ENV !== "production" && status ? <p className="mt-3 text-sm font-semibold text-[#625e57]">HTTP {status}</p> : null}
               {process.env.NODE_ENV !== "production" ? (
                 <div className="mt-5 break-all rounded-2xl border border-[#e3d8cb] bg-[#fbf8f3] p-4 font-mono text-xs text-[#625e57]">{endpoint}</div>

@@ -34,7 +34,7 @@ export const adminNav: SidebarItem[] = [
   { href: "/admin/usuarios", label: "Usuarios", icon: UsersRound },
   { href: "/admin/productos/enfoques", label: "Enfoques", icon: HeartPulse },
   { href: "/admin/productos/servicios", label: "Servicios", icon: Package },
-  { href: "/admin/vistas-publicas", label: "Vistas públicas", icon: Files },
+  { href: "/biblioteca", label: "Vistas públicas", icon: Files },
   { href: "/admin/contenido/editorial", label: "Contenido", icon: BookOpen },
   { href: "/admin/contabilidad", label: "Contabilidad", icon: ReceiptText },
   { href: "/admin/contabilidad/cuentas", label: "Cuentas", icon: UserCog }

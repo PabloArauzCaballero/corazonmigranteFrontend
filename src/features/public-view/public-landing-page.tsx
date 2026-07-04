@@ -1,126 +1,92 @@
 import Link from "next/link";
-import { ArrowRight, BookOpenText, CheckCircle2, HeartHandshake, MessageCircle, Phone, ShieldCheck } from "lucide-react";
-import { env } from "@/config/env";
+import {
+  ArrowRight,
+  BookOpenText,
+  CheckCircle2,
+  HeartHandshake,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { fileServer } from "@/config/file-server";
-import { contactHref, normalizeContactPhone } from "@/features/landing/contact";
-import type { LandingLink, LandingSection, NormalizedPublicLanding } from "@/features/public-view/public-view.types";
-import { resolveLandingImage, resolveLogoUrl } from "@/features/public-view/public-view.normalizer";
+import {
+  contactHref,
+  formatContactPhone,
+  resolveContactPhone,
+} from "@/features/landing/contact";
+import type {
+  LandingImage,
+  LandingLink,
+  LandingSection,
+  NormalizedPublicLanding,
+} from "@/features/public-view/public-view.types";
+import {
+  resolveLandingImage,
+  resolveLogoUrl,
+} from "@/features/public-view/public-view.normalizer";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 
-const forbiddenPublicNav = /proceso|process|agendar|booking|cita/i;
+const hiddenPublicLabels = /^(proceso|agendar|booking|cita|citas)$/i;
+const hiddenPublicHrefs = /(booking|paciente|terapeuta|admin|#proceso)/i;
+const sectionTone = [
+  "bg-[#eef6f3] text-primary",
+  "bg-[#f6edf0] text-[#87485e]",
+  "bg-[#f5efe4] text-[#7a5830]",
+];
 
 function safeHref(link?: LandingLink, fallback = "#") {
   return link?.href || fallback;
 }
 
-function actionHref(link?: LandingLink, fallback = "/login") {
-  if (!link?.action) return safeHref(link, fallback);
-  if (/login|ingresar|agendar|booking/i.test(link.action)) return "/login";
-  if (/register|registro|signup/i.test(link.action)) return "/registro";
-  if (/admin/i.test(link.action)) return "/admin/login";
+function actionHref(link?: LandingLink, fallback = "/registro") {
+  const action = `${link?.action ?? ""} ${link?.label ?? ""} ${link?.href ?? ""}`;
+  if (/login|ingresar|sesion|sesión/i.test(action)) return "/login";
+  if (/register|registro|signup|cuenta/i.test(action)) return "/registro";
+  if (/biblioteca|blog|recurso/i.test(action)) return "/biblioteca";
+  if (/contact|contacto|whatsapp|telefono|teléfono/i.test(action))
+    return link?.href || fallback;
+  if (/agendar|booking|cita/i.test(action)) return "/login";
   return safeHref(link, fallback);
 }
 
-function isExternal(href?: string) {
-  return !!href && /^https?:\/\//i.test(href);
-}
+function cleanNavLinks(landing: NormalizedPublicLanding) {
+  const configured = landing.navbar.links.filter((item) => {
+    const label = item.label?.trim();
+    const href = item.href?.trim() ?? "";
+    if (!label) return false;
+    if (hiddenPublicLabels.test(label)) return false;
+    if (hiddenPublicHrefs.test(href)) return false;
+    return true;
+  });
 
-function publicNavLinks(landing: NormalizedPublicLanding) {
-  const configured = landing.navbar.links
-    .filter((link) => !forbiddenPublicNav.test(`${link.label} ${link.href ?? ""} ${link.action ?? ""}`))
-    .slice(0, 4);
+  const inferred = landing.sections
+    .filter((section) => section.title || section.label)
+    .map((section) => ({
+      label: section.label || section.title || section.id,
+      href: `#${section.id}`,
+    }))
+    .filter((item) => !hiddenPublicLabels.test(item.label));
 
-  const hasLibrary = configured.some((link) => /biblioteca/i.test(`${link.label} ${link.href ?? ""}`));
-  return hasLibrary ? configured : [...configured, { label: "Biblioteca", href: "/biblioteca" }];
-}
-
-function ContactLink({ phone, compact = false }: { phone?: string; compact?: boolean }) {
-  const normalizedPhone = normalizeContactPhone(phone);
-  const href = contactHref(normalizedPhone);
-  if (!normalizedPhone || !href) return null;
-
-  return (
-    <a
-      className={compact
-        ? "inline-flex shrink-0 items-center gap-2 rounded-full border border-[#173c35]/10 bg-white/76 px-4 py-2 text-xs font-bold text-[#173c35]"
-        : "inline-flex items-center gap-2 rounded-full border border-[#173c35]/10 bg-white/78 px-3 py-2 text-xs font-bold text-[#173c35] shadow-sm"}
-      href={href}
-      target={isExternal(href) ? "_blank" : undefined}
-      rel={isExternal(href) ? "noreferrer" : undefined}
-    >
-      <Phone className="h-3.5 w-3.5" aria-hidden="true" />
-      {normalizedPhone}
-    </a>
+  const links = configured.length > 0 ? configured : inferred;
+  const hasLibrary = links.some(
+    (item) =>
+      /biblioteca|recursos/i.test(item.label) || item.href === "/biblioteca",
   );
+  return [
+    ...links.slice(0, 3),
+    ...(hasLibrary ? [] : [{ label: "Biblioteca", href: "/biblioteca" }]),
+  ];
 }
 
-function ContactButton({ phone, className = "" }: { phone?: string; className?: string }) {
-  const href = contactHref(phone);
-  if (!href) return null;
-
-  return (
-    <Button asChild className={`rounded-full ${className}`} variant="outline">
-      <a href={href} target={isExternal(href) ? "_blank" : undefined} rel={isExternal(href) ? "noreferrer" : undefined}>
-        <MessageCircle className="h-4 w-4" aria-hidden="true" /> Contactar
-      </a>
-    </Button>
-  );
-}
-
-function PublicNavbar({ landing }: { landing: NormalizedPublicLanding }) {
-  const logo = resolveLogoUrl(landing.navbar, landing.uiById);
-  const links = publicNavLinks(landing);
-  const brand = landing.navbar.brand || landing.title || "Corazón Migrante";
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-[#173c35]/10 bg-[#fbf8f3]/92 backdrop-blur-2xl">
-      <div className="container flex min-h-[4.75rem] items-center justify-between gap-4 py-3">
-        <Link href="/" className="group flex min-w-0 items-center gap-3 transition-transform duration-200 motion-reduce:transition-none md:hover:-translate-y-0.5" aria-label="Ir al inicio">
-          <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-[#173c35]/10 bg-white shadow-sm transition group-hover:shadow-md">
-            {logo ? <img src={logo} alt={brand} className="h-full w-full object-contain p-1.5" /> : <HeartHandshake className="h-5 w-5 text-primary" aria-hidden="true" />}
-          </span>
-          <span className="truncate leading-tight">
-            <span className="block truncate text-[1.05rem] font-black tracking-[-0.02em] text-[#172b27]">{brand}</span>
-            {landing.navbar.tagline ? <span className="block truncate text-xs font-semibold text-[#766f66]">{landing.navbar.tagline}</span> : null}
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Navegación pública">
-          {links.map((item) => (
-            <Link className="inline-flex rounded-full px-1 text-sm font-semibold text-[#625e57] transition duration-200 hover:-translate-y-0.5 hover:text-primary motion-reduce:transition-none motion-reduce:hover:translate-y-0" href={safeHref(item)} key={`${item.label}-${item.href}`}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden items-center gap-2 md:flex">
-          <ContactLink phone={landing.phone} />
-          <ContactButton phone={landing.phone} className="px-4" />
-          <Button asChild className="rounded-full" variant="ghost">
-            <Link href="/login">Ingresar</Link>
-          </Button>
-          <Button asChild className="rounded-full px-5 shadow-[0_16px_40px_rgba(35,99,89,0.18)]">
-            <Link href={actionHref(landing.navbar.cta, "/registro")}>{landing.navbar.cta?.label || "Crear cuenta"}</Link>
-          </Button>
-        </div>
-      </div>
-
-      <nav className="container flex gap-2 overflow-x-auto pb-3 md:hidden" aria-label="Navegación pública móvil">
-        {links.map((item) => (
-          <Link className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#173c35]/10 bg-white/76 px-4 py-2 text-xs font-bold text-[#625e57] transition duration-200 active:scale-[0.98] motion-reduce:transition-none" href={safeHref(item)} key={`${item.label}-${item.href}-mobile`}>
-            {/biblioteca/i.test(`${item.label} ${item.href ?? ""}`) ? <BookOpenText className="h-3.5 w-3.5" aria-hidden="true" /> : null}
-            {item.label}
-          </Link>
-        ))}
-        <ContactButton phone={landing.phone} className="h-8 px-4 text-xs" />
-        <Link className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white" href="/login">
-          Ingresar
-        </Link>
-      </nav>
-    </header>
-  );
+function imageUrl(
+  image: LandingImage | undefined,
+  landing: NormalizedPublicLanding,
+  fallback?: string,
+) {
+  return resolveLandingImage(image, landing.uiById, fallback);
 }
 
 function TextBlock({ value }: { value?: string | string[] }) {
@@ -131,111 +97,322 @@ function TextBlock({ value }: { value?: string | string[] }) {
     return (
       <ul className="mt-7 grid gap-3 text-sm text-[#5f5b54] sm:grid-cols-2">
         {items.map((item) => (
-          <li className="inline-flex items-center gap-2 rounded-full border border-[#173c35]/10 bg-white/72 px-4 py-2 shadow-sm backdrop-blur" key={item}>
-            <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden="true" />
-            {item}
+          <li
+            className="flex items-start gap-2 rounded-2xl border border-[#eadfd4] bg-white/78 px-4 py-3 shadow-sm"
+            key={item}
+          >
+            <CheckCircle2
+              className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            <span>{item}</span>
           </li>
         ))}
       </ul>
     );
   }
-
-  return <p className="mt-5 max-w-2xl text-pretty text-base leading-8 text-[#625e57] md:text-lg">{value}</p>;
-}
-
-function EmptyPublicContent() {
   return (
-    <section className="container py-16">
-      <div className="mx-auto max-w-3xl rounded-[2rem] border border-[#e3d8cb] bg-white/82 p-8 text-center shadow-soft">
-        <ShieldCheck className="mx-auto h-9 w-9 text-primary" aria-hidden="true" />
-        <h1 className="mt-5 text-3xl font-black tracking-tight text-[#172b27]">Corazón Migrante</h1>
-        <p className="mt-3 text-sm leading-6 text-[#625e57]">La página pública estará disponible pronto.</p>
-      </div>
-    </section>
+    <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-[#625e57] md:text-xl">
+      {value}
+    </p>
   );
 }
 
-function HeroImage({ landing }: { landing: NormalizedPublicLanding }) {
-  const hero = landing.hero;
-  const title = hero?.title || landing.title || "Corazón Migrante";
-  const imageSrc = resolveLandingImage(hero?.image, landing.uiById, fileServer.landingHeroImageUrl || fileServer.authImageUrl);
+function PublicNavbar({
+  landing,
+  phone,
+}: {
+  landing: NormalizedPublicLanding;
+  phone?: string;
+}) {
+  const logo = resolveLogoUrl(landing.navbar, landing.uiById);
+  const links = cleanNavLinks(landing);
+  const brand = landing.navbar.brand || landing.title || "Corazón Migrante";
+  const formattedPhone = formatContactPhone(phone);
 
   return (
-    <div className="relative mx-auto w-full max-w-[34rem] lg:max-w-none">
-      <div className="absolute -inset-3 rounded-[2.4rem] bg-[#173c35]/5" aria-hidden="true" />
-      <div className="relative overflow-hidden rounded-[2.2rem] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(23,43,39,0.13)]">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-[#ded8cf] lg:aspect-[5/6]">
-          {imageSrc ? <img alt={hero?.image?.alt || title} className="absolute inset-0 h-full w-full object-cover" src={imageSrc} /> : null}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#102f2a]/82 via-[#102f2a]/20 to-transparent p-6 text-white md:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/70">{landing.navbar.brand || landing.title || "Corazón Migrante"}</p>
-            {hero?.image?.footerText ? <p className="mt-3 max-w-sm text-2xl font-black leading-tight tracking-tight md:text-3xl">{hero.image.footerText}</p> : null}
-          </div>
+    <header className="sticky top-0 z-50 border-b border-[#17372f]/10 bg-[#fbf8f3]/88 backdrop-blur-2xl">
+      <div className="container flex h-20 items-center justify-between gap-4">
+        <Link
+          href="/"
+          className="group flex min-w-0 items-center gap-3 font-bold"
+          aria-label="Ir al inicio"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#17372f]/10 bg-white shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
+            {logo ? (
+              <img
+                src={logo}
+                alt={brand}
+                className="h-full w-full object-contain p-1.5"
+              />
+            ) : (
+              <HeartHandshake
+                className="h-6 w-6 text-primary"
+                aria-hidden="true"
+              />
+            )}
+          </span>
+          <span className="truncate leading-tight text-[#172b27]">
+            {brand}
+            {landing.navbar.tagline ? (
+              <span className="block truncate text-xs font-medium text-[#6d675f]">
+                {landing.navbar.tagline}
+              </span>
+            ) : null}
+          </span>
+        </Link>
+
+        <nav
+          className="hidden items-center gap-7 lg:flex"
+          aria-label="Navegación pública"
+        >
+          {links.map((item) => (
+            <Link
+              className="relative text-sm font-semibold text-[#625e57] transition duration-300 hover:text-primary after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
+              href={safeHref(item)}
+              key={`${item.label}-${item.href}`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden items-center gap-2 md:flex">
+          {formattedPhone ? (
+            <a
+              className="hidden items-center gap-2 rounded-2xl border border-[#d9cec2] bg-white/70 px-4 py-2 text-sm font-semibold text-[#625e57] transition hover:bg-white xl:inline-flex"
+              href={contactHref(phone)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Phone className="h-4 w-4 text-primary" aria-hidden="true" />{" "}
+              {formattedPhone}
+            </a>
+          ) : null}
+          <Button asChild className="rounded-2xl" variant="ghost">
+            <Link href="/login">Ingresar</Link>
+          </Button>
+          <Button
+            asChild
+            className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.18)]"
+          >
+            <Link href={actionHref(landing.navbar.cta, "/registro")}>
+              {landing.navbar.cta?.label || "Crear cuenta"}
+            </Link>
+          </Button>
         </div>
       </div>
-    </div>
+
+      <nav
+        className="container flex gap-2 overflow-x-auto pb-3 md:hidden"
+        aria-label="Navegación pública móvil"
+      >
+        {links.map((item) => (
+          <Link
+            className="shrink-0 rounded-full border border-[#17372f]/10 bg-white/76 px-4 py-2 text-xs font-semibold text-[#625e57]"
+            href={safeHref(item)}
+            key={`${item.label}-${item.href}-mobile`}
+          >
+            {item.label}
+          </Link>
+        ))}
+        <Link
+          className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+          href="/login"
+        >
+          Ingresar
+        </Link>
+      </nav>
+    </header>
   );
 }
 
-function Hero({ landing }: { landing: NormalizedPublicLanding }) {
+function Hero({
+  landing,
+  phone,
+}: {
+  landing: NormalizedPublicLanding;
+  phone?: string;
+}) {
   const hero = landing.hero;
-  const title = hero?.title || landing.title;
-  const contact = contactHref(landing.phone);
-
-  if (!title && !hero?.subtitle) return <EmptyPublicContent />;
+  const heroImage = imageUrl(
+    hero?.image,
+    landing,
+    fileServer.landingHeroImageUrl || fileServer.authImageUrl,
+  );
+  const title = hero?.title || landing.title || "Corazón Migrante";
+  const formattedPhone = formatContactPhone(phone);
+  const contactUrl = contactHref(phone);
 
   return (
-    <section className="relative overflow-hidden bg-[#fbf8f3]">
-      <div className="pointer-events-none absolute left-[-18rem] top-[-20rem] h-[42rem] w-[42rem] rounded-full bg-primary/10 blur-3xl" />
-      <div className="container relative grid min-h-[calc(100vh-4.75rem)] gap-12 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-20">
-        <div className="max-w-3xl">
-          {hero?.badge || hero?.eyebrow ? (
-            <Badge variant="secondary" className="border border-[#173c35]/10 bg-white/76 px-4 py-2 text-primary shadow-sm">
-              {hero.badge || hero.eyebrow}
-            </Badge>
-          ) : null}
+    <section className="relative isolate overflow-hidden bg-[#fbf8f3]">
+      <div className="absolute left-[-20rem] top-[-18rem] -z-10 h-[42rem] w-[42rem] rounded-full bg-primary/14 blur-3xl" />
+      <div className="absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-[#8c4a62]/12 blur-3xl" />
 
-          <h1 className="mt-6 text-balance text-5xl font-black tracking-[-0.055em] text-[#172b27] md:text-7xl lg:text-[5.35rem] lg:leading-[0.93]">{title}</h1>
-          {hero?.subtitle ? <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-[#625e57] md:text-xl">{hero.subtitle}</p> : null}
+      <div className="container grid min-h-[calc(100vh-5rem)] gap-12 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/80 px-4 py-2 text-sm font-semibold text-primary shadow-sm backdrop-blur">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />{" "}
+            {hero?.badge || hero?.eyebrow || "Acompañamiento emocional"}
+          </div>
+
+          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-[#172b27] md:text-7xl">
+            {title}
+          </h1>
+          {hero?.subtitle ? (
+            <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-[#625e57] md:text-xl">
+              {hero.subtitle}
+            </p>
+          ) : null}
           <TextBlock value={hero?.description} />
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button asChild className="h-[3.25rem] rounded-full px-7 shadow-[0_18px_45px_rgba(35,99,89,0.20)]" size="lg">
+            <Button
+              asChild
+              className="h-[3.35rem] rounded-2xl px-7 shadow-[0_18px_45px_rgba(35,99,89,0.22)]"
+              size="lg"
+            >
               <Link href={actionHref(hero?.primaryCta, "/registro")}>
-                {hero?.primaryCta?.label || "Crear cuenta"} <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                {hero?.primaryCta?.label || "Crear cuenta"}{" "}
+                <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
-            <Button asChild className="h-[3.25rem] rounded-full border-[#cfc4b8] bg-white/80 px-7 hover:bg-white" size="lg" variant="outline">
-              <Link href={actionHref(hero?.secondaryCta, "/login")}>{hero?.secondaryCta?.label || "Ingresar"}</Link>
+            <Button
+              asChild
+              className="h-[3.35rem] rounded-2xl border-[#cfc4b8] bg-white/78 px-7 hover:bg-white"
+              size="lg"
+              variant="outline"
+            >
+              <a
+                href={contactUrl}
+                target={phone ? "_blank" : undefined}
+                rel={phone ? "noreferrer" : undefined}
+              >
+                <MessageCircle className="h-5 w-5" aria-hidden="true" />{" "}
+                Contactar
+              </a>
             </Button>
-            {contact ? <ContactButton phone={landing.phone} className="h-[3.25rem] px-7" /> : null}
           </div>
 
-          {landing.phone ? (
-            <div className="mt-7 flex flex-wrap items-center gap-3 text-sm text-[#625e57]">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#8a8176]">Contacto</span>
-              <ContactLink phone={landing.phone} />
-            </div>
+          {formattedPhone ? (
+            <p className="mt-5 flex items-center gap-2 text-sm font-semibold text-[#625e57]">
+              <Phone className="h-4 w-4 text-primary" aria-hidden="true" />{" "}
+              Atención por WhatsApp: {formattedPhone}
+            </p>
           ) : null}
         </div>
 
-        <HeroImage landing={landing} />
+        <div className="relative mx-auto w-full max-w-[38rem] lg:max-w-none">
+          <div className="absolute -left-5 top-8 z-10 hidden max-w-[15rem] rounded-[1.75rem] border border-white/70 bg-white/88 p-4 shadow-[0_20px_55px_rgba(23,43,39,0.13)] backdrop-blur md:block">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e4f0ec] text-primary">
+                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-[#172b27]">
+                  Atención segura
+                </p>
+                <p className="text-xs leading-5 text-[#6d675f]">
+                  Ingreso protegido para pacientes
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[2.75rem] border border-white/80 bg-white/60 p-3 shadow-[0_38px_100px_rgba(23,43,39,0.18)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_46px_120px_rgba(23,43,39,0.22)]">
+            <div className="relative min-h-[32rem] overflow-hidden rounded-[2.2rem] bg-[#d8d0c4] md:min-h-[38rem]">
+              {heroImage ? (
+                <img
+                  alt={hero?.image?.alt || title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  src={heroImage}
+                />
+              ) : null}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#102f2a]/90 via-[#102f2a]/24 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-7 text-white md:p-9">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/68">
+                  {landing.navbar.brand || "Corazón Migrante"}
+                </p>
+                <h2 className="mt-3 max-w-md text-3xl font-black tracking-tight md:text-4xl">
+                  {hero?.image?.footerText ||
+                    "Un espacio humano para ordenar lo que sientes."}
+                </h2>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
+  );
+}
+
+function SectionHeading({ section }: { section: LandingSection }) {
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      {section.badge || section.label ? (
+        <Badge
+          className="rounded-full border-primary/15 bg-primary/10 px-4 py-1.5 text-primary hover:bg-primary/10"
+          variant="secondary"
+        >
+          {section.badge || section.label}
+        </Badge>
+      ) : null}
+      {section.title ? (
+        <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#172b27] md:text-5xl">
+          {section.title}
+        </h2>
+      ) : null}
+      {section.subtitle ? (
+        <p className="mt-4 text-lg leading-8 text-[#625e57]">
+          {section.subtitle}
+        </p>
+      ) : null}
+      {section.body ? (
+        <p className="mt-4 text-base leading-8 text-[#625e57]">
+          {section.body}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
 function CardGrid({ section }: { section: LandingSection }) {
   if (!section.items || section.items.length === 0) return null;
-
   return (
-    <div className="mt-10 grid gap-5 md:grid-cols-3">
+    <div className="mt-11 grid gap-5 md:grid-cols-3">
       {section.items.map((item, index) => (
-        <Card className="overflow-hidden border-[#e3d8cb] bg-white/[0.86] shadow-[0_18px_55px_rgba(23,43,39,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(23,43,39,0.13)]" key={`${item.title}-${index}`}>
-          {item.image?.src ? <img src={item.image.src} alt={item.image.alt || item.title || "Imagen"} className="h-48 w-full object-cover" /> : null}
+        <Card
+          className="group overflow-hidden border-[#e3d8cb] bg-white/86 transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(23,43,39,0.13)]"
+          key={`${item.title}-${index}`}
+        >
+          {item.image?.src ? (
+            <img
+              src={item.image.src}
+              alt={item.image.alt || item.title || "Imagen"}
+              className="h-48 w-full object-cover"
+            />
+          ) : null}
           <CardContent className="p-7">
-            {item.label ? <Badge variant="secondary" className="border border-[#173c35]/10 bg-[#edf3f0] text-primary">{item.label}</Badge> : null}
-            {item.title ? <h3 className="mt-5 text-xl font-black tracking-tight text-[#172b27]">{item.title}</h3> : null}
-            {item.body || item.description ? <p className="mt-3 text-sm leading-6 text-[#6d675f]">{item.body || item.description}</p> : null}
+            <span
+              className={`grid h-11 w-11 place-items-center rounded-2xl ${sectionTone[index % sectionTone.length]}`}
+            >
+              <HeartHandshake className="h-5 w-5" aria-hidden="true" />
+            </span>
+            {item.label ? (
+              <p className="mt-5 text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                {item.label}
+              </p>
+            ) : null}
+            {item.title ? (
+              <h3 className="mt-3 text-xl font-black tracking-tight text-[#172b27]">
+                {item.title}
+              </h3>
+            ) : null}
+            {item.body || item.description ? (
+              <p className="mt-3 text-sm leading-7 text-[#625e57]">
+                {item.body || item.description}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       ))}
@@ -243,134 +420,241 @@ function CardGrid({ section }: { section: LandingSection }) {
   );
 }
 
-function SplitSection({ section, landing }: { section: LandingSection; landing: NormalizedPublicLanding }) {
-  const imageSrc = resolveLandingImage(section.image, landing.uiById);
-
+function SplitSection({
+  section,
+  landing,
+}: {
+  section: LandingSection;
+  landing: NormalizedPublicLanding;
+}) {
+  const sectionImage = imageUrl(
+    section.image,
+    landing,
+    fileServer.familyImageUrl ||
+      fileServer.therapyImageUrl ||
+      fileServer.landingHeroImageUrl,
+  );
   return (
-    <section className="container py-16" id={section.id}>
-      <div className="grid gap-10 rounded-[2.25rem] border border-[#e5dbcf] bg-white/64 p-6 shadow-[0_20px_70px_rgba(23,43,39,0.07)] md:p-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-        <div>
-          {section.badge || section.label ? <Badge variant="secondary" className="border border-[#173c35]/10 bg-white/74 text-primary">{section.badge || section.label}</Badge> : null}
-          {section.title ? <h2 className="mt-4 text-balance text-4xl font-black tracking-tight text-[#172b27] md:text-5xl">{section.title}</h2> : null}
-          {section.subtitle ? <p className="mt-5 text-lg leading-8 text-[#625e57]">{section.subtitle}</p> : null}
-          {section.body ? <p className="mt-5 text-base leading-8 text-[#625e57]">{section.body}</p> : null}
-          {section.paragraphs?.map((paragraph) => <p className="mt-4 text-base leading-8 text-[#625e57]" key={paragraph}>{paragraph}</p>)}
-          {(section.primaryCta || section.secondaryCta) ? (
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              {section.primaryCta ? <Button asChild className="rounded-full"><Link href={actionHref(section.primaryCta)}>{section.primaryCta.label}</Link></Button> : null}
-              {section.secondaryCta ? <Button asChild className="rounded-full" variant="outline"><Link href={actionHref(section.secondaryCta)}>{section.secondaryCta.label}</Link></Button> : null}
-            </div>
-          ) : null}
-        </div>
-
-        {imageSrc ? (
-          <div className="overflow-hidden rounded-[1.85rem] bg-[#ded8cf] shadow-[0_18px_55px_rgba(23,43,39,0.11)]">
-            <img src={imageSrc} alt={section.image?.alt || section.title || "Sección"} className="h-[27rem] w-full object-cover" />
-          </div>
+    <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+      <div>
+        {section.badge || section.label ? (
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-primary">
+            {section.badge || section.label}
+          </p>
+        ) : null}
+        {section.title ? (
+          <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#172b27] md:text-5xl">
+            {section.title}
+          </h2>
+        ) : null}
+        {section.subtitle ? (
+          <p className="mt-5 text-lg leading-8 text-[#625e57]">
+            {section.subtitle}
+          </p>
+        ) : null}
+        {section.body ? (
+          <p className="mt-5 text-base leading-8 text-[#625e57]">
+            {section.body}
+          </p>
+        ) : null}
+        {section.paragraphs?.map((paragraph) => (
+          <p
+            className="mt-4 text-base leading-8 text-[#625e57]"
+            key={paragraph}
+          >
+            {paragraph}
+          </p>
+        ))}
+        {section.primaryCta ? (
+          <Button asChild className="mt-7 rounded-2xl">
+            <Link href={actionHref(section.primaryCta)}>
+              {section.primaryCta.label}
+            </Link>
+          </Button>
         ) : null}
       </div>
-      <CardGrid section={section} />
-    </section>
-  );
-}
-
-function StandardSection({ section, landing }: { section: LandingSection; landing: NormalizedPublicLanding }) {
-  if (section.layout === "split" || section.image?.src || section.image?.idUi) return <SplitSection section={section} landing={landing} />;
-  if (section.layout === "cta") return <CtaSection section={section} phone={landing.phone} />;
-
-  return (
-    <section className="container py-16" id={section.id}>
-      <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
-        <div>
-          {section.badge || section.label ? <Badge variant="secondary" className="border border-[#173c35]/10 bg-white/74 text-primary">{section.badge || section.label}</Badge> : null}
-          {section.title ? <h2 className="mt-4 text-balance text-4xl font-black tracking-tight text-[#172b27] md:text-5xl">{section.title}</h2> : null}
-        </div>
-        <div>
-          {section.subtitle ? <p className="max-w-3xl text-lg leading-8 text-[#625e57]">{section.subtitle}</p> : null}
-          {section.body ? <p className="mt-3 max-w-3xl text-base leading-8 text-[#625e57]">{section.body}</p> : null}
-        </div>
-      </div>
-      <CardGrid section={section} />
-    </section>
-  );
-}
-
-function CtaSection({ section, phone }: { section: LandingSection; phone?: string }) {
-  return (
-    <section className="container py-16" id={section.id}>
-      <div className="relative overflow-hidden rounded-[2.35rem] bg-[#102f2a] p-8 text-white shadow-[0_35px_90px_rgba(16,47,42,0.18)] md:p-12">
-        <div className="pointer-events-none absolute right-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative max-w-3xl">
-          {section.badge || section.label ? <Badge className="border border-white/15 bg-white/10 text-white">{section.badge || section.label}</Badge> : null}
-          {section.title ? <h2 className="mt-5 text-balance text-4xl font-black tracking-tight md:text-5xl">{section.title}</h2> : null}
-          {section.subtitle || section.body ? <p className="mt-5 text-lg leading-8 text-white/72">{section.subtitle || section.body}</p> : null}
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            {section.primaryCta ? <Button asChild className="rounded-full bg-white text-[#102f2a] hover:bg-white/90"><Link href={actionHref(section.primaryCta)}>{section.primaryCta.label}</Link></Button> : null}
-            {section.secondaryCta ? <Button asChild className="rounded-full border-white/25 bg-transparent text-white hover:bg-white/10" variant="outline"><Link href={actionHref(section.secondaryCta)}>{section.secondaryCta.label}</Link></Button> : null}
-            <ContactButton phone={phone} className="border-white/25 bg-transparent text-white hover:bg-white/10" />
+      <div className="rounded-[2.2rem] border border-white/80 bg-white/72 p-3 shadow-[0_28px_80px_rgba(23,43,39,0.13)]">
+        {sectionImage ? (
+          <img
+            src={sectionImage}
+            alt={section.image?.alt || section.title || "Sección"}
+            className="h-[28rem] w-full rounded-[1.75rem] object-cover"
+          />
+        ) : (
+          <div className="grid h-[28rem] place-items-center rounded-[1.75rem] bg-[#e4f0ec] text-center text-sm font-semibold text-primary">
+            Corazón Migrante
           </div>
-        </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Section({
+  section,
+  landing,
+}: {
+  section: LandingSection;
+  landing: NormalizedPublicLanding;
+}) {
+  if (section.layout === "split" || section.image?.src) {
+    return (
+      <section id={section.id} className="container scroll-mt-28 py-20">
+        <SplitSection section={section} landing={landing} />
+      </section>
+    );
+  }
+
+  if (section.layout === "cta" || section.layout === "quote") {
+    return (
+      <section id={section.id} className="container scroll-mt-28 py-16">
+        <div className="rounded-[2.4rem] border border-[#d7ccc0] bg-[#102f2a] p-8 text-white shadow-[0_30px_90px_rgba(23,43,39,0.18)] md:p-12">
+          {section.title ? (
+            <h2 className="max-w-3xl text-3xl font-black tracking-tight md:text-5xl">
+              {section.title}
+            </h2>
+          ) : null}
+          {section.body || section.subtitle ? (
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-white/72">
+              {section.body || section.subtitle}
+            </p>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id={section.id} className="container scroll-mt-28 py-20">
+      <SectionHeading section={section} />
+      <CardGrid section={section} />
     </section>
   );
 }
 
-function Footer({ landing }: { landing: NormalizedPublicLanding }) {
-  const brand = landing.navbar.brand || landing.title || "Corazón Migrante";
-
+function FloatingContact({ phone }: { phone?: string }) {
   return (
-    <footer className="border-t border-[#173c35]/10 bg-[#102f2a] text-white">
+    <a
+      className="fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(35,99,89,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#1b5148]"
+      href={contactHref(phone)}
+      target={phone ? "_blank" : undefined}
+      rel={phone ? "noreferrer" : undefined}
+      aria-label="Contactar a Corazón Migrante"
+    >
+      <MessageCircle className="h-5 w-5" aria-hidden="true" />
+      <span className="hidden sm:inline">Contactar</span>
+    </a>
+  );
+}
+
+function Footer({
+  landing,
+  phone,
+}: {
+  landing: NormalizedPublicLanding;
+  phone?: string;
+}) {
+  const brand = landing.navbar.brand || landing.title || "Corazón Migrante";
+  const formattedPhone = formatContactPhone(phone);
+  return (
+    <footer className="border-t border-[#1a342f]/10 bg-[#102f2a] text-white">
       <div className="container grid gap-10 py-14 md:grid-cols-[1.15fr_0.85fr_1fr]">
         <div>
           <p className="text-lg font-black">{brand}</p>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-white/64">{landing.footer?.note || landing.seoDescription || "Acompañamiento emocional con una experiencia clara, privada y humana."}</p>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-white/64">
+            {landing.footer?.note ||
+              landing.seoDescription ||
+              "Acompañamiento emocional con atención clara, humana y responsable."}
+          </p>
         </div>
         <div>
           <p className="font-semibold">Accesos</p>
           <div className="mt-3 grid gap-2 text-sm text-white/64">
-            <Link className="transition hover:text-white" href="/biblioteca">Biblioteca</Link>
-            <Link className="transition hover:text-white" href="/login">Ingresar</Link>
-            <Link className="transition hover:text-white" href="/registro">Crear cuenta</Link>
+            <Link className="transition hover:text-white" href="/biblioteca">
+              Biblioteca
+            </Link>
+            <Link className="transition hover:text-white" href="/privacidad">
+              Política de privacidad
+            </Link>
+            <Link className="transition hover:text-white" href="/terminos">
+              Términos y condiciones
+            </Link>
           </div>
         </div>
         <div>
-          <p className="font-semibold">Atención responsable</p>
-          <p className="mt-3 text-sm leading-6 text-white/64">Este sitio no reemplaza servicios de emergencia ni ofrece diagnósticos automáticos.</p>
-          {landing.phone ? <div className="mt-4"><ContactLink phone={landing.phone} compact /></div> : null}
+          <p className="font-semibold">Contacto</p>
+          {formattedPhone ? (
+            <a
+              className="mt-3 inline-flex text-sm font-semibold text-white/74 transition hover:text-white"
+              href={contactHref(phone)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {formattedPhone}
+            </a>
+          ) : (
+            <p className="mt-3 text-sm leading-6 text-white/64">
+              Completa tu registro para recibir orientación inicial.
+            </p>
+          )}
+          <p className="mt-4 text-sm leading-6 text-white/64">
+            La información publicada es orientativa y no reemplaza servicios de
+            emergencia.
+          </p>
         </div>
       </div>
     </footer>
   );
 }
 
-function WhatsAppFab({ phone }: { phone?: string }) {
-  const href = contactHref(phone);
-  if (!href) return null;
-
-  return (
-    <a href={href} target={isExternal(href) ? "_blank" : undefined} rel={isExternal(href) ? "noreferrer" : undefined} className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#1f6f5f] text-white shadow-[0_18px_45px_rgba(31,111,95,0.28)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(31,111,95,0.34)] active:scale-95 motion-reduce:transition-none motion-reduce:hover:translate-y-0" aria-label="Contactar">
-      <MessageCircle className="h-6 w-6" aria-hidden="true" />
-    </a>
+export function PublicLandingPage({
+  landing,
+}: {
+  landing: NormalizedPublicLanding;
+}) {
+  const phone = resolveContactPhone(landing.phone);
+  const sections = landing.sections.filter(
+    (section) =>
+      section.title ||
+      section.subtitle ||
+      section.body ||
+      section.image?.src ||
+      (section.items && section.items.length > 0),
   );
-}
-
-export function PublicLandingPage({ landing }: { landing: NormalizedPublicLanding }) {
-  const landingWithPublicDefaults = {
-    ...landing,
-    phone: landing.phone ?? env.NEXT_PUBLIC_PUBLIC_CONTACT_PHONE
-  };
 
   return (
-    <div className="min-h-screen bg-[#fbf8f3]">
-      <PublicNavbar landing={landingWithPublicDefaults} />
-      <main id="contenido">
-        <Hero landing={landingWithPublicDefaults} />
-        {landingWithPublicDefaults.sections.map((section) => (
-          <StandardSection section={section} landing={landingWithPublicDefaults} key={`${section.code}-${section.id}`} />
-        ))}
+    <div className="min-h-screen bg-[#fbf8f3] text-[#172b27]">
+      <PublicNavbar landing={landing} phone={phone} />
+      <main>
+        <Hero landing={landing} phone={phone} />
+        {sections.length > 0 ? (
+          sections.map((section) => (
+            <Section section={section} landing={landing} key={section.id} />
+          ))
+        ) : (
+          <section className="container py-16">
+            <div className="rounded-[2rem] border border-[#e3d8cb] bg-white/82 p-8 shadow-[0_26px_80px_rgba(23,43,39,0.10)]">
+              <div className="flex items-start gap-3">
+                <BookOpenText
+                  className="mt-1 h-5 w-5 text-primary"
+                  aria-hidden="true"
+                />
+                <div>
+                  <h2 className="text-2xl font-black text-[#172b27]">
+                    Contenido en preparación
+                  </h2>
+                  <p className="mt-2 leading-7 text-[#625e57]">
+                    Estamos preparando nuevas secciones para explicar mejor los
+                    servicios de Corazón Migrante.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
-      <Footer landing={landingWithPublicDefaults} />
-      <WhatsAppFab phone={landingWithPublicDefaults.phone} />
+      <Footer landing={landing} phone={phone} />
+      <FloatingContact phone={phone} />
     </div>
   );
 }

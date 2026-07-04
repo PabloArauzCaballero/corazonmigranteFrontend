@@ -7,8 +7,6 @@ export type SistemaListQuery = {
   sortDir?: "asc" | "desc";
 };
 
-export type RemoteListQuery = SistemaListQuery;
-
 export function buildQueryString(params: SistemaListQuery & Record<string, string | number | undefined> = {}) {
   const searchParams = new URLSearchParams();
   const search = params.search?.trim();

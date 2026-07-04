@@ -20,7 +20,7 @@ function apiBaseUrl() {
 
     if (isLocalFrontendOrigin) {
       throw new ApiError(
-        "NEXT_PUBLIC_API_BASE_URL está apuntando al frontend. Este proyecto corre por defecto en 4173; configura la API en otro puerto, por ejemplo NEXT_PUBLIC_API_BASE_URL=http://localhost:3000.",
+        "NEXT_PUBLIC_API_BASE_URL está apuntando al aplicación. Este proyecto corre por defecto en 4173; configura el sistema en otro puerto, por ejemplo NEXT_PUBLIC_API_BASE_URL=http://localhost:3000.",
         500
       );
     }
@@ -58,7 +58,7 @@ function extractErrorMessage(payload: unknown) {
     }
   }
 
-  return "No se pudo completar la comunicación con el servicio";
+  return "Error de comunicación con el servidor";
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {

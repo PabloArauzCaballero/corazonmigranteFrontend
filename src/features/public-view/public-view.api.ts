@@ -39,7 +39,7 @@ function publicViewIdentity() {
   const explicitId = env.NEXT_PUBLIC_PUBLIC_VIEW_ID?.trim();
   const code = env.NEXT_PUBLIC_PUBLIC_VIEW_CODE?.trim();
 
-  // Compatibilidad con la versión anterior: el campo llamado "slug" puede traer el id.
+  // Compatibilidad con el versión anterior: el campo llamado "slug" puede traer el id.
   const id = explicitId || (isNumericId(legacySlug) ? legacySlug : undefined);
   const slug = legacySlug && !isNumericId(legacySlug) ? legacySlug : "inicio";
 
@@ -123,11 +123,9 @@ export function buildConfiguredPublicViewElementCandidates(code: string): Public
   if (custom) candidates.push(custom);
 
   if (mode === "page-slug" && !identity.id) {
-    const template = "/api/v1/public/pages/:slug/elements/:code";
-    candidates.push({ label: "page-slug-element", url: absoluteUrl(resolveTemplate(template.replaceAll(":code", encodeURIComponent(code)))) });
+    candidates.push({ label: "page-slug-element", url: absoluteUrl(resolveTemplate(`/api/v1/public/pages/:slug/elements/${encodeURIComponent(code)}`)) });
   } else {
-    const template = "/api/v1/public-views/:id/elements/:code";
-    candidates.push({ label: "public-view-element", url: absoluteUrl(resolveTemplate(template.replaceAll(":code", encodeURIComponent(code)))) });
+    candidates.push({ label: "public-view-element", url: absoluteUrl(resolveTemplate(`/api/v1/public-views/:id/elements/${encodeURIComponent(code)}`)) });
   }
 
   if (identity.slug) candidates.push({ label: "fallback-page-slug-element", url: absoluteUrl(`/api/v1/public/pages/${encodeToken(identity.slug)}/elements/${encodeURIComponent(code)}`) });

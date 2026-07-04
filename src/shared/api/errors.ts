@@ -22,8 +22,8 @@ export function humanizeApiError(error: unknown) {
     if (error.status === 403) return "No tienes permisos suficientes para realizar esta acción.";
     if (error.status === 422 || error.status === 400) return message || "Revisa los datos ingresados.";
     if (error.status === 501) return message;
-    if (error.status >= 500) return message && /NEXT_PUBLIC_API_BASE_URL|sistema|servidor/i.test(message) ? message : "El servicio tuvo un problema. Intenta nuevamente en unos minutos.";
-    return message || "No se pudo completar la comunicación con el servicio.";
+    if (error.status >= 500) return message && /NEXT_PUBLIC_API_BASE_URL|sistema|servidor/i.test(message) ? message : "El servidor tuvo un problema. Intenta nuevamente en unos minutos.";
+    return message || "Error de comunicación con el servidor.";
   }
   return "No pudimos completar la acción. Verifica tu conexión e intenta de nuevo.";
 }
