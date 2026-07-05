@@ -189,7 +189,19 @@ async function fetchPublicJson(endpoint: string, identity = publicViewIdentity()
 }
 
 export async function loadConfiguredPublicLanding(): Promise<PublicViewLoadResult> {
-  const candidates = buildConfiguredPublicViewCandidates();
+  let candidates: PublicEndpointCandidate[];
+
+  try {
+    candidates = buildConfiguredPublicViewCandidates();
+  } catch (error) {
+    return {
+      ok: false,
+      endpoint: "NEXT_PUBLIC_API_BASE_URL",
+      message: error instanceof Error ? error.message : "NEXT_PUBLIC_API_BASE_URL no está configurado.",
+      details: error
+    };
+  }
+
   const identity = publicViewIdentity();
   let lastFailure: { endpoint: string; status?: number; message: string; details?: unknown } | undefined;
 

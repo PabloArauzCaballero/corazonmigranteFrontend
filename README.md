@@ -150,18 +150,14 @@ Si el backend no devuelve la vista configurada, la landing muestra un error clar
 
 ## Cloudflare Pages
 
-La configuracion actual no usa `output: "export"` porque la home publica se
-renderiza dinamicamente contra el backend. Por eso `next build` genera `.next`,
-pero no genera `out`.
+Para Cloudflare Pages usar:
 
-Si Cloudflare muestra `Error: Output directory "out" not found`, el proyecto esta
-configurado en Cloudflare como exportacion estatica. Esa configuracion no aplica
-a esta version de la app.
+- Build command: `yarn build`
+- Build output directory: `out`
+- Framework preset: `Next.js (Static HTML Export)`
 
-Opciones validas:
+No usar `dist`. Next.js con `output: "export"` genera `out` durante el build.
 
-- Desplegar en un entorno compatible con Next.js dinamico usando `yarn build` y
-  `yarn start`.
-- Si se necesita Cloudflare Pages estatico, reactivar `output: "export"` y
-  quitar la dependencia de render dinamico de la home; eso congela la landing al
-  momento del build.
+La landing publica se prerenderiza al momento del deploy. Configura
+`NEXT_PUBLIC_API_BASE_URL` y las variables `NEXT_PUBLIC_PUBLIC_VIEW_*` en
+Cloudflare Pages para que el HTML exportado use el backend correcto.

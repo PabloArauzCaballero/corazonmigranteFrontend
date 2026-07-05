@@ -4,9 +4,6 @@ import { loadConfiguredPublicLanding } from "@/features/public-view/public-view.
 import { PublicLandingPage } from "@/features/public-view/public-landing-page";
 import { Button } from "@/shared/ui/button";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 function PublicViewError({
   message,
   endpoint,
