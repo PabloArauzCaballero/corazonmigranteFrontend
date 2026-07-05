@@ -1,8 +1,11 @@
 import net from "node:net";
 import { spawn } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const preferredPort = Number.parseInt(process.env.NEXT_PUBLIC_DEV_PORT ?? process.env.PORT ?? "4173", 10);
 const maxAttempts = Number.parseInt(process.env.NEXT_PUBLIC_DEV_PORT_SCAN_LIMIT ?? "30", 10);
+const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function isFree(port) {
   return new Promise((resolve) => {
@@ -24,7 +27,7 @@ async function findFreePort(startPort) {
 }
 
 const port = await findFreePort(preferredPort);
-const command = process.platform === "win32" ? "yarn.cmd" : "yarn";
+const nextCli = join(rootDir, "node_modules", "next", "dist", "bin", "next");
 
 const env = {
   ...process.env,
@@ -37,9 +40,10 @@ console.log(`\nCorazón Migrante frontend: http://localhost:${port}`);
 console.log(`Backend esperado: ${env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000"}`);
 console.log("Si el backend está en otro puerto, ajusta NEXT_PUBLIC_API_BASE_URL en .env.local.\n");
 
-const child = spawn(command, ["next", "dev", "-p", String(port)], {
+const child = spawn(process.execPath, [nextCli, "dev", "-p", String(port)], {
   stdio: "inherit",
-  env
+  env,
+  cwd: rootDir
 });
 
 child.on("exit", (code, signal) => {
