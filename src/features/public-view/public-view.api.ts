@@ -48,9 +48,16 @@ function resolveTemplate(template: string) {
     .replaceAll(":code", encodeToken(identity.code));
 }
 
+function normalizeLegacyPublicPagePath(pathOrUrl: string) {
+  return pathOrUrl
+    .replace(/(\/api\/v1\/public\/pages\/)1(?=\/|$)/g, "$1inicio")
+    .replace(/(\/api\/v1\/public\/pages\/)2(?=\/|$)/g, "$1biblioteca");
+}
+
 function absoluteUrl(pathOrUrl: string) {
-  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
-  const normalizedPath = pathOrUrl.startsWith("/") ? pathOrUrl : `/${trimSlashes(pathOrUrl)}`;
+  const publicPagePath = normalizeLegacyPublicPagePath(pathOrUrl);
+  if (/^https?:\/\//i.test(publicPagePath)) return publicPagePath;
+  const normalizedPath = publicPagePath.startsWith("/") ? publicPagePath : `/${trimSlashes(publicPagePath)}`;
   return `${apiBaseUrl()}${normalizedPath}`;
 }
 
