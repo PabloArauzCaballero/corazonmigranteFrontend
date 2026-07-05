@@ -299,7 +299,7 @@ function numberedContainers(
   const entries = Object.entries(record)
     .filter(([key]) => key.startsWith(prefix))
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
-    .map(([key, value]) => cardFrom(value, uiById))
+    .map(([, value]) => cardFrom(value, uiById))
     .filter(Boolean) as LandingCard[];
 
   return entries;

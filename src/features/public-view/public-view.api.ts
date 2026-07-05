@@ -14,7 +14,13 @@ function trimSlashes(value: string) {
 }
 
 function apiBaseUrl() {
-  return env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, "");
+  const baseUrl = env.NEXT_PUBLIC_API_BASE_URL;
+
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL no está configurado. Revisa .env.local.");
+  }
+
+  return baseUrl.replace(/\/$/, "");
 }
 
 function encodeToken(value: string | undefined) {
