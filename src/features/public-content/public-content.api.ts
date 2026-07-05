@@ -12,7 +12,7 @@ export type PublicContentRow = {
 };
 
 type PublicContentQuery = SistemaListQuery & {
-  id?: string;
+  slug?: string;
 };
 
 function replacePathParam(path: string, param: string, value: string) {
@@ -31,8 +31,8 @@ export function mapPublicContentRow(item: unknown, index: number): PublicContent
 }
 
 export async function listPublicContent(query: PublicContentQuery = {}): Promise<PaginatedResult<PublicContentRow>> {
-  const { id = env.NEXT_PUBLIC_PUBLIC_VIEW_ID ?? "1", ...listQuery } = query;
-  const path = replacePathParam(ENDPOINTS.publicUi.elementsList, "id", id);
+  const { slug = env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG, ...listQuery } = query;
+  const path = replacePathParam(ENDPOINTS.publicUi.elementsList, "slug", slug);
   const payload = await apiRequest<unknown>(`${path}${buildQueryString(listQuery)}`);
   return normalizePaginatedResponse(payload, mapPublicContentRow, listQuery);
 }

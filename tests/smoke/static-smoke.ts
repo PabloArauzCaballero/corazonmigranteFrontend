@@ -53,8 +53,8 @@ if (!/output\s*:\s*["']export["']/.test(nextConfig)) {
 
 const publicViewApi = readFileSync(join(root, "src/features/public-view/public-view.api.ts"), "utf8");
 for (const expected of [
-  "/api/v1/public-views/:id",
-  "/api/v1/public-views/:id/elements/",
+  "/api/v1/public/pages/:slug",
+  "/api/v1/public/pages/:slug/elements/",
 ]) {
   if (!publicViewApi.includes(expected)) {
     throw new Error(`Falta endpoint publico configurable: ${expected}`);

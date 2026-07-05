@@ -10,11 +10,11 @@ describe("public view api endpoints", () => {
     process.env = { ...originalEnv };
   });
 
-  it("usa public-views/1 para la landing por defecto", async () => {
+  it("usa public/pages/inicio para la landing por defecto", async () => {
     process.env = {
       ...originalEnv,
       NEXT_PUBLIC_API_BASE_URL: "https://api.corazondemigrante.com",
-      NEXT_PUBLIC_PUBLIC_VIEW_ID: "",
+      NEXT_PUBLIC_PUBLIC_VIEW_SLUG: "",
     };
 
     const {
@@ -23,10 +23,10 @@ describe("public view api endpoints", () => {
     } = await importPublicViewApi();
 
     expect(buildConfiguredPublicViewCandidates().map((item) => item.url)).toEqual([
-      "https://api.corazondemigrante.com/api/v1/public-views/1",
+      "https://api.corazondemigrante.com/api/v1/public/pages/inicio",
     ]);
     expect(buildConfiguredPublicViewElementCandidates("hero").map((item) => item.url)).toEqual([
-      "https://api.corazondemigrante.com/api/v1/public-views/1/elements/hero",
+      "https://api.corazondemigrante.com/api/v1/public/pages/inicio/elements/hero",
     ]);
   });
 });

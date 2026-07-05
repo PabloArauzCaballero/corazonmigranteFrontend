@@ -100,15 +100,12 @@ Endpoints públicos soportados:
 
 ```txt
 GET /api/v1/public/pages/:slug
-GET /api/v1/public/pages/by-id/:id
 GET /api/v1/public/pages/:slug/elements/:code
 GET /api/v1/public/page-elements/:id
-GET /api/v1/public-views/:id
-GET /api/v1/public-views/:id/elements/:code
 ```
 
 Configuración recomendada para Corazón Migrante:
 
 ```env
-NEXT_PUBLIC_PUBLIC_VIEW_ID=1
+NEXT_PUBLIC_PUBLIC_VIEW_SLUG=inicio
 ```

@@ -1,4 +1,3 @@
-import { env } from "@/config/env";
 import { fileServer, buildPublicAssetUrl } from "@/config/file-server";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
@@ -161,17 +160,7 @@ export function getResourcesFromPage(page: CmsPage) {
 
 function publicCmsPageFallbacks(slug: string) {
   const normalizedSlug = slug.trim() || "biblioteca";
-  const legacyId =
-    normalizedSlug === "biblioteca"
-      ? env.NEXT_PUBLIC_CMS_LIBRARY_LEGACY_VIEW_ID?.trim() || "2"
-      : normalizedSlug === "inicio"
-        ? env.NEXT_PUBLIC_PUBLIC_VIEW_ID?.trim() || "1"
-        : undefined;
-  const paths = [replacePathParam(ENDPOINTS.cms.publicPage, "slug", normalizedSlug)];
-
-  if (legacyId) paths.push(replacePathParam(ENDPOINTS.publicUi.publicViewById, "id", legacyId));
-
-  return [...new Set(paths)];
+  return [replacePathParam(ENDPOINTS.cms.publicPage, "slug", normalizedSlug)];
 }
 
 export async function getPublicCmsPage(slug: string): Promise<CmsPage> {

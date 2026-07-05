@@ -81,14 +81,11 @@ export const ENDPOINTS = {
     adminAddElement: `${API_PREFIX}/admin/cms/pages/:pageId/elements`
   },
   publicUi: {
-    pageBundle: `${API_PREFIX}/public-views/:id`,
+    pageBundle: `${API_PREFIX}/public/pages/:slug`,
     pageBySlug: `${API_PREFIX}/public/pages/:slug`,
-    pageById: `${API_PREFIX}/public/pages/by-id/:id`,
     pageElementByCode: `${API_PREFIX}/public/pages/:slug/elements/:code`,
     pageElementById: `${API_PREFIX}/public/page-elements/:id`,
-    publicViewById: `${API_PREFIX}/public-views/:id`,
-    publicViewElementByCode: `${API_PREFIX}/public-views/:id/elements/:code`,
-    elementsList: `${API_PREFIX}/public-views/:id`,
+    elementsList: `${API_PREFIX}/public/pages/:slug`,
     elementsCreate: `${API_PREFIX}/admin/cms/pages`,
     elementsUpdate: `${API_PREFIX}/admin/cms/pages/:pageId/elements`,
     elementsUpdateWithFile: `${API_PREFIX}/admin/cms/pages/:pageId/elements`,

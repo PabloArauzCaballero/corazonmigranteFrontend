@@ -5,13 +5,17 @@ const optionalUrl = z.preprocess(
     typeof value === "string" && value.trim() === "" ? undefined : value,
   z.string().url().optional(),
 );
+const stringWithDefault = (fallback: string) =>
+  z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().min(1).default(fallback),
+  );
 const envSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().min(1).default("Corazón Migrante"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:4173"),
   NEXT_PUBLIC_API_BASE_URL: optionalUrl,
-  NEXT_PUBLIC_CMS_LIBRARY_SLUG: z.string().min(1).default("biblioteca"),
-  NEXT_PUBLIC_CMS_LIBRARY_LEGACY_VIEW_ID: z.string().optional(),
-  NEXT_PUBLIC_PUBLIC_VIEW_ID: z.string().optional(),
+  NEXT_PUBLIC_PUBLIC_VIEW_SLUG: stringWithDefault("inicio"),
+  NEXT_PUBLIC_CMS_LIBRARY_SLUG: stringWithDefault("biblioteca"),
   NEXT_PUBLIC_PUBLIC_VIEW_CODE: z.string().optional(),
   NEXT_PUBLIC_PUBLIC_VIEW_ENDPOINT: z.string().optional(),
   NEXT_PUBLIC_PUBLIC_VIEW_ELEMENT_ENDPOINT: z.string().optional(),
@@ -37,10 +41,8 @@ export const env = envSchema.parse({
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  NEXT_PUBLIC_PUBLIC_VIEW_SLUG: process.env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG,
   NEXT_PUBLIC_CMS_LIBRARY_SLUG: process.env.NEXT_PUBLIC_CMS_LIBRARY_SLUG,
-  NEXT_PUBLIC_CMS_LIBRARY_LEGACY_VIEW_ID:
-    process.env.NEXT_PUBLIC_CMS_LIBRARY_LEGACY_VIEW_ID,
-  NEXT_PUBLIC_PUBLIC_VIEW_ID: process.env.NEXT_PUBLIC_PUBLIC_VIEW_ID,
   NEXT_PUBLIC_PUBLIC_VIEW_CODE: process.env.NEXT_PUBLIC_PUBLIC_VIEW_CODE,
   NEXT_PUBLIC_PUBLIC_VIEW_ENDPOINT:
     process.env.NEXT_PUBLIC_PUBLIC_VIEW_ENDPOINT,

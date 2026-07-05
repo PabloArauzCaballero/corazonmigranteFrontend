@@ -35,16 +35,16 @@ function uniqueCandidates(candidates: PublicEndpointCandidate[]) {
 }
 
 function publicViewIdentity() {
-  const id = env.NEXT_PUBLIC_PUBLIC_VIEW_ID?.trim() || "1";
+  const slug = env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG.trim() || "inicio";
   const code = env.NEXT_PUBLIC_PUBLIC_VIEW_CODE?.trim();
 
-  return { id, code };
+  return { slug, code };
 }
 
 function resolveTemplate(template: string) {
   const identity = publicViewIdentity();
   return template
-    .replaceAll(":id", encodeToken(identity.id))
+    .replaceAll(":slug", encodeToken(identity.slug))
     .replaceAll(":code", encodeToken(identity.code));
 }
 
@@ -75,7 +75,7 @@ export function buildConfiguredPublicViewCandidates(): PublicEndpointCandidate[]
   const candidates: PublicEndpointCandidate[] = [];
 
   if (custom) candidates.push(custom);
-  candidates.push({ label: "public-view-id", url: absoluteUrl(resolveTemplate("/api/v1/public-views/:id")) });
+  candidates.push({ label: "public-page-slug", url: absoluteUrl(resolveTemplate("/api/v1/public/pages/:slug")) });
 
   return uniqueCandidates(candidates);
 }
@@ -89,7 +89,7 @@ export function buildConfiguredPublicViewElementCandidates(code: string): Public
   const candidates: PublicEndpointCandidate[] = [];
 
   if (custom) candidates.push(custom);
-  candidates.push({ label: "public-view-element", url: absoluteUrl(resolveTemplate(`/api/v1/public-views/:id/elements/${encodeURIComponent(code)}`)) });
+  candidates.push({ label: "public-page-element", url: absoluteUrl(resolveTemplate(`/api/v1/public/pages/:slug/elements/${encodeURIComponent(code)}`)) });
 
   return uniqueCandidates(candidates);
 }
@@ -135,7 +135,7 @@ async function fetchPublicJson(endpoint: string, identity = publicViewIdentity()
       Accept: "application/json",
       ...(!isBrowser
         ? {
-            ...(identity.id ? { "x-public-view-id": identity.id } : {}),
+            ...(identity.slug ? { "x-public-page-slug": identity.slug } : {}),
             ...(identity.code ? { "x-public-view-code": identity.code } : {})
           }
         : {})

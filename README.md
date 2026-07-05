@@ -107,23 +107,23 @@ La home `/` no usa mockups. Carga la configuración desde el backend usando la c
 src/features/public-view/public-view.api.ts
 ```
 
-Por defecto, la landing principal se carga solo por ID de Vista Publica:
+Por defecto, la landing principal se carga por slug publico:
 
 ```env
-NEXT_PUBLIC_PUBLIC_VIEW_ID=1
+NEXT_PUBLIC_PUBLIC_VIEW_SLUG=inicio
 ```
 
 Eso llama a:
 
 ```txt
-GET /api/v1/public-views/1
+GET /api/v1/public/pages/inicio
 ```
 
-También se soportan:
+La biblioteca usa el mismo contrato con el slug `biblioteca`:
 
 ```txt
-GET /api/v1/public-views/:id
-GET /api/v1/public-views/:id/elements/:code
+GET /api/v1/public/pages/biblioteca
+GET /api/v1/public/pages/:slug/elements/:code
 ```
 
 Si el backend no devuelve la vista configurada, la landing muestra un error claro y no renderiza contenido inventado.
