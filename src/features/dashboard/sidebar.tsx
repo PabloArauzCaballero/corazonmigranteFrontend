@@ -1,8 +1,9 @@
 "use client";
 
+import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, CalendarDays, Files, HeartPulse, Home, LayoutDashboard, LogOut, Package, ReceiptText, UserCog, UserRound, UsersRound } from "lucide-react";
+import { BookOpen, CalendarDays, Files, HeartPulse, Home, LayoutDashboard, LogOut, Megaphone, Newspaper, Package, ReceiptText, Tags, UserCog, UserRound, UsersRound } from "lucide-react";
 import { clearClientSession } from "@/shared/auth/cookies";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -10,7 +11,7 @@ import { Button } from "@/shared/ui/button";
 export type SidebarItem = {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
 };
 
 export const patientNav: SidebarItem[] = [
@@ -35,12 +36,19 @@ export const adminNav: SidebarItem[] = [
   { href: "/admin/productos/enfoques", label: "Enfoques", icon: HeartPulse },
   { href: "/admin/productos/servicios", label: "Servicios", icon: Package },
   { href: "/biblioteca", label: "Vistas públicas", icon: Files },
-  { href: "/admin/contenido/editorial", label: "Contenido", icon: BookOpen },
+  { href: "/noticias", label: "Noticias públicas", icon: Newspaper },
+  { href: "/admin/contenido/editorial", label: "Biblioteca CMS", icon: BookOpen },
+  { href: "/admin/contenido/publicaciones", label: "Publicaciones", icon: Newspaper },
+  { href: "/admin/contenido/categorias", label: "Categorías", icon: Tags },
+  { href: "/admin/contenido/tags", label: "Tags", icon: Tags },
+  { href: "/admin/contenido/autores", label: "Autores", icon: UserRound },
+  { href: "/admin/contenido/homepage", label: "Portada", icon: Home },
+  { href: "/admin/publicidad", label: "Publicidad", icon: Megaphone },
   { href: "/admin/contabilidad", label: "Contabilidad", icon: ReceiptText },
   { href: "/admin/contabilidad/cuentas", label: "Cuentas", icon: UserCog }
 ];
 
-export function DashboardShell({ navItems, title, children }: { navItems: SidebarItem[]; title: string; children: React.ReactNode }) {
+export function DashboardShell({ navItems, title, children }: { navItems: SidebarItem[]; title: string; children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 

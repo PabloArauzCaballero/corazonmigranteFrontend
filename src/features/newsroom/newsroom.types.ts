@@ -1,0 +1,11 @@
+export type PublicationType = "NEWS" | "COLUMN" | "OPINION" | "INTERVIEW" | "REPORT" | "ANALYSIS";
+export type PublicationStatus = "DRAFT" | "IN_REVIEW" | "SCHEDULED" | "PUBLISHED" | "ARCHIVED";
+export type Category = { id: string; slug: string; name: string; description?: string | null; isActive: boolean; sortOrder: number };
+export type Tag = { id: string; slug: string; name: string };
+export type Author = { id: string; displayName: string; headline?: string | null; bio?: string | null; status: "ACTIVE" | "INACTIVE" };
+export type Publication = { id: string; slug: string; title: string; summary: string; body?: string; publicationType: PublicationType; accessType: "PUBLIC" | "PREMIUM" | "INTERNAL_ONLY"; status: PublicationStatus; publishedAt?: string | null; scheduledAt?: string | null; category?: Category; author?: Author; tags: Tag[] };
+export type AdsCompany = { id: string; businessName: string; commercialName: string; contactEmail?: string | null; contactPhone?: string | null; status: "ACTIVE" | "INACTIVE" | "BLOCKED" };
+export type AdsPlacement = { id: string; code: string; name: string; context: "HOME" | "ARTICLE" | "CATEGORY"; isActive: boolean; description?: string | null };
+export type AdsCreative = { id: string; campaignId: string; title: string; assetUrl: string; destinationUrl: string; mediaType: string; isPrimary: boolean; approvalStatus: string };
+export type AdsCampaign = { id: string; companyId: string; company?: AdsCompany; name: string; objective: string; status: "DRAFT" | "ACTIVE" | "PAUSED" | "ENDED" | "CANCELLED" | "REJECTED"; startsAt: string; endsAt: string; budgetAmount: number; currency: string; priority: number; placements: AdsPlacement[]; creatives: AdsCreative[]; notes?: string | null };
+export type HomepagePayload = { generatedAt: string; editorial?: { topHeadline?: Publication | null; headlines?: Publication[]; columns?: Publication[] }; advertising?: unknown; layout?: Array<Record<string, unknown>>; adminPreview?: boolean };

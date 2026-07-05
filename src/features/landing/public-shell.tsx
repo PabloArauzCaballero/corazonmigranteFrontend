@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { HeartPulse, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { fileServer } from "@/config/file-server";
@@ -11,10 +12,11 @@ import { Button } from "@/shared/ui/button";
 const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/biblioteca", label: "Biblioteca" },
+  { href: "/noticias", label: "Noticias" },
   { href: "/privacidad", label: "Privacidad" },
 ];
 
-export function PublicShell({ children }: { children: React.ReactNode }) {
+export function PublicShell({ children }: { children: ReactNode }) {
   const phone = resolveContactPhone();
   const formattedPhone = formatContactPhone(phone);
 
