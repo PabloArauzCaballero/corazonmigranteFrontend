@@ -154,6 +154,14 @@ function externalTarget(href: string) {
   return /^https?:\/\//i.test(href) ? { target: "_blank", rel: "noreferrer" } : {};
 }
 
+function normalizeFooterHref(href?: string) {
+  const value = href?.trim();
+  if (!value) return "#";
+  if (/^#privacidad$/i.test(value)) return "/privacidad";
+  if (/^#terminos$/i.test(value)) return "/terminos";
+  return value;
+}
+
 function publicLinks(content: LandingV2Content) {
   const configured = content.navbar?.links ?? [];
   const clean = configured.filter((item) => {
@@ -169,6 +177,20 @@ function publicLinks(content: LandingV2Content) {
   );
   const library = hasLibrary ? [] : [{ label: "Biblioteca", href: "/biblioteca" }];
   return [...clean, ...library];
+}
+
+function footerLegalLinks(content: LandingV2Content) {
+  const configured = content.footer?.legal?.links ?? [];
+  const normalized = configured
+    .filter((item) => item.label?.trim())
+    .map((item) => ({ ...item, href: normalizeFooterHref(item.href) }));
+  const hasPrivacy = normalized.some((item) => /privacidad/i.test(item.label ?? "") || item.href === "/privacidad");
+  const hasTerms = normalized.some((item) => /terminos/i.test(item.label ?? "") || item.href === "/terminos");
+  return [
+    ...normalized,
+    ...(hasPrivacy ? [] : [{ label: "Privacidad", href: "/privacidad" }]),
+    ...(hasTerms ? [] : [{ label: "Terminos", href: "/terminos" }]),
+  ];
 }
 
 function SectionBadge({ badge }: { badge?: LandingV2IconText }) {
@@ -924,6 +946,7 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
   const year = new Date().getFullYear();
   const copyright = footer?.legal?.copyright_template?.replace("{year}", String(year));
   const links = footer?.quick_links?.length ? footer.quick_links : publicLinks(content);
+  const legalLinks = footerLegalLinks(content);
   const formattedPhone = formatContactPhone(phone);
   return (
     <footer className="border-t border-[#1a342f]/10 bg-[#102f2a] text-white">
@@ -981,7 +1004,7 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
             </p>
           ) : null}
           <div className="mt-5 flex flex-wrap gap-3 text-xs text-white/50">
-            {footer?.legal?.links?.map((item) => (
+            {legalLinks.map((item) => (
               <Link className="transition hover:text-white" href={item.href || "#"} key={linkKey(item, "legal")}>
                 {item.label}
               </Link>

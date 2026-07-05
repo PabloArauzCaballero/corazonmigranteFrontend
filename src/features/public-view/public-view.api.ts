@@ -46,7 +46,7 @@ function publicViewIdentity() {
   const code = env.NEXT_PUBLIC_PUBLIC_VIEW_CODE?.trim();
 
   // Compatibilidad con el versión anterior: el campo llamado "slug" puede traer el id.
-  const id = explicitId || (isNumericId(legacySlug) ? legacySlug : undefined);
+  const id = explicitId || (isNumericId(legacySlug) ? legacySlug : "1");
   const slug = legacySlug && !isNumericId(legacySlug) ? legacySlug : "inicio";
 
   return { id, slug, code, legacySlug };
@@ -61,7 +61,7 @@ function normalizeMode(): PublicViewMode {
 function resolveTemplate(template: string) {
   const identity = publicViewIdentity();
   return template
-    .replaceAll(":id", encodeToken(identity.id || identity.legacySlug || "1"))
+    .replaceAll(":id", encodeToken(identity.id || "1"))
     .replaceAll(":slug", encodeToken(identity.slug || identity.legacySlug || "inicio"))
     .replaceAll(":code", encodeToken(identity.code));
 }
@@ -109,9 +109,11 @@ export function buildConfiguredPublicViewCandidates(): PublicEndpointCandidate[]
 
   // Fallbacks seguros: protegen despliegues donde el sistema ya migró a CMS por slug
   // o donde el id legacy 1 aún no está disponible. No inventan contenido local.
-  if (identity.slug) candidates.push({ label: "fallback-page-slug", url: absoluteUrl(`/api/v1/public/pages/${encodeToken(identity.slug)}`) });
-  candidates.push({ label: "fallback-inicio", url: absoluteUrl("/api/v1/public/pages/inicio") });
-  candidates.push({ label: "fallback-public-view-1", url: absoluteUrl("/api/v1/public-views/1") });
+  if (mode === "auto") {
+    if (identity.slug) candidates.push({ label: "fallback-page-slug", url: absoluteUrl(`/api/v1/public/pages/${encodeToken(identity.slug)}`) });
+    candidates.push({ label: "fallback-inicio", url: absoluteUrl("/api/v1/public/pages/inicio") });
+    candidates.push({ label: "fallback-public-view-1", url: absoluteUrl("/api/v1/public-views/1") });
+  }
 
   return uniqueCandidates(candidates);
 }
@@ -128,15 +130,17 @@ export function buildConfiguredPublicViewElementCandidates(code: string): Public
 
   if (custom) candidates.push(custom);
 
-  if (mode === "page-slug" && !identity.id) {
+  if (mode === "page-slug") {
     candidates.push({ label: "page-slug-element", url: absoluteUrl(resolveTemplate(`/api/v1/public/pages/:slug/elements/${encodeURIComponent(code)}`)) });
   } else {
     candidates.push({ label: "public-view-element", url: absoluteUrl(resolveTemplate(`/api/v1/public-views/:id/elements/${encodeURIComponent(code)}`)) });
   }
 
-  if (identity.slug) candidates.push({ label: "fallback-page-slug-element", url: absoluteUrl(`/api/v1/public/pages/${encodeToken(identity.slug)}/elements/${encodeURIComponent(code)}`) });
-  candidates.push({ label: "fallback-inicio-element", url: absoluteUrl(`/api/v1/public/pages/inicio/elements/${encodeURIComponent(code)}`) });
-  candidates.push({ label: "fallback-public-view-1-element", url: absoluteUrl(`/api/v1/public-views/1/elements/${encodeURIComponent(code)}`) });
+  if (mode === "auto") {
+    if (identity.slug) candidates.push({ label: "fallback-page-slug-element", url: absoluteUrl(`/api/v1/public/pages/${encodeToken(identity.slug)}/elements/${encodeURIComponent(code)}`) });
+    candidates.push({ label: "fallback-inicio-element", url: absoluteUrl(`/api/v1/public/pages/inicio/elements/${encodeURIComponent(code)}`) });
+    candidates.push({ label: "fallback-public-view-1-element", url: absoluteUrl(`/api/v1/public-views/1/elements/${encodeURIComponent(code)}`) });
+  }
 
   return uniqueCandidates(candidates);
 }
