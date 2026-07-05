@@ -176,7 +176,7 @@ async function readJsonOrText(response: Response) {
 
 async function fetchPublicJson(endpoint: string, identity = publicViewIdentity()) {
   const response = await fetch(endpoint, {
-    cache: "no-store",
+    cache: "force-cache",
     headers: {
       Accept: "application/json",
       "x-public-view-slug": identity.legacySlug || identity.slug,
