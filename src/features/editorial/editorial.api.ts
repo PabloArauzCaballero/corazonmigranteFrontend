@@ -1,6 +1,8 @@
+import { env } from "@/config/env";
 import { fileServer, buildPublicAssetUrl } from "@/config/file-server";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
+import { buildFileDownloadUrl } from "@/shared/api/files";
 import { getNumber, getString, isRecord } from "@/shared/api/normalizers";
 import type {
   CmsElement,
@@ -45,13 +47,33 @@ function getContentString(content: Record<string, unknown>, keys: string[], fall
   return getString(content, keys, fallback);
 }
 
-function resolveImageUrl(content: Record<string, unknown>, fallback?: string) {
+function getNestedImageRecord(content: Record<string, unknown>) {
+  for (const key of ["image", "imagen", "cover", "portada", "picture"]) {
+    const value = content[key];
+    if (isRecord(value)) return value;
+  }
+  return undefined;
+}
+
+function resolveImageUrl(content: Record<string, unknown>, fileId?: string, fallback?: string) {
   const direct = getContentString(content, ["imageUrl", "image_url", "imagen", "urlImagen", "coverImageUrl", "cover_url", "mediaUrl", "url", "link"], "");
   if (direct) return direct;
+
+  const nestedImage = getNestedImageRecord(content);
+  if (nestedImage) {
+    const nestedDirect = getContentString(nestedImage, ["src", "url", "imageUrl", "image_url"], "");
+    if (nestedDirect) return nestedDirect;
+    const nestedObjectKey = getContentString(nestedImage, ["objectKey", "object_key"], "");
+    const nestedPublicUrl = buildPublicAssetUrl(nestedObjectKey);
+    if (nestedPublicUrl) return nestedPublicUrl;
+  }
 
   const objectKey = getContentString(content, ["objectKey", "object_key", "fileObjectKey", "archivoObjectKey"], "");
   const publicUrl = buildPublicAssetUrl(objectKey);
   if (publicUrl) return publicUrl;
+
+  const fileUrl = buildFileDownloadUrl(fileId);
+  if (fileUrl) return fileUrl;
 
   return fallback;
 }
@@ -100,7 +122,7 @@ export function mapResourceFromElement(element: CmsElement, index: number): Edit
     eyebrow: getContentString(content, ["eyebrow", "kicker", "antetitulo"], "Biblioteca"),
     summary: getContentString(content, ["summary", "resumen", "excerpt", "descripcion", "description"], ""),
     category: getContentString(content, ["category", "categoria", "section", "seccion"], "Acompañamiento"),
-    imageUrl: resolveImageUrl(content, fileServer.editorialFallbackImageUrl),
+    imageUrl: resolveImageUrl(content, element.fileId, fileServer.editorialFallbackImageUrl),
     imageAlt: getContentString(content, ["imageAlt", "alt", "imagenAlt"], title),
     readTimeLabel: getContentString(content, ["readTimeLabel", "tiempoLectura", "readingTime"], body.length > 0 ? `${Math.max(2, body.length * 2)} min` : "Lectura breve"),
     authorLabel: getContentString(content, ["author", "autor", "authorLabel"], "Equipo Corazón Migrante"),
@@ -123,7 +145,7 @@ export function getHeroFromPage(page: CmsPage): EditorialHero {
       ["subtitle", "subtitulo", "description", "descripcion"],
       "Guías, lecturas y orientación psicoeducativa preparadas por Corazón Migrante."
     ),
-    imageUrl: resolveImageUrl(content, fileServer.editorialHeroImageUrl),
+    imageUrl: resolveImageUrl(content, heroElement?.fileId, fileServer.editorialHeroImageUrl),
     imageAlt: getContentString(content, ["imageAlt", "alt", "imagenAlt"], page.title || "Corazón Migrante"),
     ctaLabel: getContentString(content, ["ctaLabel", "buttonLabel"], "Agendar desde mi portal"),
     ctaHref: getContentString(content, ["ctaHref", "href"], "/booking")
@@ -139,7 +161,12 @@ export function getResourcesFromPage(page: CmsPage) {
 
 function publicCmsPageFallbacks(slug: string) {
   const normalizedSlug = slug.trim() || "biblioteca";
-  const legacyId = normalizedSlug === "biblioteca" ? "2" : normalizedSlug === "inicio" ? "1" : undefined;
+  const legacyId =
+    normalizedSlug === "biblioteca"
+      ? env.NEXT_PUBLIC_CMS_LIBRARY_LEGACY_VIEW_ID?.trim() || "2"
+      : normalizedSlug === "inicio"
+        ? env.NEXT_PUBLIC_PUBLIC_VIEW_ID?.trim() || "1"
+        : undefined;
   const paths = [replacePathParam(ENDPOINTS.cms.publicPage, "slug", normalizedSlug)];
 
   if (legacyId) paths.push(replacePathParam(ENDPOINTS.publicUi.publicViewById, "id", legacyId));

@@ -1,4 +1,5 @@
 import { buildPublicAssetUrl, fileServer } from "@/config/file-server";
+import { buildFileDownloadUrl } from "@/shared/api/files";
 import type {
   LandingCard,
   LandingHero,
@@ -231,6 +232,16 @@ function imageFrom(
   };
 }
 
+function withFileIdFallback(
+  image: LandingImage | undefined,
+  fileId: unknown,
+): LandingImage | undefined {
+  if (image?.src) return image;
+  const url = buildFileDownloadUrl(asString(fileId));
+  if (!url) return image;
+  return { ...(image ?? {}), src: url };
+}
+
 function cardFrom(
   value: unknown,
   uiById: Record<number, UiElementAsset>,
@@ -353,9 +364,13 @@ function sectionFrom(
     .filter(Boolean) as LandingCard[];
   const inferredItems = numberedContainers(record, "contenedor_", uiById);
   const items = explicitItems.length > 0 ? explicitItems : inferredItems;
-  const image = imageFrom(
-    record.image ?? record.img ?? record.media ?? record.imagen ?? record.foto,
-    uiById,
+  const elementRecord = asRecord(value);
+  const image = withFileIdFallback(
+    imageFrom(
+      record.image ?? record.img ?? record.media ?? record.imagen ?? record.foto,
+      uiById,
+    ),
+    elementRecord.fileId ?? elementRecord.file_id,
   );
   const primaryCta = linkFrom(
     record.primaryCta ?? record.primary_cta ?? record.cta,
@@ -567,6 +582,7 @@ function normalizeHero(
   raw: unknown,
   uiById: Record<number, UiElementAsset>,
   pageTitle?: string,
+  fileId?: unknown,
 ): LandingHero | undefined {
   const record = readContentContainer(raw);
   const title = firstString(
@@ -595,9 +611,12 @@ function normalizeHero(
     record.bullets ??
     record.lista ??
     record.puntos;
-  const image = imageFrom(
-    record.image ?? record.img ?? record.media ?? record.imagen ?? record.foto,
-    uiById,
+  const image = withFileIdFallback(
+    imageFrom(
+      record.image ?? record.img ?? record.media ?? record.imagen ?? record.foto,
+      uiById,
+    ),
+    fileId,
   );
   if (!title && !subtitle && !image?.src) return undefined;
   return {
@@ -894,8 +913,9 @@ function normalizeCmsPage(
     "Corazón Migrante";
   const seo = asRecord(page.seoMetadata ?? page.seo_metadata ?? page.seo);
 
+  const heroFileId = asRecord(elementByCode.get("hero")).fileId;
   const hero =
-    normalizeHero(contentOf("hero"), uiById, pageTitle) ??
+    normalizeHero(contentOf("hero"), uiById, pageTitle, heroFileId) ??
     normalizeHero(page, uiById, pageTitle);
   const navbar = normalizeNavbar(contentOf("navbar"), uiById, pageTitle);
   const footerContent = normalizeFooter(contentOf("footer"));
