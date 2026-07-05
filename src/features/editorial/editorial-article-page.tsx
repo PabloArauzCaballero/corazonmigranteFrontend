@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Clock3, UserRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3, LockKeyhole, UserRound } from "lucide-react";
 import { env } from "@/config/env";
 import { getHeroFromPage, getPublicCmsPage, getResourcesFromPage } from "@/features/editorial/editorial.api";
 import { humanizeApiError } from "@/shared/api/errors";
@@ -58,6 +58,7 @@ export function EditorialArticlePage({ slug }: { slug: string }) {
               <div className="space-y-7">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.24em] text-teal-800">
                   <span>{resource.category}</span>
+                  {resource.isPremium ? <span className="inline-flex items-center gap-1 bg-teal-900 px-2 py-1 text-white"><LockKeyhole className="h-3 w-3" />Premium</span> : null}
                   <span className="h-px w-10 bg-teal-800/50" aria-hidden="true" />
                   <span>{resource.eyebrow}</span>
                 </div>
@@ -86,6 +87,20 @@ export function EditorialArticlePage({ slug }: { slug: string }) {
               <EmptyState title="Contenido pendiente" description="El elemento existe en CMS, pero su JSON todavía no incluye body, blocks o contenido de lectura." />
             </div>
           )}
+
+          {resource.isPremium ? (
+            <div className="mx-auto mb-10 max-w-3xl border border-teal-900/20 bg-teal-900/5 p-7">
+              <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-teal-900"><LockKeyhole className="h-4 w-4" />Contenido premium</p>
+              {resource.premiumSummary ? <p className="mt-4 text-sm leading-7 text-slate-700">{resource.premiumSummary}</p> : null}
+              {resource.premiumBodyBlocks.length > 0 ? (
+                <div className="mt-6 grid gap-5 font-serif text-lg leading-8 text-slate-800">
+                  {resource.premiumBodyBlocks.map((block, index) => <p key={`${resource.id}-premium-${index}`}>{block}</p>)}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm leading-7 text-slate-600">Este recurso esta marcado como premium. El contenido adicional puede cargarse desde el administrador editorial.</p>
+              )}
+            </div>
+          ) : null}
 
           <Card className="m-7 rounded-none border-slate-200 bg-[#f7f4ef] shadow-none md:m-10">
             <CardContent className="grid gap-5 p-6 md:grid-cols-[1fr_auto] md:items-center">

@@ -46,6 +46,19 @@ function getContentString(content: Record<string, unknown>, keys: string[], fall
   return getString(content, keys, fallback);
 }
 
+function getContentBoolean(content: Record<string, unknown>, keys: string[], fallback = false) {
+  for (const key of keys) {
+    const value = content[key];
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "yes", "si", "premium"].includes(normalized)) return true;
+      if (["false", "0", "no", "free", "public"].includes(normalized)) return false;
+    }
+  }
+  return fallback;
+}
+
 function getNestedImageRecord(content: Record<string, unknown>) {
   for (const key of ["image", "imagen", "cover", "portada", "picture"]) {
     const value = content[key];
@@ -113,6 +126,9 @@ export function mapResourceFromElement(element: CmsElement, index: number): Edit
   const title = getContentString(content, ["title", "titulo", "name", "nombre"], `Recurso ${index + 1}`);
   const slug = getContentString(content, ["slug", "path", "urlSlug"], element.code || element.id);
   const body = normalizeBodyBlocks(content.bodyBlocks ?? content.blocks ?? content.body ?? content.contenido ?? content.text ?? content.texto);
+  const premiumBody = normalizeBodyBlocks(content.premiumBodyBlocks ?? content.premiumBlocks ?? content.premiumBody ?? content.contenidoPremium);
+  const accessType = getContentString(content, ["accessType", "access", "tipoAcceso"], "").toUpperCase();
+  const isPremium = getContentBoolean(content, ["isPremium", "premium", "esPremium"], accessType === "PREMIUM");
 
   return {
     id: element.id,
@@ -126,7 +142,10 @@ export function mapResourceFromElement(element: CmsElement, index: number): Edit
     readTimeLabel: getContentString(content, ["readTimeLabel", "tiempoLectura", "readingTime"], body.length > 0 ? `${Math.max(2, body.length * 2)} min` : "Lectura breve"),
     authorLabel: getContentString(content, ["author", "autor", "authorLabel"], "Equipo Corazón Migrante"),
     publishedAt: getContentString(content, ["publishedAt", "published_at", "fecha"], "") || undefined,
+    isPremium,
     bodyBlocks: body,
+    premiumSummary: getContentString(content, ["premiumSummary", "resumenPremium", "premiumExcerpt"], "") || undefined,
+    premiumBodyBlocks: premiumBody,
     ctaLabel: getContentString(content, ["ctaLabel", "boton", "buttonLabel"], "") || undefined,
     ctaHref: getContentString(content, ["ctaHref", "href", "linkCta"], "") || undefined,
     sourceElement: element

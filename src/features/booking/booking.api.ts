@@ -14,10 +14,21 @@ export type BookingProduct = {
   currency: string;
 };
 
+export type BookingTherapist = {
+  id: string;
+  name: string;
+  title: string;
+  specialty: string;
+  bio: string;
+  personalPhrase: string;
+  avatarUrl?: string;
+  timezone: string;
+};
+
 export type AvailabilitySlot = {
   scheduledStartAt: string;
   scheduledEndAt?: string;
-  label: string;
+  timezone: string;
 };
 
 function unwrapPayload(payload: unknown) {
@@ -37,13 +48,49 @@ export function mapBookingProduct(item: unknown, index: number): BookingProduct 
   };
 }
 
+function nestedRecord(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    if (isRecord(value)) return value;
+  }
+  return {};
+}
+
+function firstString(records: Record<string, unknown>[], keys: string[], fallback = "") {
+  for (const record of records) {
+    const value = getString(record, keys, "");
+    if (value) return value;
+  }
+  return fallback;
+}
+
+export function mapBookingTherapist(item: unknown, index: number): BookingTherapist {
+  const record = isRecord(item) ? item : {};
+  const profile = nestedRecord(record, ["therapistProfile", "therapist_profile", "perfilTerapeuta", "profile", "perfil"]);
+  const firstName = firstString([record, profile], ["firstName", "first_name", "nombre"], "");
+  const lastName = firstString([record, profile], ["lastName", "last_name", "apellido"], "");
+  const composedName = `${firstName} ${lastName}`.trim();
+  const name = firstString([record, profile], ["name", "nombreCompleto", "fullName", "full_name", "displayName"], composedName || `Terapeuta ${index + 1}`);
+
+  return {
+    id: firstString([record, profile], ["id", "userId", "user_id", "therapistUserId", "therapist_user_id", "uuid"], `terapeuta-${index + 1}`),
+    name,
+    title: firstString([profile, record], ["title", "titulo", "professionalTitle"], "Terapeuta"),
+    specialty: firstString([profile, record], ["mainSpecialty", "main_specialty", "specialty", "especialidad"], "Acompanamiento emocional"),
+    bio: firstString([profile, record], ["bio", "biography", "descripcion"], ""),
+    personalPhrase: firstString([profile, record], ["personalPhrase", "personal_phrase", "phrase", "frase"], ""),
+    avatarUrl: firstString([profile, record], ["avatarUrl", "avatar_url", "photoUrl", "photo_url", "profileImageUrl", "imageUrl", "publicUrl"], "") || undefined,
+    timezone: firstString([profile, record], ["timezone", "timeZone", "zonaHoraria"], "America/La_Paz")
+  };
+}
+
 export function mapAvailabilitySlot(item: unknown, index: number): AvailabilitySlot {
   const record = isRecord(item) ? item : {};
   const scheduledStartAt = getString(record, ["scheduledStartAt", "startAt", "start", "fecha_hora", "dateTime", "datetime"], `slot-${index + 1}`);
   return {
     scheduledStartAt,
     scheduledEndAt: getString(record, ["scheduledEndAt", "endAt", "end"], ""),
-    label: getString(record, ["label", "time", "hora"], scheduledStartAt)
+    timezone: getString(record, ["timezone", "timeZone", "zonaHoraria"], "America/La_Paz")
   };
 }
 
@@ -62,6 +109,19 @@ function normalizeAvailability(payload: unknown): AvailabilitySlot[] {
 export async function listBookingProducts() {
   const payload = await apiRequest<unknown>(`${ENDPOINTS.products.productsPublicList}${buildQueryString({ page: 1, pageSize: 100 })}`, { auth: false });
   return normalizePaginatedResponse(payload, mapBookingProduct, { page: 1, pageSize: 100 }).items;
+}
+
+export async function listBookingTherapists() {
+  const query = buildQueryString({
+    page: 1,
+    pageSize: 100,
+    role: "TERAPEUTA",
+    rol: "TERAPEUTA",
+    status: "activo"
+  });
+  const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${query}`);
+  const result = normalizePaginatedResponse(payload, mapBookingTherapist, { page: 1, pageSize: 100 });
+  return result.items.filter((therapist) => therapist.id && !therapist.id.startsWith("terapeuta-"));
 }
 
 export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {

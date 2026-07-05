@@ -45,7 +45,10 @@ export type EditorialResource = {
   readTimeLabel: string;
   authorLabel: string;
   publishedAt?: string;
+  isPremium: boolean;
   bodyBlocks: string[];
+  premiumSummary?: string;
+  premiumBodyBlocks: string[];
   ctaLabel?: string;
   ctaHref?: string;
   sourceElement: CmsElement;

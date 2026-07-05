@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock3 } from "lucide-react";
+import { ArrowUpRight, Clock3, LockKeyhole } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EditorialResource } from "@/features/editorial/editorial.types";
 
@@ -21,8 +21,9 @@ export function EditorialArticleCard({ resource, priority = false }: { resource:
           />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" aria-hidden="true" />
-        <div className="absolute left-4 top-4 border border-white/40 bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-800 backdrop-blur">
-          {resource.category}
+        <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+          <span className="border border-white/40 bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-800 backdrop-blur">{resource.category}</span>
+          {resource.isPremium ? <span className="inline-flex items-center gap-1 bg-teal-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white"><LockKeyhole className="h-3 w-3" />Premium</span> : null}
         </div>
       </div>
       <div className={cn("flex flex-col justify-between gap-8 p-6 md:p-8", priority ? "lg:min-h-[27rem]" : "")}> 
