@@ -42,5 +42,8 @@ export const fileServer = {
 
 export function buildPublicAssetUrl(objectKey?: string) {
   if (!objectKey || !fileServer.publicAssetsBaseUrl) return undefined;
-  return `${fileServer.publicAssetsBaseUrl}/${objectKey.replace(/^\//, "")}`;
+  const cleanKey = objectKey.replace(/^\//, "");
+  // Use encodeURI to encode spaces and special characters while preserving path structure
+  const encoded = encodeURI(cleanKey);
+  return `${fileServer.publicAssetsBaseUrl}/${encoded}`;
 }

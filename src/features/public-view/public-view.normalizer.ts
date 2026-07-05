@@ -97,8 +97,10 @@ function normalizeAssetUrl(value?: string) {
 
   if (/^https?:\/\//i.test(text)) return encodeAssetUrl(text);
   if (text.startsWith("//")) return `https:${encodeAssetUrl(text)}`;
-  if (text.startsWith("/"))
-    return buildPublicAssetUrl(text) ?? encodeAssetUrl(text);
+  if (text.startsWith("/")) {
+    const built = buildPublicAssetUrl(text);
+    return built ? encodeAssetUrl(built) : encodeAssetUrl(text);
+  }
   if (isLikelyAssetPath(text))
     return buildPublicAssetUrl(text) ?? encodeAssetUrl(text);
 
@@ -234,6 +236,22 @@ function cardFrom(
   uiById: Record<number, UiElementAsset>,
 ): LandingCard | null {
   const record = readContentContainer(value);
+  
+  // Helper to find value starting with prefix (for titulo_*, parrafo_*, etc)
+  const findWithPrefix = (record: Record<string, unknown>, ...prefixes: string[]) => {
+    for (const key of Object.keys(record)) {
+      for (const prefix of prefixes) {
+        if (key.startsWith(prefix)) {
+          const value = record[key];
+          if (typeof value === "string" && value.trim().length > 0) {
+            return value;
+          }
+        }
+      }
+    }
+    return undefined;
+  };
+  
   const title = firstString(
     record.title,
     record.titulo,
@@ -241,6 +259,7 @@ function cardFrom(
     record.name,
     record.nombre,
     record.heading,
+    findWithPrefix(record, "titulo_"),
   );
   const body = firstString(
     record.body,
@@ -250,6 +269,7 @@ function cardFrom(
     record.descripcion,
     record.description,
     record.resumen,
+    findWithPrefix(record, "parrafo_"),
   );
   const label = firstString(
     record.label,
@@ -279,35 +299,7 @@ function numberedContainers(
   const entries = Object.entries(record)
     .filter(([key]) => key.startsWith(prefix))
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
-    .map(([key, value]) => {
-      const container = asRecord(value);
-      const suffix = key.replace(prefix, "");
-      return cardFrom(
-        {
-          title:
-            container[`titulo_${suffix}`] ??
-            container.titulo ??
-            container.title ??
-            container.nombre,
-          body:
-            container[`parrafo_${suffix}`] ??
-            container.parrafo ??
-            container.body ??
-            container.descripcion ??
-            container.description,
-          label:
-            container[`etiqueta_${suffix}`] ??
-            container.label ??
-            container.badge,
-          image:
-            container.img ??
-            container.image ??
-            container.imagen ??
-            container.media,
-        },
-        uiById,
-      );
-    })
+    .map(([key, value]) => cardFrom(value, uiById))
     .filter(Boolean) as LandingCard[];
 
   return entries;
