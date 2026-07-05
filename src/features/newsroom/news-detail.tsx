@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Newspaper, UserRound } from "lucide-react";
 import { newsroomApi } from "@/features/newsroom/newsroom.api";
+import { getPremiumPublication } from "@/features/newsroom/premium-content.api";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -19,10 +20,11 @@ function blocks(body?: string) {
   return (body ?? "").split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
 }
 
-export function NewsDetailPage({ slug }: { slug: string }) {
+export function NewsDetailPage({ slug, premium = false, kind = "news" }: { slug: string; premium?: boolean; kind?: "news" | "columns" }) {
   const query = useQuery({
-    queryKey: ["newsroom-public-detail", slug],
+    queryKey: ["newsroom-public-detail", slug, premium, kind],
     queryFn: async () => {
+      if (premium) return await getPremiumPublication(slug, kind);
       try {
         return await newsroomApi.publicPublication(slug, "news");
       } catch {
@@ -35,7 +37,7 @@ export function NewsDetailPage({ slug }: { slug: string }) {
     <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
       <section className="border-b border-slate-200 bg-white/70">
         <div className="container py-8 md:py-12">
-          <Button asChild className="mb-8 rounded-none" variant="outline"><Link href="/noticias"><ArrowLeft className="h-4 w-4" /> Volver a noticias</Link></Button>
+          <Button asChild className="mb-8 rounded-none" variant="outline"><Link href="/novedades"><ArrowLeft className="h-4 w-4" /> Volver a novedades</Link></Button>
           {query.isLoading ? <LoadingState title="Cargando publicación" /> : null}
           {query.isError ? <ErrorState title="No se pudo abrir la publicación" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}
           {query.data ? (

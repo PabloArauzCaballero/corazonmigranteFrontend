@@ -5,6 +5,6 @@ export const metadata = {
   description: "Lecturas, columnas y novedades de acompanamiento emocional de Corazon Migrante."
 };
 
-export default function NoticiasCompatPage() {
+export default function NovedadesPage() {
   return <NewsPublicPage />;
 }

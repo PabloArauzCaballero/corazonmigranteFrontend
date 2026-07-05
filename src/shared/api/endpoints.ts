@@ -31,7 +31,7 @@ export const ENDPOINTS = {
      * Debe crearse para permitir que ADMIN/SUPER_ADMIN/THERAPIST agenden para un paciente concreto
      * sin convertir al actor autenticado en paciente.
      */
-    createForPatient: `${API_PREFIX}/appointments/admin/create-for-patient`
+    createForPatient: `${API_PREFIX}/appointments`
   },
   booking: {
     availability: `${API_PREFIX}/booking/availability`
@@ -79,6 +79,14 @@ export const ENDPOINTS = {
     publicPage: `${API_PREFIX}/public/pages/:slug`,
     adminCreatePage: `${API_PREFIX}/admin/cms/pages`,
     adminAddElement: `${API_PREFIX}/admin/cms/pages/:pageId/elements`
+  },
+  content: {
+    subscriptionMine: `${API_PREFIX}/me/news-subscription`,
+    premiumNewsDetail: `${API_PREFIX}/premium/publications/news/:slug`,
+    premiumColumnDetail: `${API_PREFIX}/premium/publications/columns/:slug`,
+    subscribe: `${API_PREFIX}/publications/subscribers`,
+    adminSubscribers: `${API_PREFIX}/admin/content/subscribers`,
+    adminSubscriberById: `${API_PREFIX}/admin/content/subscribers/:id`
   },
   publicUi: {
     pageBundle: `${API_PREFIX}/public/pages/:slug`,

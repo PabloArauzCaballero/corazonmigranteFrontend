@@ -398,7 +398,7 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
         <CardDescription>Selecciona terapeuta, servicio y horario calculado antes de enviar la solicitud operativa.</CardDescription>
       </CardHeader>
       <CardContent className="p-7">
-        <form className="grid gap-7" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+        <form className="grid gap-7" onSubmit={(event) => event.preventDefault()}>
           <BookingFields
             form={form}
             products={data.products.data ?? []}
@@ -409,10 +409,10 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
           />
           <div className="border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
             <span className="inline-flex items-center gap-2 font-semibold"><LockKeyhole className="h-4 w-4" />Accion operativa protegida</span>
-            <p className="mt-1">El OpenAPI actual no expone un endpoint publico para crear citas a nombre de otro paciente; esta accion depende del contrato protegido configurado para el rol.</p>
+            <p className="mt-1">El OpenAPI actualizado indica que `POST /appointments` requiere rol PATIENT. Admin y terapeuta pueden consultar disponibilidad y revisar reglas, pero no crear una sesion por otro paciente hasta que exista un endpoint operativo dedicado.</p>
           </div>
           {mutation.isError ? <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{humanizeApiError(mutation.error)}</p> : null}
-          <Button disabled={mutation.isPending} type="submit" variant="outline" className="w-full rounded-none md:w-fit">Validar disponibilidad</Button>
+          <Button disabled type="button" variant="outline" className="w-full rounded-none md:w-fit">Creacion operativa pendiente de endpoint</Button>
         </form>
       </CardContent>
     </Card>

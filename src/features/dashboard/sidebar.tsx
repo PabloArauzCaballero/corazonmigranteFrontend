@@ -3,7 +3,7 @@
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, CalendarDays, Files, HeartPulse, Home, LayoutDashboard, LogOut, Megaphone, Newspaper, Package, ReceiptText, Tags, UserCog, UserRound, UsersRound } from "lucide-react";
+import { BookOpen, CalendarDays, Crown, Files, HeartPulse, Home, LayoutDashboard, LogOut, Megaphone, Newspaper, Package, ReceiptText, Tags, UserCog, UserRound, UsersRound } from "lucide-react";
 import { clearClientSession } from "@/shared/auth/cookies";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -18,28 +18,29 @@ export const patientNav: SidebarItem[] = [
   { href: "/paciente", label: "Resumen", icon: Home },
   { href: "/paciente/citas", label: "Mis citas", icon: CalendarDays },
   { href: "/paciente/booking", label: "Reservar cita", icon: HeartPulse },
+  { href: "/paciente/premium", label: "Contenido premium", icon: Crown },
   { href: "/paciente/perfil", label: "Perfil", icon: UserRound }
 ];
 
 export const therapistNav: SidebarItem[] = [
   { href: "/terapeuta", label: "Resumen", icon: LayoutDashboard },
   { href: "/terapeuta/agenda", label: "Agenda", icon: CalendarDays },
-  { href: "/terapeuta/booking", label: "Agendar paciente", icon: HeartPulse },
+  { href: "/terapeuta/booking", label: "Disponibilidad", icon: HeartPulse },
   { href: "/terapeuta/perfil", label: "Perfil", icon: UserRound }
 ];
 
 export const adminNav: SidebarItem[] = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard },
   { href: "/admin/solicitudes", label: "Solicitudes", icon: CalendarDays },
-  { href: "/admin/booking", label: "Nueva cita", icon: HeartPulse },
+  { href: "/admin/booking", label: "Disponibilidad", icon: HeartPulse },
   { href: "/admin/usuarios", label: "Usuarios", icon: UsersRound },
   { href: "/admin/productos/enfoques", label: "Enfoques", icon: HeartPulse },
   { href: "/admin/productos/servicios", label: "Servicios", icon: Package },
-  { href: "/biblioteca", label: "Vistas públicas", icon: Files },
-  { href: "/noticias", label: "Noticias públicas", icon: Newspaper },
+  { href: "/biblioteca", label: "Vistas publicas", icon: Files },
+  { href: "/novedades", label: "Novedades publicas", icon: Newspaper },
   { href: "/admin/contenido/editorial", label: "Biblioteca CMS", icon: BookOpen },
   { href: "/admin/contenido/publicaciones", label: "Publicaciones", icon: Newspaper },
-  { href: "/admin/contenido/categorias", label: "Categorías", icon: Tags },
+  { href: "/admin/contenido/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/contenido/tags", label: "Tags", icon: Tags },
   { href: "/admin/contenido/autores", label: "Autores", icon: UserRound },
   { href: "/admin/contenido/homepage", label: "Portada", icon: Home },
@@ -62,9 +63,9 @@ export function DashboardShell({ navItems, title, children }: { navItems: Sideba
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-card/95 p-5 backdrop-blur lg:block">
         <Link href="/" className="flex items-center gap-3 font-bold">
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><HeartPulse className="h-6 w-6" /></span>
-          <span>{title}<span className="block text-xs font-medium text-muted-foreground">Corazón Migrante</span></span>
+          <span>{title}<span className="block text-xs font-medium text-muted-foreground">Corazon Migrante</span></span>
         </Link>
-        <nav className="mt-8 grid gap-2" aria-label="Navegación del panel">
+        <nav className="mt-8 grid gap-2" aria-label="Navegacion del panel">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (
@@ -80,7 +81,7 @@ export function DashboardShell({ navItems, title, children }: { navItems: Sideba
           })}
         </nav>
         <Button className="absolute bottom-5 left-5 right-5" onClick={logout} variant="outline">
-          <LogOut className="h-4 w-4" /> Cerrar sesión
+          <LogOut className="h-4 w-4" /> Cerrar sesion
         </Button>
       </aside>
       <div className="lg:pl-72">
@@ -89,7 +90,7 @@ export function DashboardShell({ navItems, title, children }: { navItems: Sideba
             <Link href="/" className="font-bold">{title}</Link>
             <Button onClick={logout} size="sm" variant="outline">Salir</Button>
           </div>
-          <nav className="container flex gap-2 overflow-x-auto pb-3" aria-label="Navegación móvil">
+          <nav className="container flex gap-2 overflow-x-auto pb-3" aria-label="Navegacion movil">
             {navItems.map((item) => (
               <Link className="shrink-0 rounded-full border bg-card px-3 py-1.5 text-xs font-semibold" href={item.href} key={item.href}>{item.label}</Link>
             ))}

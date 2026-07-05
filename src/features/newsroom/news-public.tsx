@@ -43,7 +43,7 @@ function PublicationCard({ item, featured = false }: { item: Publication; featur
               {(item.tags ?? []).slice(0, 3).map((tag) => <Badge key={tag.id} variant="muted">{tag.name}</Badge>)}
             </div>
             <Button asChild className="rounded-none bg-teal-900 hover:bg-teal-950">
-              <Link href={{ pathname: "/noticias/detalle", query: { slug: item.slug } }}>Leer <ArrowRight className="h-4 w-4" /></Link>
+              <Link href={{ pathname: "/novedades/detalle", query: { slug: item.slug } }}>Leer <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -75,11 +75,11 @@ export function NewsPublicPage() {
         <div className="container grid gap-10 py-10 md:grid-cols-[1fr_0.72fr] md:py-16">
           <div className="space-y-8">
             <div className="inline-flex w-fit items-center gap-2 border border-teal-900/20 bg-teal-900/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-teal-900">
-              <Newspaper className="h-4 w-4" aria-hidden="true" /> Noticias y columnas
+              <Newspaper className="h-4 w-4" aria-hidden="true" /> Novedades y columnas
             </div>
             <div className="space-y-5">
-              <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.98] tracking-tight text-slate-950 md:text-7xl">Actualidad migrante con mirada humana.</h1>
-              <p className="max-w-2xl text-base leading-8 text-slate-600 md:text-lg">Vista pública absorbida del módulo editorial: noticias, columnas y reportes publicados desde el backend unificado de Corazón Migrante.</p>
+              <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.98] tracking-tight text-slate-950 md:text-7xl">Lecturas serias para acompanar procesos migrantes.</h1>
+              <p className="max-w-2xl text-base leading-8 text-slate-600 md:text-lg">Novedades, columnas y recursos editoriales publicados por Corazon Migrante con una mirada clinica y humana.</p>
             </div>
             <form className="grid max-w-2xl gap-3 border border-slate-200 bg-white p-2 sm:grid-cols-[1fr_auto]" onSubmit={(event) => { event.preventDefault(); setSubmittedSearch(search.trim()); }}>
               <div className="relative">
@@ -105,7 +105,7 @@ export function NewsPublicPage() {
 
       <section className="container grid gap-4 border-b border-slate-200 py-6 md:grid-cols-3">
         <button className={`flex items-start gap-3 border bg-white p-4 text-left transition ${mode === "news" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("news")} type="button">
-          <Newspaper className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Noticias</b><span className="text-sm">Titulares y reportes publicados.</span></span>
+          <Newspaper className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Novedades</b><span className="text-sm">Actualizaciones y lecturas institucionales.</span></span>
         </button>
         <button className={`flex items-start gap-3 border bg-white p-4 text-left transition ${mode === "columns" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("columns")} type="button">
           <BookOpen className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Columnas</b><span className="text-sm">Opinión y lectura editorial.</span></span>

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { listTherapistAgenda, type TherapistAgendaRow } from "@/features/therapy/therapy.api";
+import { AppointmentsCalendar } from "@/features/therapy/appointments-calendar";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { DataTable, PaginationBar } from "@/shared/ui/data-table";
@@ -22,6 +23,10 @@ export function TherapistAgendaTable() {
 
   return query.data ? (
     <div className="grid gap-4">
+      <AppointmentsCalendar
+        title="Agenda semanal"
+        items={query.data.items.map((row) => ({ id: row.id, date: row.date, title: row.patient, subtitle: row.service, status: row.status }))}
+      />
       <DataTable<TherapistAgendaRow>
         data={query.data.items}
         getRowKey={(row) => row.id}

@@ -12,7 +12,7 @@ import { Button } from "@/shared/ui/button";
 const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/biblioteca", label: "Biblioteca" },
-  { href: "/noticias", label: "Noticias" },
+  { href: "/novedades", label: "Novedades" },
   { href: "/privacidad", label: "Privacidad" },
 ];
 
