@@ -3,7 +3,7 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Archive, BookOpen, Home, Megaphone, Newspaper, Plus, Send, Tags, UserRoundPlus } from "lucide-react";
+import { Archive, Home, Megaphone, Newspaper, Plus, Send, Tags, UserRoundPlus } from "lucide-react";
 import { adsApi, newsroomApi } from "@/features/newsroom/newsroom.api";
 import type { AdsCampaign, AdsCompany, AdsPlacement, Author, Category, Publication, PublicationType, Tag } from "@/features/newsroom/newsroom.types";
 import { csv, Field, fmtDate, fnum, fstr, isoLocal, NativeInput, NativeTextarea, Notice, Panel, Select, StatusBadge, Submit, typeLabel } from "@/features/newsroom/admin-kit";

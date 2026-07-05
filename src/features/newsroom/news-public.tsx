@@ -43,7 +43,7 @@ function PublicationCard({ item, featured = false }: { item: Publication; featur
               {(item.tags ?? []).slice(0, 3).map((tag) => <Badge key={tag.id} variant="muted">{tag.name}</Badge>)}
             </div>
             <Button asChild className="rounded-none bg-teal-900 hover:bg-teal-950">
-              <Link href={`/noticias/${item.slug}`}>Leer <ArrowRight className="h-4 w-4" /></Link>
+              <Link href={{ pathname: "/noticias/detalle", query: { slug: item.slug } }}>Leer <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -65,7 +65,7 @@ export function NewsPublicPage() {
       : newsroomApi.publicColumns({ page: 1, pageSize: 18, search: submittedSearch, categorySlug })
   });
 
-  const items = list.data?.items ?? [];
+  const items = useMemo(() => list.data?.items ?? [], [list.data?.items]);
   const featured = items[0];
   const rest = useMemo(() => items.slice(1), [items]);
 

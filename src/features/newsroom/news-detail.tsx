@@ -25,7 +25,7 @@ export function NewsDetailPage({ slug }: { slug: string }) {
     queryFn: async () => {
       try {
         return await newsroomApi.publicPublication(slug, "news");
-      } catch (error) {
+      } catch {
         return await newsroomApi.publicPublication(slug, "columns");
       }
     }
