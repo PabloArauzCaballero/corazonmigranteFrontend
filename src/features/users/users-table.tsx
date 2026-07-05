@@ -2,8 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
-import type { AdminUser } from "@/features/users/users.types";
-import { createUser, listUsers, type CreateUserInput } from "@/features/users/users.api";
+import type { AdminUser, AdminUserStatus } from "@/features/users/users.types";
+import { createUser, listUsers, updateUserStatus, type CreateUserInput } from "@/features/users/users.api";
+import { fetchProfessions, fetchSpecialties } from "@/features/auth/public-options";
 import { useDebounce } from "@/shared/hooks/use-debounce";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
@@ -14,6 +15,68 @@ import { ErrorState, LoadingState } from "@/shared/ui/state";
 import { Button } from "@/shared/ui/button";
 
 const PAGE_SIZE = 20;
+
+function initialsFrom(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? "?";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return `${first}${last}`.toUpperCase();
+}
+
+function UserAvatar({ user }: { user: AdminUser }) {
+  if (user.avatarUrl) {
+    return (
+      <img
+        src={user.avatarUrl}
+        alt={user.name}
+        className="h-10 w-10 rounded-full border object-cover"
+        onError={(event) => {
+          event.currentTarget.style.display = "none";
+        }}
+      />
+    );
+  }
+  return (
+    <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/12 text-sm font-bold text-primary">
+      {initialsFrom(user.name)}
+    </span>
+  );
+}
+
+const statusActions: { value: AdminUserStatus; label: string }[] = [
+  { value: "activo", label: "Activar" },
+  { value: "bloqueado", label: "Bloquear" },
+  { value: "pendiente", label: "Marcar pendiente" }
+];
+
+function StatusActions({ user }: { user: AdminUser }) {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (status: AdminUserStatus) => updateUserStatus(user.id, status),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+    }
+  });
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {statusActions
+        .filter((action) => action.value !== user.status)
+        .map((action) => (
+          <Button
+            key={action.value}
+            size="sm"
+            variant="outline"
+            disabled={mutation.isPending}
+            onClick={() => mutation.mutate(action.value)}
+          >
+            {action.label}
+          </Button>
+        ))}
+      {mutation.isError ? <p className="w-full text-xs text-destructive">{humanizeApiError(mutation.error)}</p> : null}
+    </div>
+  );
+}
 
 export function UsersTable() {
   const queryClient = useQueryClient();
@@ -26,6 +89,9 @@ export function UsersTable() {
     queryKey: ["users", { search: debouncedSearch, page, pageSize: PAGE_SIZE }],
     queryFn: () => listUsers({ search: debouncedSearch, page, pageSize: PAGE_SIZE })
   });
+  const specialties = useQuery({ queryKey: ["public-options", "specialties"], queryFn: fetchSpecialties, enabled: role === "TERAPEUTA" });
+  const professions = useQuery({ queryKey: ["public-options", "professions"], queryFn: fetchProfessions, enabled: role === "TERAPEUTA" });
+
   const createMutation = useMutation({
     mutationFn: async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -49,30 +115,54 @@ export function UsersTable() {
   });
 
   return (
-    <div className="grid gap-4">
-      <form className="grid gap-4 border border-slate-200 bg-white p-5 md:grid-cols-2" onSubmit={(event) => createMutation.mutate(event)}>
+    <div className="grid gap-6">
+      <form className="grid gap-4 rounded-2xl border bg-card p-6 shadow-sm md:grid-cols-2" onSubmit={(event) => createMutation.mutate(event)}>
         <div className="md:col-span-2">
-          <h2 className="font-serif text-2xl font-bold">Crear usuario</h2>
-          <p className="mt-1 text-sm text-slate-600">El backend actual permite registrar pacientes y terapeutas. Los roles administrativos requieren endpoint dedicado.</p>
+          <h2 className="text-lg font-bold">Crear usuario</h2>
+          <p className="mt-1 text-sm text-muted-foreground">El backend actual permite registrar pacientes y terapeutas. Los roles administrativos requieren endpoint dedicado.</p>
         </div>
-        <div className="grid gap-2"><Label>Rol</Label><select className="focus-ring h-11 rounded-none border bg-background px-3 text-sm" value={role} onChange={(event) => setRole(event.target.value as CreateUserInput["role"])}><option value="PACIENTE">Paciente</option><option value="TERAPEUTA">Terapeuta</option><option value="ADMIN">Admin</option><option value="SUPER_ADMIN">Super admin</option><option value="CONTADOR">Contador</option></select></div>
-        <div className="grid gap-2"><Label>Correo</Label><Input name="email" type="email" required className="rounded-none" /></div>
-        <div className="grid gap-2"><Label>Nombre</Label><Input name="firstName" required className="rounded-none" /></div>
-        <div className="grid gap-2"><Label>Apellido</Label><Input name="lastName" required className="rounded-none" /></div>
-        <div className="grid gap-2"><Label>Telefono</Label><Input name="phone" className="rounded-none" /></div>
-        <div className="grid gap-2"><Label>Contrasena temporal</Label><Input name="password" type="password" required minLength={8} className="rounded-none" /></div>
+        <div className="grid gap-2">
+          <Label>Rol</Label>
+          <select className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm" value={role} onChange={(event) => setRole(event.target.value as CreateUserInput["role"])}>
+            <option value="PACIENTE">Paciente</option>
+            <option value="TERAPEUTA">Terapeuta</option>
+            <option value="ADMIN">Admin</option>
+            <option value="SUPER_ADMIN">Super admin</option>
+            <option value="CONTADOR">Contador</option>
+          </select>
+        </div>
+        <div className="grid gap-2"><Label>Correo</Label><Input name="email" type="email" required /></div>
+        <div className="grid gap-2"><Label>Nombre</Label><Input name="firstName" required /></div>
+        <div className="grid gap-2"><Label>Apellido</Label><Input name="lastName" required /></div>
+        <div className="grid gap-2"><Label>Telefono</Label><Input name="phone" /></div>
+        <div className="grid gap-2"><Label>Contrasena temporal</Label><Input name="password" type="password" required minLength={8} /></div>
         {role === "TERAPEUTA" ? (
           <>
-            <div className="grid gap-2"><Label>Titulo profesional</Label><Input name="title" required className="rounded-none" /></div>
-            <div className="grid gap-2"><Label>Especialidad principal</Label><Input name="mainSpecialty" required className="rounded-none" /></div>
-            <div className="grid gap-2 md:col-span-2"><Label>Bio</Label><Input name="bio" className="rounded-none" /></div>
+            <div className="grid gap-2">
+              <Label>Titulo profesional</Label>
+              <select name="title" required className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm" disabled={professions.isLoading}>
+                <option value="">{professions.isLoading ? "Cargando..." : "Seleccionar titulo"}</option>
+                {professions.data?.map((title) => <option key={title} value={title}>{title}</option>)}
+              </select>
+              {professions.isError ? <p className="text-xs text-destructive">No se pudo cargar el catálogo de títulos.</p> : null}
+            </div>
+            <div className="grid gap-2">
+              <Label>Especialidad principal</Label>
+              <select name="mainSpecialty" required className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm" disabled={specialties.isLoading}>
+                <option value="">{specialties.isLoading ? "Cargando..." : "Seleccionar especialidad"}</option>
+                {specialties.data?.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
+              </select>
+              {specialties.isError ? <p className="text-xs text-destructive">No se pudo cargar el catálogo de especialidades.</p> : null}
+            </div>
+            <div className="grid gap-2 md:col-span-2"><Label>Bio</Label><Input name="bio" /></div>
           </>
         ) : null}
-        {createMutation.isError ? <p className="text-sm text-red-700 md:col-span-2">{humanizeApiError(createMutation.error)}</p> : null}
+        {createMutation.isError ? <p className="text-sm text-destructive md:col-span-2">{humanizeApiError(createMutation.error)}</p> : null}
         {createMutation.isSuccess ? <p className="text-sm text-emerald-700 md:col-span-2">Usuario enviado al backend correctamente.</p> : null}
-        <div className="md:col-span-2"><Button disabled={createMutation.isPending} className="rounded-none bg-teal-900 hover:bg-teal-950">{createMutation.isPending ? "Creando..." : "Crear usuario"}</Button></div>
+        <div className="md:col-span-2"><Button disabled={createMutation.isPending} type="submit">{createMutation.isPending ? "Creando..." : "Crear usuario"}</Button></div>
       </form>
-      <div className="rounded-2xl border bg-card p-4">
+
+      <div className="rounded-2xl border bg-card p-5 shadow-sm">
         <Label htmlFor="usersSearch">Buscar usuarios</Label>
         <Input
           id="usersSearch"
@@ -95,10 +185,22 @@ export function UsersTable() {
             data={query.data.items}
             getRowKey={(row) => row.id}
             columns={[
-              { key: "name", header: "Nombre", render: (row) => <span className="font-semibold">{row.name}</span> },
-              { key: "email", header: "Correo", render: (row) => row.email },
+              {
+                key: "name",
+                header: "Usuario",
+                render: (row) => (
+                  <div className="flex items-center gap-3">
+                    <UserAvatar user={row} />
+                    <div>
+                      <p className="font-semibold">{row.name}</p>
+                      <p className="text-xs text-muted-foreground">{row.email}</p>
+                    </div>
+                  </div>
+                )
+              },
               { key: "role", header: "Rol", render: (row) => <Badge variant="secondary">{row.role}</Badge> },
-              { key: "status", header: "Estado", render: (row) => <Badge variant={row.status === "activo" ? "success" : row.status === "pendiente" ? "warning" : "muted"}>{row.status}</Badge> }
+              { key: "status", header: "Estado", render: (row) => <Badge variant={row.status === "activo" ? "success" : row.status === "pendiente" ? "warning" : "muted"}>{row.status}</Badge> },
+              { key: "actions", header: "Acciones", render: (row) => <StatusActions user={row} /> }
             ]}
           />
           <PaginationBar page={query.data.page} totalPages={query.data.totalPages} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(query.data.totalPages, current + 1))} />

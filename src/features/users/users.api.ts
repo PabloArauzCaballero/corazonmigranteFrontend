@@ -1,24 +1,53 @@
+import { buildPublicAssetUrl } from "@/config/file-server";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
+import { buildFileDownloadUrl } from "@/shared/api/files";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
 import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
 import { ROLES, type UserRole } from "@/shared/auth/roles";
 import type { AdminUser, AdminUserStatus } from "@/features/users/users.types";
 import { ApiError } from "@/shared/api/errors";
 
+function replacePathParam(path: string, param: string, value: string) {
+  return path.replace(`:${param}`, encodeURIComponent(value));
+}
+
 function normalizeRole(value: unknown): UserRole {
   const role = String(value ?? "").trim().toUpperCase();
   return ROLES.includes(role as UserRole) ? (role as UserRole) : "PACIENTE";
+}
+
+function resolveUserName(record: Record<string, unknown>) {
+  const direct = getString(record, ["name", "nombre", "full_name", "nombre_completo", "displayName"], "");
+  if (direct) return direct;
+
+  const firstName = getString(record, ["firstName", "first_name", "nombres"], "");
+  const lastName = getString(record, ["lastName", "last_name", "apellidos"], "");
+  const combined = [firstName, lastName].filter(Boolean).join(" ").trim();
+  return combined || "Sin nombre";
+}
+
+function resolveUserAvatar(record: Record<string, unknown>) {
+  const direct = getString(record, ["avatarUrl", "avatar_url", "photoUrl", "photo_url", "imageUrl", "image_url", "fotoUrl"], "");
+  if (direct) return direct;
+
+  const objectKey = getString(record, ["avatarObjectKey", "avatar_object_key", "photoObjectKey"], "");
+  const publicUrl = buildPublicAssetUrl(objectKey);
+  if (publicUrl) return publicUrl;
+
+  const fileId = getString(record, ["avatarFileId", "avatar_file_id", "photoFileId", "photo_file_id", "fileId", "file_id"], "");
+  return buildFileDownloadUrl(fileId);
 }
 
 export function mapUser(item: unknown, index: number): AdminUser {
   const record = isRecord(item) ? item : {};
   return {
     id: getString(record, ["id", "user_id", "id_usuario", "uuid"], `usuario-${index + 1}`),
-    name: getString(record, ["name", "nombre", "full_name", "nombre_completo", "displayName"], "Sin nombre"),
+    name: resolveUserName(record),
     email: getString(record, ["email", "correo", "correo_electronico"], "sin-correo@corazonmigrante.local"),
     role: normalizeRole(record.role ?? record.rol ?? record.tipo_usuario),
-    status: normalizeStatus(record.status ?? record.estado ?? record.activo) as AdminUserStatus
+    status: normalizeStatus(record.status ?? record.estado ?? record.activo) as AdminUserStatus,
+    avatarUrl: resolveUserAvatar(record)
   };
 }
 
@@ -74,4 +103,18 @@ export async function createUser(input: CreateUserInput) {
   }
 
   throw new ApiError("El OpenAPI actual solo expone creacion de pacientes y terapeutas. Admin, super admin y contador requieren un endpoint administrativo dedicado.", 501);
+}
+
+const statusToBackend: Record<AdminUserStatus, string> = {
+  activo: "ACTIVE",
+  inactivo: "INACTIVE",
+  bloqueado: "BLOCKED",
+  pendiente: "PENDING"
+};
+
+export async function updateUserStatus(userId: string, status: AdminUserStatus) {
+  return apiRequest<unknown>(replacePathParam(ENDPOINTS.users.updateStatus, "userId", userId), {
+    method: "PATCH",
+    body: { status: statusToBackend[status] }
+  });
 }

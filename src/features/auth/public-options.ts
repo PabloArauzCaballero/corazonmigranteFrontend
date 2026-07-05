@@ -16,3 +16,11 @@ export function fetchCountriesCities() {
 export function fetchOccupations() {
   return fetchJson<string[]>(fileServer.occupationsUrl);
 }
+
+export function fetchSpecialties() {
+  return fetchJson<string[]>(fileServer.specialtiesUrl);
+}
+
+export function fetchProfessions() {
+  return fetchJson<string[]>(fileServer.professionsUrl);
+}

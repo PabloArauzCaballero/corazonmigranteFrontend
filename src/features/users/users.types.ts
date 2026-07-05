@@ -8,4 +8,5 @@ export type AdminUser = {
   email: string;
   role: UserRole;
   status: AdminUserStatus;
+  avatarUrl?: string;
 };
