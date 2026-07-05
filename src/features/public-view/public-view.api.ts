@@ -175,13 +175,18 @@ async function readJsonOrText(response: Response) {
 }
 
 async function fetchPublicJson(endpoint: string, identity = publicViewIdentity()) {
+  const isBrowser = typeof window !== "undefined";
   const response = await fetch(endpoint, {
-    cache: "force-cache",
+    cache: isBrowser ? "no-store" : "force-cache",
     headers: {
       Accept: "application/json",
-      "x-public-view-slug": identity.legacySlug || identity.slug,
-      ...(identity.id ? { "x-public-view-id": identity.id } : {}),
-      ...(identity.code ? { "x-public-view-code": identity.code } : {})
+      ...(!isBrowser
+        ? {
+            "x-public-view-slug": identity.legacySlug || identity.slug,
+            ...(identity.id ? { "x-public-view-id": identity.id } : {}),
+            ...(identity.code ? { "x-public-view-code": identity.code } : {})
+          }
+        : {})
     }
   });
   const payload = await readJsonOrText(response);
