@@ -10,12 +10,10 @@ describe("public view api endpoints", () => {
     process.env = { ...originalEnv };
   });
 
-  it("usa public-views/1 para la landing aunque el slug configurado sea biblioteca", async () => {
+  it("usa public-views/1 para la landing por defecto", async () => {
     process.env = {
       ...originalEnv,
       NEXT_PUBLIC_API_BASE_URL: "https://api.corazondemigrante.com",
-      NEXT_PUBLIC_PUBLIC_VIEW_MODE: "public-view-id",
-      NEXT_PUBLIC_PUBLIC_VIEW_SLUG: "biblioteca",
       NEXT_PUBLIC_PUBLIC_VIEW_ID: "",
     };
 

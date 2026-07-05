@@ -328,6 +328,9 @@ function Hero({
                   alt={hero?.image?.alt || title}
                   className="absolute inset-0 h-full w-full object-cover"
                   src={heroImage}
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
                 />
               ) : null}
               <div className="absolute inset-0 bg-gradient-to-t from-[#102f2a]/90 via-[#102f2a]/24 to-transparent" />

@@ -3,9 +3,9 @@ import { env } from "@/config/env";
 const DEFAULT_FILE_SERVER = {
   logoUrl: "https://storage.googleapis.com/vistas_publicas_assets/global_assets/media/LOGO%20CORAZON%20MIGRANTE.png",
   authImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Dise_o_sin_t_tulo_7__c464ecd0-68bd-4a35-afed-c7bad56c7670.png",
-  landingHeroImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/global_assets/media/landing_hero_migrante_1.jpeg",
+  landingHeroImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Ana_migrante-1.jpg",
   therapyImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Dise_o_sin_t_tulo_7__c464ecd0-68bd-4a35-afed-c7bad56c7670.png",
-  familyImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/global_assets/media/landing_hero_migrante_1.jpeg",
+  familyImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Ana_migrante-1.jpg",
   libraryImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Dise_o_sin_t_tulo_7__c464ecd0-68bd-4a35-afed-c7bad56c7670.png",
   editorialHeroImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Dise_o_sin_t_tulo_7__c464ecd0-68bd-4a35-afed-c7bad56c7670.png",
   editorialFallbackImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Dise_o_sin_t_tulo_7__c464ecd0-68bd-4a35-afed-c7bad56c7670.png",

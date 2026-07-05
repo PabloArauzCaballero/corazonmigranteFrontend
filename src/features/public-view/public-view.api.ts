@@ -2,8 +2,6 @@ import { env } from "@/config/env";
 import { normalizePublicLandingResponse } from "@/features/public-view/public-view.normalizer";
 import type { PublicViewLoadResult } from "@/features/public-view/public-view.types";
 
-type PublicViewMode = "auto" | "public-view-id" | "page-by-id" | "page-slug";
-
 type PublicEndpointCandidate = {
   label: string;
   url: string;
@@ -17,7 +15,7 @@ function apiBaseUrl() {
   const baseUrl = env.NEXT_PUBLIC_API_BASE_URL;
 
   if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_API_BASE_URL no está configurado. Revisa .env.local.");
+    throw new Error("NEXT_PUBLIC_API_BASE_URL no esta configurado. Revisa .env.local.");
   }
 
   return baseUrl.replace(/\/$/, "");
@@ -36,33 +34,17 @@ function uniqueCandidates(candidates: PublicEndpointCandidate[]) {
   });
 }
 
-function isNumericId(value: string | undefined) {
-  return !!value && /^\d+$/.test(value.trim());
-}
-
 function publicViewIdentity() {
-  const legacySlug = env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG?.trim();
-  const explicitId = env.NEXT_PUBLIC_PUBLIC_VIEW_ID?.trim();
+  const id = env.NEXT_PUBLIC_PUBLIC_VIEW_ID?.trim() || "1";
   const code = env.NEXT_PUBLIC_PUBLIC_VIEW_CODE?.trim();
 
-  // Compatibilidad con el versión anterior: el campo llamado "slug" puede traer el id.
-  const id = explicitId || (isNumericId(legacySlug) ? legacySlug : "1");
-  const slug = legacySlug && !isNumericId(legacySlug) ? legacySlug : "inicio";
-
-  return { id, slug, code, legacySlug };
-}
-
-function normalizeMode(): PublicViewMode {
-  const mode = env.NEXT_PUBLIC_PUBLIC_VIEW_MODE;
-  if (mode === "auto" || mode === "public-view-id" || mode === "page-by-id" || mode === "page-slug") return mode;
-  return "public-view-id";
+  return { id, code };
 }
 
 function resolveTemplate(template: string) {
   const identity = publicViewIdentity();
   return template
-    .replaceAll(":id", encodeToken(identity.id || "1"))
-    .replaceAll(":slug", encodeToken(identity.slug || identity.legacySlug || "inicio"))
+    .replaceAll(":id", encodeToken(identity.id))
     .replaceAll(":code", encodeToken(identity.code));
 }
 
@@ -89,31 +71,11 @@ export function buildConfiguredPublicViewUrl() {
 }
 
 export function buildConfiguredPublicViewCandidates(): PublicEndpointCandidate[] {
-  const identity = publicViewIdentity();
-  const mode = normalizeMode();
   const custom = configuredEndpointCandidate();
   const candidates: PublicEndpointCandidate[] = [];
 
   if (custom) candidates.push(custom);
-
-  if (mode === "page-slug") {
-    candidates.push({ label: "page-slug", url: absoluteUrl(resolveTemplate("/api/v1/public/pages/:slug")) });
-  } else if (mode === "page-by-id") {
-    candidates.push({ label: "page-by-id", url: absoluteUrl(resolveTemplate("/api/v1/public/pages/by-id/:id")) });
-  } else if (mode === "auto") {
-    if (identity.id) candidates.push({ label: "public-view-id", url: absoluteUrl(resolveTemplate("/api/v1/public-views/:id")) });
-    candidates.push({ label: "page-slug", url: absoluteUrl(resolveTemplate("/api/v1/public/pages/:slug")) });
-  } else {
-    candidates.push({ label: "public-view-id", url: absoluteUrl(resolveTemplate("/api/v1/public-views/:id")) });
-  }
-
-  // Fallbacks seguros: protegen despliegues donde el sistema ya migró a CMS por slug
-  // o donde el id legacy 1 aún no está disponible. No inventan contenido local.
-  if (mode === "auto") {
-    if (identity.slug) candidates.push({ label: "fallback-page-slug", url: absoluteUrl(`/api/v1/public/pages/${encodeToken(identity.slug)}`) });
-    candidates.push({ label: "fallback-inicio", url: absoluteUrl("/api/v1/public/pages/inicio") });
-    candidates.push({ label: "fallback-public-view-1", url: absoluteUrl("/api/v1/public-views/1") });
-  }
+  candidates.push({ label: "public-view-id", url: absoluteUrl(resolveTemplate("/api/v1/public-views/:id")) });
 
   return uniqueCandidates(candidates);
 }
@@ -123,24 +85,11 @@ export function buildConfiguredPublicViewElementUrl(code: string) {
 }
 
 export function buildConfiguredPublicViewElementCandidates(code: string): PublicEndpointCandidate[] {
-  const identity = publicViewIdentity();
-  const mode = normalizeMode();
   const custom = configuredElementEndpointCandidate(code);
   const candidates: PublicEndpointCandidate[] = [];
 
   if (custom) candidates.push(custom);
-
-  if (mode === "page-slug") {
-    candidates.push({ label: "page-slug-element", url: absoluteUrl(resolveTemplate(`/api/v1/public/pages/:slug/elements/${encodeURIComponent(code)}`)) });
-  } else {
-    candidates.push({ label: "public-view-element", url: absoluteUrl(resolveTemplate(`/api/v1/public-views/:id/elements/${encodeURIComponent(code)}`)) });
-  }
-
-  if (mode === "auto") {
-    if (identity.slug) candidates.push({ label: "fallback-page-slug-element", url: absoluteUrl(`/api/v1/public/pages/${encodeToken(identity.slug)}/elements/${encodeURIComponent(code)}`) });
-    candidates.push({ label: "fallback-inicio-element", url: absoluteUrl(`/api/v1/public/pages/inicio/elements/${encodeURIComponent(code)}`) });
-    candidates.push({ label: "fallback-public-view-1-element", url: absoluteUrl(`/api/v1/public-views/1/elements/${encodeURIComponent(code)}`) });
-  }
+  candidates.push({ label: "public-view-element", url: absoluteUrl(resolveTemplate(`/api/v1/public-views/:id/elements/${encodeURIComponent(code)}`)) });
 
   return uniqueCandidates(candidates);
 }
@@ -186,7 +135,6 @@ async function fetchPublicJson(endpoint: string, identity = publicViewIdentity()
       Accept: "application/json",
       ...(!isBrowser
         ? {
-            "x-public-view-slug": identity.legacySlug || identity.slug,
             ...(identity.id ? { "x-public-view-id": identity.id } : {}),
             ...(identity.code ? { "x-public-view-code": identity.code } : {})
           }
@@ -206,7 +154,7 @@ export async function loadConfiguredPublicLanding(): Promise<PublicViewLoadResul
     return {
       ok: false,
       endpoint: "NEXT_PUBLIC_API_BASE_URL",
-      message: error instanceof Error ? error.message : "NEXT_PUBLIC_API_BASE_URL no está configurado.",
+      message: error instanceof Error ? error.message : "NEXT_PUBLIC_API_BASE_URL no esta configurado.",
       details: error
     };
   }
@@ -222,7 +170,7 @@ export async function loadConfiguredPublicLanding(): Promise<PublicViewLoadResul
         lastFailure = {
           endpoint: candidate.url,
           status: response.status,
-          message: responseMessage(payload, `No se pudo cargar la página principal. HTTP ${response.status}.`),
+          message: responseMessage(payload, `No se pudo cargar la pagina principal. HTTP ${response.status}.`),
           details: payload
         };
         continue;
@@ -233,7 +181,7 @@ export async function loadConfiguredPublicLanding(): Promise<PublicViewLoadResul
     } catch (error) {
       lastFailure = {
         endpoint: candidate.url,
-        message: error instanceof Error ? error.message : "No se pudo conectar con la página principal.",
+        message: error instanceof Error ? error.message : "No se pudo conectar con la pagina principal.",
         details: error
       };
     }
@@ -243,7 +191,7 @@ export async function loadConfiguredPublicLanding(): Promise<PublicViewLoadResul
     ok: false,
     endpoint: lastFailure?.endpoint ?? candidates[0].url,
     status: lastFailure?.status,
-    message: lastFailure?.message ?? "No se pudo cargar la página principal.",
+    message: lastFailure?.message ?? "No se pudo cargar la pagina principal.",
     details: lastFailure?.details
   };
 }
@@ -260,7 +208,7 @@ export async function loadConfiguredPublicViewElement(code: string): Promise<{ o
         lastFailure = {
           endpoint: candidate.url,
           status: response.status,
-          message: responseMessage(payload, `No se pudo cargar el contenido público ${code}. HTTP ${response.status}.`),
+          message: responseMessage(payload, `No se pudo cargar el contenido publico ${code}. HTTP ${response.status}.`),
           details: payload
         };
         continue;
@@ -270,7 +218,7 @@ export async function loadConfiguredPublicViewElement(code: string): Promise<{ o
     } catch (error) {
       lastFailure = {
         endpoint: candidate.url,
-        message: error instanceof Error ? error.message : "No se pudo conectar con el contenido público.",
+        message: error instanceof Error ? error.message : "No se pudo conectar con el contenido publico.",
         details: error
       };
     }
@@ -280,7 +228,7 @@ export async function loadConfiguredPublicViewElement(code: string): Promise<{ o
     ok: false,
     endpoint: lastFailure?.endpoint ?? candidates[0].url,
     status: lastFailure?.status,
-    message: lastFailure?.message ?? `No se pudo cargar el contenido público solicitado.`,
+    message: lastFailure?.message ?? "No se pudo cargar el contenido publico solicitado.",
     details: lastFailure?.details
   };
 }

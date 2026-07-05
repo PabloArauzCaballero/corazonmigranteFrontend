@@ -110,8 +110,5 @@ GET /api/v1/public-views/:id/elements/:code
 Configuración recomendada para Corazón Migrante:
 
 ```env
-NEXT_PUBLIC_PUBLIC_VIEW_MODE=public-view-id
-NEXT_PUBLIC_PUBLIC_VIEW_SLUG=1
+NEXT_PUBLIC_PUBLIC_VIEW_ID=1
 ```
-
-Nota: `NEXT_PUBLIC_PUBLIC_VIEW_SLUG` conserva el nombre legacy, pero puede contener el id numérico esperado por `/api/v1/public-views/:id`.

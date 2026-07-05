@@ -107,12 +107,10 @@ La home `/` no usa mockups. Carga la configuración desde el backend usando la c
 src/features/public-view/public-view.api.ts
 ```
 
-Por defecto, para respetar el flujo real de Vistas Públicas, la variable histórica `NEXT_PUBLIC_PUBLIC_VIEW_SLUG` puede contener el ID de la vista:
+Por defecto, la landing principal se carga solo por ID de Vista Publica:
 
 ```env
-NEXT_PUBLIC_PUBLIC_VIEW_MODE=public-view-id
-NEXT_PUBLIC_PUBLIC_VIEW_SLUG=1
-NEXT_PUBLIC_PUBLIC_VIEW_ID=
+NEXT_PUBLIC_PUBLIC_VIEW_ID=1
 ```
 
 Eso llama a:
@@ -124,26 +122,8 @@ GET /api/v1/public-views/1
 También se soportan:
 
 ```txt
-GET /api/v1/public/pages/:slug
-GET /api/v1/public/pages/by-id/:id
-GET /api/v1/public/pages/:slug/elements/:code
-GET /api/v1/public/page-elements/:id
 GET /api/v1/public-views/:id
 GET /api/v1/public-views/:id/elements/:code
-```
-
-Para cambiar el modo:
-
-```env
-NEXT_PUBLIC_PUBLIC_VIEW_MODE=page-by-id
-NEXT_PUBLIC_PUBLIC_VIEW_ID=1
-```
-
-O para slug real:
-
-```env
-NEXT_PUBLIC_PUBLIC_VIEW_MODE=page-slug
-NEXT_PUBLIC_PUBLIC_VIEW_SLUG=inicio
 ```
 
 Si el backend no devuelve la vista configurada, la landing muestra un error claro y no renderiza contenido inventado.

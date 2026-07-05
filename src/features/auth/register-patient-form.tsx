@@ -1,11 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useEffect, useMemo, useRef } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { registerPatientSchema, type RegisterPatientInput } from "@/features/auth/auth.schemas";
 import { registerPatient } from "@/features/auth/auth.api";
+import { fetchCountriesCities, fetchOccupations } from "@/features/auth/public-options";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -16,9 +18,30 @@ import { Textarea } from "@/shared/ui/textarea";
 export function RegisterPatientForm() {
   const form = useForm<RegisterPatientInput>({
     resolver: zodResolver(registerPatientSchema),
-    defaultValues: { fullName: "", email: "", password: "", country: "", reason: "" }
+    defaultValues: { fullName: "", email: "", password: "", country: "", city: "", phone: "", occupation: "", reason: "" }
   });
   const mutation = useMutation({ mutationFn: registerPatient });
+
+  const countriesCities = useQuery({ queryKey: ["public-options", "countries-cities"], queryFn: fetchCountriesCities });
+  const occupations = useQuery({ queryKey: ["public-options", "occupations"], queryFn: fetchOccupations });
+
+  const selectedCountry = useWatch({ control: form.control, name: "country" });
+  const countryNames = useMemo(
+    () => Object.keys(countriesCities.data ?? {}).sort((a, b) => a.localeCompare(b)),
+    [countriesCities.data]
+  );
+  const cityOptions = useMemo(
+    () => (selectedCountry ? countriesCities.data?.[selectedCountry] ?? [] : []),
+    [countriesCities.data, selectedCountry]
+  );
+
+  const previousCountry = useRef(selectedCountry);
+  useEffect(() => {
+    if (previousCountry.current !== selectedCountry) {
+      form.setValue("city", "");
+      previousCountry.current = selectedCountry;
+    }
+  }, [selectedCountry, form]);
 
   return (
     <Card className="mx-auto w-full max-w-2xl">
@@ -50,10 +73,62 @@ export function RegisterPatientForm() {
                 {form.formState.errors.password ? <p className="text-sm text-destructive">{form.formState.errors.password.message}</p> : null}
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="country">País o ciudad actual</Label>
-              <Input id="country" {...form.register("country")} />
-              {form.formState.errors.country ? <p className="text-sm text-destructive">{form.formState.errors.country.message}</p> : null}
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="country">País actual</Label>
+                <select
+                  id="country"
+                  className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm"
+                  {...form.register("country")}
+                  disabled={countriesCities.isLoading}
+                >
+                  <option value="">
+                    {countriesCities.isLoading ? "Cargando países..." : "Seleccionar país"}
+                  </option>
+                  {countryNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                {countriesCities.isError ? <p className="text-xs text-destructive">No se pudo cargar la lista de países.</p> : null}
+                {form.formState.errors.country ? <p className="text-sm text-destructive">{form.formState.errors.country.message}</p> : null}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="city">Ciudad</Label>
+                <select
+                  id="city"
+                  className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm"
+                  {...form.register("city")}
+                  disabled={!selectedCountry}
+                >
+                  <option value="">Seleccionar ciudad</option>
+                  {cityOptions.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Teléfono (opcional)</Label>
+                <Input id="phone" type="tel" autoComplete="tel" {...form.register("phone")} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="occupation">Ocupación (opcional)</Label>
+                <select
+                  id="occupation"
+                  className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm"
+                  {...form.register("occupation")}
+                  disabled={occupations.isLoading}
+                >
+                  <option value="">
+                    {occupations.isLoading ? "Cargando ocupaciones..." : "Seleccionar ocupación"}
+                  </option>
+                  {occupations.data?.map((occupation) => (
+                    <option key={occupation} value={occupation}>{occupation}</option>
+                  ))}
+                </select>
+                {occupations.isError ? <p className="text-xs text-destructive">No se pudo cargar la lista de ocupaciones.</p> : null}
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reason">Motivo breve de consulta</Label>

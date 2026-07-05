@@ -17,8 +17,8 @@ const timeoutMs = Number(process.env.BACKEND_INTEGRATION_TIMEOUT_MS ?? 10_000);
 const publicChecks: ContractCheck[] = [
   { name: "health", path: ENDPOINTS.health.check, expectedStatuses: [200] },
   { name: "public therapy products", path: ENDPOINTS.products.productsPublicList, expectedStatuses: [200] },
-  { name: "public view landing by id", path: ENDPOINTS.publicUi.publicViewById.replace(":id", process.env.NEXT_PUBLIC_PUBLIC_VIEW_ID || process.env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG || "1"), expectedStatuses: [200] },
-  { name: "public page by id contract", path: ENDPOINTS.publicUi.pageById.replace(":id", process.env.NEXT_PUBLIC_PUBLIC_VIEW_ID || process.env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG || "1"), expectedStatuses: [200, 404] },
+  { name: "public view landing by id", path: ENDPOINTS.publicUi.publicViewById.replace(":id", process.env.NEXT_PUBLIC_PUBLIC_VIEW_ID || "1"), expectedStatuses: [200] },
+  { name: "public page by id contract", path: ENDPOINTS.publicUi.pageById.replace(":id", process.env.NEXT_PUBLIC_PUBLIC_VIEW_ID || "1"), expectedStatuses: [200, 404] },
   { name: "public CMS inicio", path: ENDPOINTS.cms.publicPage.replace(":slug", "inicio"), expectedStatuses: [200] },
   { name: "public CMS biblioteca", path: ENDPOINTS.cms.publicPage.replace(":slug", process.env.NEXT_PUBLIC_CMS_LIBRARY_SLUG ?? "biblioteca"), expectedStatuses: [200] },
   { name: "public CMS biblioteca hero", path: ENDPOINTS.publicUi.pageElementByCode.replace(":slug", process.env.NEXT_PUBLIC_CMS_LIBRARY_SLUG ?? "biblioteca").replace(":code", "hero"), expectedStatuses: [200] },

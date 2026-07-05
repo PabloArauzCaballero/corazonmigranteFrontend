@@ -10,12 +10,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:4173"),
   NEXT_PUBLIC_API_BASE_URL: optionalUrl,
   NEXT_PUBLIC_CMS_LIBRARY_SLUG: z.string().min(1).default("biblioteca"),
-  NEXT_PUBLIC_PUBLIC_VIEW_SLUG: z.string().min(1).default("1"),
   NEXT_PUBLIC_PUBLIC_VIEW_ID: z.string().optional(),
   NEXT_PUBLIC_PUBLIC_VIEW_CODE: z.string().optional(),
-  NEXT_PUBLIC_PUBLIC_VIEW_MODE: z
-    .enum(["auto", "public-view-id", "page-by-id", "page-slug"])
-    .default("public-view-id"),
   NEXT_PUBLIC_PUBLIC_VIEW_ENDPOINT: z.string().optional(),
   NEXT_PUBLIC_PUBLIC_VIEW_ELEMENT_ENDPOINT: z.string().optional(),
   NEXT_PUBLIC_PUBLIC_CONTACT_PHONE: z.string().optional(),
@@ -41,10 +37,8 @@ export const env = envSchema.parse({
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   NEXT_PUBLIC_CMS_LIBRARY_SLUG: process.env.NEXT_PUBLIC_CMS_LIBRARY_SLUG,
-  NEXT_PUBLIC_PUBLIC_VIEW_SLUG: process.env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG,
   NEXT_PUBLIC_PUBLIC_VIEW_ID: process.env.NEXT_PUBLIC_PUBLIC_VIEW_ID,
   NEXT_PUBLIC_PUBLIC_VIEW_CODE: process.env.NEXT_PUBLIC_PUBLIC_VIEW_CODE,
-  NEXT_PUBLIC_PUBLIC_VIEW_MODE: process.env.NEXT_PUBLIC_PUBLIC_VIEW_MODE,
   NEXT_PUBLIC_PUBLIC_VIEW_ENDPOINT:
     process.env.NEXT_PUBLIC_PUBLIC_VIEW_ENDPOINT,
   NEXT_PUBLIC_PUBLIC_VIEW_ELEMENT_ENDPOINT:
