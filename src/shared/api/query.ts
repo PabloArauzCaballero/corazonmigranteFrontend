@@ -22,8 +22,8 @@ export function buildQueryString(params: SistemaListQuery & Record<string, strin
   if (params.page && params.page > 0) searchParams.set("page", String(params.page));
   if (params.pageSize && params.pageSize > 0) searchParams.set("pageSize", String(params.pageSize));
 
-  if (params.sortBy?.trim()) searchParams.set("sort", params.sortBy.trim());
-  if (params.sortDir) searchParams.set("order", params.sortDir);
+  // No enviamos sort/order desde el helper genérico. El backend tiene orden por defecto
+  // y varias versiones desplegadas rechazan esos campos con ValidationPipe estricto.
 
   for (const [key, value] of Object.entries(params)) {
     if (["search", "page", "pageSize", "status", "sortBy", "sortDir", "role", "rol"].includes(key)) continue;

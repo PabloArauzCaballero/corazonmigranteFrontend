@@ -36,8 +36,8 @@ describe("backend response normalization", () => {
     expect(query).toContain("search=ana");
     expect(query).toContain("page=3");
     expect(query).toContain("pageSize=25");
-    expect(query).toContain("sort=nombre");
-    expect(query).toContain("order=asc");
+    expect(query).not.toContain("sort=nombre");
+    expect(query).not.toContain("order=asc");
     expect(query).not.toContain("p_search");
     expect(query).not.toContain("p_limit");
     expect(query).not.toContain("p_estado");

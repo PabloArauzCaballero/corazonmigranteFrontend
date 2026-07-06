@@ -19,8 +19,7 @@ function listQuery(query: PublicationQuery | AdsQuery = {}) {
   setParam(params, "page", query.page);
   setParam(params, "pageSize", query.pageSize ?? 20);
   setParam(params, "status", query.status);
-  setParam(params, "sort", query.sort ?? query.sortBy ?? "createdAt");
-  setParam(params, "order", query.order ?? query.sortDir ?? "desc");
+  // Evitamos sort/order por defecto para no provocar 400 en backends con DTO estricto.
   Object.entries(query).forEach(([key, value]) => {
     if (["search", "page", "pageSize", "status", "sort", "order", "sortBy", "sortDir"].includes(key)) return;
     setParam(params, key, value);
