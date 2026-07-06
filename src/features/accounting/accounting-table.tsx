@@ -6,7 +6,7 @@ import { listAccountingRows, type AccountingResource, type AccountingRow } from 
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { DataTable, PaginationBar } from "@/shared/ui/data-table";
-import { ErrorState, LoadingState } from "@/shared/ui/state";
+import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/state";
 
 const PAGE_SIZE = 20;
 
@@ -16,6 +16,10 @@ export function AccountingTable({ resource }: { resource: AccountingResource }) 
 
   if (query.isLoading) return <LoadingState title="Consultando contabilidad" />;
   if (query.isError) return <ErrorState title="No se pudo cargar la información contable" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
+
+  if (query.data && query.data.items.length === 0) {
+    return <EmptyState title="Sin registros" description="Aún no hay elementos en este catálogo contable. Crea el primero desde el botón superior." />;
+  }
 
   return query.data ? (
     <div className="grid gap-4">

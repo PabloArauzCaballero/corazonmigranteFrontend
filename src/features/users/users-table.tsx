@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import type { AdminUser, AdminUserStatus } from "@/features/users/users.types";
-import { createUser, listUsers, updateUserStatus, type CreateUserInput } from "@/features/users/users.api";
+import { createUser, listUsers, updateTherapistProfileByAdmin, updateUserStatus, type CreateUserInput, type UpdateTherapistProfileInput } from "@/features/users/users.api";
 import { fetchProfessions, fetchSpecialties } from "@/features/auth/public-options";
 import { useDebounce } from "@/shared/hooks/use-debounce";
 import { humanizeApiError } from "@/shared/api/errors";
@@ -13,6 +13,8 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { ErrorState, LoadingState } from "@/shared/ui/state";
 import { Button } from "@/shared/ui/button";
+import { Modal } from "@/shared/ui/modal";
+import { uploadUserPhoto } from "@/shared/api/files";
 
 const PAGE_SIZE = 20;
 
@@ -48,6 +50,83 @@ const statusActions: { value: AdminUserStatus; label: string }[] = [
   { value: "bloqueado", label: "Bloquear" },
   { value: "pendiente", label: "Marcar pendiente" }
 ];
+
+function EditTherapistAction({ user }: { user: AdminUser }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const mutation = useMutation({
+    mutationFn: (input: UpdateTherapistProfileInput) => updateTherapistProfileByAdmin(user.id, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setOpen(false);
+    }
+  });
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    mutation.mutate({
+      firstName: String(form.get("firstName") ?? ""),
+      lastName: String(form.get("lastName") ?? ""),
+      phone: String(form.get("phone") ?? ""),
+      title: String(form.get("title") ?? ""),
+      mainSpecialty: String(form.get("mainSpecialty") ?? ""),
+      personalPhrase: String(form.get("personalPhrase") ?? ""),
+      bio: String(form.get("bio") ?? "")
+    });
+  }
+
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Editar terapeuta</Button>
+      <Modal open={open} onClose={() => setOpen(false)} title={`Información de ${user.name}`} description="Actualiza los datos profesionales del terapeuta.">
+        <form className="grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
+          <div className="grid gap-2"><Label>Nombre</Label><Input name="firstName" /></div>
+          <div className="grid gap-2"><Label>Apellido</Label><Input name="lastName" /></div>
+          <div className="grid gap-2"><Label>Teléfono</Label><Input name="phone" /></div>
+          <div className="grid gap-2"><Label>Título profesional</Label><Input name="title" /></div>
+          <div className="grid gap-2 md:col-span-2"><Label>Especialidad principal</Label><Input name="mainSpecialty" /></div>
+          <div className="grid gap-2 md:col-span-2"><Label>Frase personal</Label><Input name="personalPhrase" /></div>
+          <div className="grid gap-2 md:col-span-2"><Label>Bio</Label><Input name="bio" /></div>
+          <p className="text-xs text-muted-foreground md:col-span-2">Solo se envían los campos con contenido; los vacíos no modifican el perfil.</p>
+          {mutation.isError ? <p className="text-sm text-destructive md:col-span-2">{humanizeApiError(mutation.error)}</p> : null}
+          <div className="md:col-span-2"><Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? "Guardando..." : "Guardar cambios"}</Button></div>
+        </form>
+      </Modal>
+    </>
+  );
+}
+
+function UploadPhotoAction({ user }: { user: AdminUser }) {
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mutation = useMutation({
+    mutationFn: (file: File) => uploadUserPhoto(user.id, file),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+    }
+  });
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          if (file) mutation.mutate(file);
+          event.currentTarget.value = "";
+        }}
+      />
+      <Button size="sm" variant="outline" disabled={mutation.isPending} onClick={() => inputRef.current?.click()}>
+        {mutation.isPending ? "Subiendo..." : "Subir foto"}
+      </Button>
+      {mutation.isError ? <p className="w-full text-xs text-destructive">{humanizeApiError(mutation.error)}</p> : null}
+    </>
+  );
+}
 
 function StatusActions({ user }: { user: AdminUser }) {
   const queryClient = useQueryClient();
@@ -200,7 +279,13 @@ export function UsersTable() {
               },
               { key: "role", header: "Rol", render: (row) => <Badge variant="secondary">{row.role}</Badge> },
               { key: "status", header: "Estado", render: (row) => <Badge variant={row.status === "activo" ? "success" : row.status === "pendiente" ? "warning" : "muted"}>{row.status}</Badge> },
-              { key: "actions", header: "Acciones", render: (row) => <StatusActions user={row} /> }
+              { key: "actions", header: "Acciones", render: (row) => (
+                  <div className="flex flex-wrap gap-2">
+                    <UploadPhotoAction user={row} />
+                    {row.role === "TERAPEUTA" ? <EditTherapistAction user={row} /> : null}
+                    <StatusActions user={row} />
+                  </div>
+                ) }
             ]}
           />
           <PaginationBar page={query.data.page} totalPages={query.data.totalPages} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(query.data.totalPages, current + 1))} />

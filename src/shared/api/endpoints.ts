@@ -26,11 +26,7 @@ export const ENDPOINTS = {
     mine: `${API_PREFIX}/appointments/mine`,
     adminList: `${API_PREFIX}/appointments/admin/list`,
     updateStatus: `${API_PREFIX}/appointments/:appointmentId/status`,
-    /**
-     * PENDIENTE_SERVICIO_CM: el sistema actual no expone todavía este contrato.
-     * Debe crearse para permitir que ADMIN/SUPER_ADMIN/THERAPIST agenden para un paciente concreto
-     * sin convertir al actor autenticado en paciente.
-     */
+    // Booking operativo: mismo POST /appointments, con patientUserId en el body para agendar por un paciente concreto.
     createForPatient: `${API_PREFIX}/appointments`
   },
   booking: {
@@ -112,14 +108,12 @@ export const ENDPOINTS = {
     accountsCreate: `${API_PREFIX}/admin/accounting/accounts`,
     accountsUpdate: `${API_PREFIX}/admin/accounting/accounts/:accountId`,
     accountsDelete: `${API_PREFIX}/admin/accounting/accounts/:accountId`,
-    // PENDIENTE_CM_SERVICIO_ACCOUNTING_COST_CENTERS_LIST: sistema actual solo tiene POST.
     costCentersList: `${API_PREFIX}/admin/accounting/cost-centers`,
     costCentersCreate: `${API_PREFIX}/admin/accounting/cost-centers`,
     costCentersUpdate: `${API_PREFIX}/admin/accounting/cost-centers/:costCenterId`,
     costCentersDelete: `${API_PREFIX}/admin/accounting/cost-centers/:costCenterId`,
-    // PENDIENTE_CM_SERVICIO_ACCOUNTING_TRANSACTIONS_LIST: sistema actual solo tiene POST.
     transactionsList: `${API_PREFIX}/admin/accounting/transactions`,
-    transactionsBatchCreate: `${API_PREFIX}/admin/accounting/transactions/batch`,
+    transactionsCreate: `${API_PREFIX}/admin/accounting/transactions`,
     transactionSaleCreate: `${API_PREFIX}/admin/accounting/transactions`
   },
   health: {

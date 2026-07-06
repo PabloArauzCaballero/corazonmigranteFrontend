@@ -6,7 +6,7 @@ import { listTransactions, type TransactionRow } from "@/features/accounting/acc
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { DataTable, PaginationBar } from "@/shared/ui/data-table";
-import { ErrorState, LoadingState } from "@/shared/ui/state";
+import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/state";
 
 const PAGE_SIZE = 20;
 
@@ -16,6 +16,10 @@ export function TransactionsTable() {
 
   if (query.isLoading) return <LoadingState title="Consultando transacciones" />;
   if (query.isError) return <ErrorState title="No se pudieron cargar las transacciones" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
+
+  if (query.data && query.data.items.length === 0) {
+    return <EmptyState title="Sin transacciones registradas" description="Aún no hay movimientos contables. Usa el botón Nueva transacción para registrar la primera partida." />;
+  }
 
   return query.data ? (
     <div className="grid gap-4">

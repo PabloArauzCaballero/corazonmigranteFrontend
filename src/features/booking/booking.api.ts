@@ -111,17 +111,88 @@ export async function listBookingProducts() {
   return normalizePaginatedResponse(payload, mapBookingProduct, { page: 1, pageSize: 100 }).items;
 }
 
-export async function listBookingTherapists() {
+function normalizeTherapistResult(payload: unknown) {
+  const result = normalizePaginatedResponse(payload, mapBookingTherapist, { page: 1, pageSize: 100 });
+  return result.items.filter((therapist) => therapist.id && !therapist.id.startsWith("terapeuta-"));
+}
+
+const therapistDirectoryQuery = buildQueryString({
+  page: 1,
+  pageSize: 100,
+  role: "THERAPIST",
+  rol: "TERAPEUTA",
+  status: "activo"
+});
+
+/**
+ * Directorio de terapeutas consciente del rol:
+ * - ADMIN / SUPER_ADMIN / CONTADOR usan `GET /admin/users?role=THERAPIST` (autorizado por el OpenAPI).
+ * - PACIENTE / TERAPEUTA / anónimo NUNCA envían su token a la ruta administrativa (eso causaba el 403).
+ *   Para ellos se intentan fuentes públicas en orden y se devuelve la primera que responda.
+ */
+export async function listBookingTherapists(options: { canUseAdminDirectory?: boolean } = {}) {
+  if (options.canUseAdminDirectory) {
+    const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${therapistDirectoryQuery}`);
+    return normalizeTherapistResult(payload);
+  }
+
+  // 1) Intento público directo (sin Authorization) por si el backend expone el directorio sin rol admin.
+  try {
+    const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${therapistDirectoryQuery}`, { auth: false });
+    const items = normalizeTherapistResult(payload);
+    if (items.length > 0) return items;
+  } catch {
+    // continúa con las siguientes fuentes
+  }
+
+  // 2) Páginas CMS públicas que pueden alojar el directorio de terapeutas.
+  const cmsSlugs = ["terapeutas", "equipo", "booking"];
+  for (const slug of cmsSlugs) {
+    try {
+      const payload = await apiRequest<unknown>(ENDPOINTS.cms.publicPage.replace(":slug", slug), { auth: false });
+      const items = normalizeTherapistResult(payload);
+      if (items.length > 0) return items;
+    } catch {
+      // slug no existe, probar el siguiente
+    }
+  }
+
+  throw new ApiError(
+    "El directorio público de terapeutas no está disponible todavía en el backend. Un administrador puede reservar por ti mientras se habilita.",
+    404
+  );
+}
+
+export type PatientOption = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export function mapPatientOption(item: unknown, index: number): PatientOption {
+  const record = isRecord(item) ? item : {};
+  const firstName = getString(record, ["firstName", "first_name", "nombres", "nombre"], "");
+  const lastName = getString(record, ["lastName", "last_name", "apellidos", "apellido"], "");
+  const composed = `${firstName} ${lastName}`.trim();
+  return {
+    id: getString(record, ["id", "userId", "user_id", "uuid"], `paciente-${index + 1}`),
+    name: getString(record, ["name", "full_name", "nombre_completo", "fullName", "displayName"], composed || `Paciente ${index + 1}`),
+    email: getString(record, ["email", "correo", "correo_electronico"], "")
+  };
+}
+
+/** Lista desplegable de usuarios finales (pacientes) para booking operativo. Requiere rol administrativo. */
+export async function listPatientOptions(search = "") {
   const query = buildQueryString({
     page: 1,
     pageSize: 100,
-    role: "TERAPEUTA",
-    rol: "TERAPEUTA",
-    status: "activo"
+    role: "PATIENT",
+    rol: "PACIENTE",
+    search: search || undefined
   });
   const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${query}`);
-  const result = normalizePaginatedResponse(payload, mapBookingTherapist, { page: 1, pageSize: 100 });
-  return result.items.filter((therapist) => therapist.id && !therapist.id.startsWith("terapeuta-"));
+  const result = normalizePaginatedResponse(payload, mapPatientOption, { page: 1, pageSize: 100 });
+  return result.items.filter((patient) => patient.id && !patient.id.startsWith("paciente-"));
 }
 
 export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
@@ -150,9 +221,23 @@ export async function createPatientBooking(input: PatientBookingInput) {
   });
 }
 
-export async function createManagedBooking(_input: ManagedBookingInput) {
-  throw new ApiError(
-    `La creación operativa de citas para pacientes concretos todavía no está habilitada para este rol.`,
-    501
-  );
+/**
+ * Booking operativo: crea la cita para un paciente concreto seleccionado por admin/terapeuta.
+ * Envía `patientUserId` en el body de `POST /appointments`; si el backend rechaza al actor,
+ * el error del servidor se muestra humanizado en el formulario.
+ */
+export async function createManagedBooking(input: ManagedBookingInput) {
+  return apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createForPatient, {
+    method: "POST",
+    body: {
+      patientUserId: input.patientUserId,
+      patient_user_id: input.patientUserId,
+      therapistUserId: input.therapistUserId,
+      productId: input.productId,
+      scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
+      timezone: input.timezone,
+      notesForTherapist: input.notesForTherapist
+    },
+    auth: true
+  });
 }

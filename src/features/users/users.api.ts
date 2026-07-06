@@ -112,6 +112,28 @@ const statusToBackend: Record<AdminUserStatus, string> = {
   pendiente: "PENDING"
 };
 
+export type UpdateTherapistProfileInput = {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  title?: string;
+  mainSpecialty?: string;
+  bio?: string;
+  personalPhrase?: string;
+};
+
+/** Edición administrativa de la información del terapeuta (PATCH /admin/users/:userId/therapist-profile). */
+export async function updateTherapistProfileByAdmin(userId: string, input: UpdateTherapistProfileInput) {
+  const body: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (typeof value === "string" && value.trim()) body[key] = value.trim();
+  }
+  return apiRequest<unknown>(replacePathParam(ENDPOINTS.users.updateTherapist, "userId", userId), {
+    method: "PATCH",
+    body
+  });
+}
+
 export async function updateUserStatus(userId: string, status: AdminUserStatus) {
   return apiRequest<unknown>(replacePathParam(ENDPOINTS.users.updateStatus, "userId", userId), {
     method: "PATCH",

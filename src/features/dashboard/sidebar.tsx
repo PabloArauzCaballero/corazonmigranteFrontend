@@ -3,7 +3,7 @@
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, CalendarDays, Crown, Files, HeartPulse, Home, LayoutDashboard, LogOut, Megaphone, Newspaper, Package, ReceiptText, Tags, UserCog, UserRound, UsersRound } from "lucide-react";
+import { BookOpen, CalendarDays, Clock3, Crown, Files, HeartPulse, Home, LayoutDashboard, LogOut, Megaphone, Newspaper, Package, ReceiptText, Tags, UserCog, UserRound, UsersRound } from "lucide-react";
 import { clearClientSession } from "@/shared/auth/cookies";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -25,6 +25,7 @@ export const patientNav: SidebarItem[] = [
 export const therapistNav: SidebarItem[] = [
   { href: "/terapeuta", label: "Resumen", icon: LayoutDashboard },
   { href: "/terapeuta/agenda", label: "Agenda", icon: CalendarDays },
+  { href: "/terapeuta/horarios", label: "Horarios", icon: Clock3 },
   { href: "/terapeuta/booking", label: "Disponibilidad", icon: HeartPulse },
   { href: "/terapeuta/perfil", label: "Perfil", icon: UserRound }
 ];
@@ -36,8 +37,7 @@ export const adminNav: SidebarItem[] = [
   { href: "/admin/usuarios", label: "Usuarios", icon: UsersRound },
   { href: "/admin/productos/enfoques", label: "Enfoques", icon: HeartPulse },
   { href: "/admin/productos/servicios", label: "Servicios", icon: Package },
-  { href: "/biblioteca", label: "Vistas publicas", icon: Files },
-  { href: "/novedades", label: "Novedades publicas", icon: Newspaper },
+  { href: "/admin/vistas-publicas", label: "Vistas publicas", icon: Files },
   { href: "/admin/contenido/editorial", label: "Biblioteca CMS", icon: BookOpen },
   { href: "/admin/contenido/publicaciones", label: "Publicaciones", icon: Newspaper },
   { href: "/admin/contenido/categorias", label: "Categorias", icon: Tags },

@@ -1,13 +1,14 @@
 import { ProfileCard } from "@/features/dashboard/profile-card";
-import { Card, CardContent } from "@/shared/ui/card";
+import { ProfilePhotoUploader, TherapistProfileForm } from "@/features/profile/profile-forms";
 import { PageHeader } from "@/shared/ui/page-header";
 
 export default function TherapistProfilePage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Perfil profesional" description="Información profesional del terapeuta, pendiente de contrato real para archivos, horarios y especialidades." />
+      <PageHeader title="Perfil profesional" description="Actualiza tu información profesional visible para pacientes y tu foto de perfil." />
       <ProfileCard />
-      <Card><CardContent className="p-6 text-sm text-muted-foreground">La edición del perfil profesional se habilitará con especialidades, ubicación, imagen y validaciones.</CardContent></Card>
+      <ProfilePhotoUploader />
+      <TherapistProfileForm />
     </div>
   );
 }

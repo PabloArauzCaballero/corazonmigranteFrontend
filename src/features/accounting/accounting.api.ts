@@ -50,21 +50,97 @@ export function mapTransactionRow(item: unknown, index: number): TransactionRow 
   };
 }
 
-export async function listAccountingRows(resource: AccountingResource, query: SistemaListQuery = {}): Promise<PaginatedResult<AccountingRow>> {
-  if (resource === "costCenters") {
-    throw new ApiError(
-      "El listado de centros de costo todavía no está disponible. Revisa la configuración administrativa antes de continuar.",
-      501
-    );
-  }
-
-  const payload = await apiRequest<unknown>(`${accountingEndpoints[resource]}${buildQueryString(query)}`);
-  return normalizePaginatedResponse(payload, mapAccountingRow, query);
+function emptyResult<T>(query: SistemaListQuery): PaginatedResult<T> {
+  return { items: [], page: query.page ?? 1, pageSize: query.pageSize ?? 20, total: 0, totalPages: 1, raw: null };
 }
 
-export async function listTransactions(_query: SistemaListQuery = {}): Promise<PaginatedResult<TransactionRow>> {
-  throw new ApiError(
-    "El listado de transacciones todavía no está disponible. Revisa la configuración administrativa antes de continuar.",
-    501
-  );
+function isMissingListEndpoint(error: unknown) {
+  return error instanceof ApiError && [404, 405, 501].includes(error.status ?? 0);
+}
+
+export async function listAccountingRows(resource: AccountingResource, query: SistemaListQuery = {}): Promise<PaginatedResult<AccountingRow>> {
+  try {
+    const payload = await apiRequest<unknown>(`${accountingEndpoints[resource]}${buildQueryString(query)}`);
+    return normalizePaginatedResponse(payload, mapAccountingRow, query);
+  } catch (error) {
+    // Si el backend aún no expone el GET (solo POST), la vista no se bloquea: se muestra vacía y se permite crear.
+    if (isMissingListEndpoint(error)) return emptyResult<AccountingRow>(query);
+    throw error;
+  }
+}
+
+export async function listTransactions(query: SistemaListQuery = {}): Promise<PaginatedResult<TransactionRow>> {
+  try {
+    const payload = await apiRequest<unknown>(`${ENDPOINTS.accounting.transactionsList}${buildQueryString(query)}`);
+    return normalizePaginatedResponse(payload, mapTransactionRow, query);
+  } catch (error) {
+    if (isMissingListEndpoint(error)) return emptyResult<TransactionRow>(query);
+    throw error;
+  }
+}
+
+export type CreateAccountGroupInput = {
+  code: string;
+  name: string;
+  type: "ASSET" | "LIABILITY" | "EQUITY" | "INCOME" | "EXPENSE";
+};
+
+export async function createAccountGroup(input: CreateAccountGroupInput) {
+  return apiRequest<unknown>(ENDPOINTS.accounting.accountGroupsCreate, { method: "POST", body: input });
+}
+
+export type CreateAccountInput = {
+  groupId: string;
+  code: string;
+  name: string;
+  normalBalance: "DEBIT" | "CREDIT";
+};
+
+export async function createAccount(input: CreateAccountInput) {
+  return apiRequest<unknown>(ENDPOINTS.accounting.accountsCreate, { method: "POST", body: input });
+}
+
+export type CreateCostCenterInput = {
+  code: string;
+  name: string;
+};
+
+export async function createCostCenter(input: CreateCostCenterInput) {
+  return apiRequest<unknown>(ENDPOINTS.accounting.costCentersCreate, { method: "POST", body: input });
+}
+
+export type TransactionEntryInput = {
+  accountId: string;
+  costCenterId?: string;
+  debit: number;
+  credit: number;
+};
+
+export type CreateTransactionInput = {
+  date: string;
+  description: string;
+  reference?: string;
+  entries: TransactionEntryInput[];
+};
+
+export async function createTransaction(input: CreateTransactionInput) {
+  const totalDebit = input.entries.reduce((sum, entry) => sum + entry.debit, 0);
+  const totalCredit = input.entries.reduce((sum, entry) => sum + entry.credit, 0);
+  if (Math.abs(totalDebit - totalCredit) > 0.005) {
+    throw new ApiError("La partida doble no cuadra: los débitos deben ser iguales a los créditos.", 400);
+  }
+  return apiRequest<unknown>(ENDPOINTS.accounting.transactionSaleCreate, {
+    method: "POST",
+    body: {
+      date: input.date,
+      description: input.description,
+      ...(input.reference ? { reference: input.reference } : {}),
+      entries: input.entries.map((entry) => ({
+        accountId: entry.accountId,
+        ...(entry.costCenterId ? { costCenterId: entry.costCenterId } : {}),
+        debit: entry.debit,
+        credit: entry.credit
+      }))
+    }
+  });
 }

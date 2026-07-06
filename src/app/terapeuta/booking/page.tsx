@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Disponibilidad de pacientes" };
 export default function TherapistBookingPage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Disponibilidad para paciente" description="Consulta terapeutas, servicios y horarios calculados. La creacion operativa requiere endpoint dedicado del backend." />
+      <PageHeader title="Disponibilidad para paciente" description="Consulta disponibilidad y registra citas para un paciente concreto." />
       <ManagedBookingForm actorLabel="terapeuta" />
     </div>
   );

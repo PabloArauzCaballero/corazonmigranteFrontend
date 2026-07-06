@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CalendarDays, Check, Clock3, Globe2, LockKeyhole, Stethoscope } from "lucide-react";
+import { CalendarDays, Check, Clock3, Globe2, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -12,9 +12,11 @@ import {
   getBookingAvailability,
   listBookingProducts,
   listBookingTherapists,
+  listPatientOptions,
   type AvailabilitySlot,
   type BookingProduct,
-  type BookingTherapist
+  type BookingTherapist,
+  type PatientOption
 } from "@/features/booking/booking.api";
 import {
   managedBookingSchema,
@@ -238,7 +240,8 @@ function BookingFields<T extends BookingFormValues>({
   therapists,
   availability,
   selectedTherapist,
-  isManaged = false
+  isManaged = false,
+  patients
 }: {
   form: ReturnType<typeof useForm<T>>;
   products: BookingProduct[];
@@ -246,6 +249,7 @@ function BookingFields<T extends BookingFormValues>({
   availability: { data?: AvailabilitySlot[]; isFetching: boolean; error: unknown };
   selectedTherapist?: BookingTherapist;
   isManaged?: boolean;
+  patients?: { options: PatientOption[]; isLoading: boolean; error: unknown };
 }) {
   const therapistUserId = useWatch({ control: form.control, name: "therapistUserId" as never }) as unknown as string;
   const scheduledTime = useWatch({ control: form.control, name: "scheduledTime" as never }) as unknown as string;
@@ -257,7 +261,27 @@ function BookingFields<T extends BookingFormValues>({
       {isManaged ? (
         <div className="grid gap-2">
           <Label htmlFor="patientUserId">Paciente</Label>
-          <Input id="patientUserId" placeholder="UUID del paciente" className="rounded-none" {...form.register("patientUserId" as never)} />
+          {patients && patients.options.length > 0 ? (
+            <select
+              id="patientUserId"
+              className="focus-ring h-12 rounded-none border border-slate-300 bg-white px-3 text-sm"
+              {...form.register("patientUserId" as never)}
+            >
+              <option value="">Seleccionar paciente</option>
+              {patients.options.map((patient) => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.name}{patient.email ? ` — ${patient.email}` : ""}
+                </option>
+              ))}
+            </select>
+          ) : patients?.isLoading ? (
+            <p className="border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Cargando lista de pacientes...</p>
+          ) : (
+            <>
+              <Input id="patientUserId" placeholder="UUID del paciente" className="rounded-none" {...form.register("patientUserId" as never)} />
+              {patients?.error ? <p className="text-xs text-amber-700">{humanizeApiError(patients.error)} Ingresa el ID manualmente.</p> : null}
+            </>
+          )}
           {patientError ? <p className="text-sm text-destructive">{String(patientError.message)}</p> : null}
         </div>
       ) : null}
@@ -317,8 +341,13 @@ function BookingFields<T extends BookingFormValues>({
 }
 
 function useBookingData(form: ReturnType<typeof useForm<PatientBookingInput>>) {
+  const { session } = useSession();
+  const canUseAdminDirectory = session?.role === "ADMIN" || session?.role === "SUPER_ADMIN" || session?.role === "CONTADOR";
   const products = useQuery({ queryKey: ["booking", "products"], queryFn: listBookingProducts });
-  const therapists = useQuery({ queryKey: ["booking", "therapists"], queryFn: listBookingTherapists });
+  const therapists = useQuery({
+    queryKey: ["booking", "therapists", canUseAdminDirectory],
+    queryFn: () => listBookingTherapists({ canUseAdminDirectory })
+  });
   const therapistUserId = useWatch({ control: form.control, name: "therapistUserId" });
   const productId = useWatch({ control: form.control, name: "productId" });
   const scheduledDate = useWatch({ control: form.control, name: "scheduledDate" });
@@ -384,6 +413,7 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
     defaultValues: { patientUserId: "", therapistUserId: "", productId: "", scheduledDate: "", scheduledTime: "", timezone: browserTimezone(), notesForTherapist: "" }
   });
   const data = useBookingData(form as unknown as ReturnType<typeof useForm<PatientBookingInput>>);
+  const patientsQuery = useQuery({ queryKey: ["booking", "patients"], queryFn: () => listPatientOptions() });
   const mutation = useMutation({ mutationFn: createManagedBooking });
 
   if (data.products.isLoading || data.therapists.isLoading) return <LoadingState title="Consultando servicios y terapeutas disponibles" />;
@@ -395,25 +425,34 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
       <CardHeader className="border-b border-slate-200 bg-[#f7f4ef] p-7">
         <Badge className="w-fit" variant="secondary">Booking por {actorLabel}</Badge>
         <CardTitle className="font-serif text-4xl">Agendar cita para un paciente concreto</CardTitle>
-        <CardDescription>Selecciona terapeuta, servicio y horario calculado antes de enviar la solicitud operativa.</CardDescription>
+        <CardDescription>Selecciona paciente, terapeuta, servicio y horario calculado antes de registrar la cita.</CardDescription>
       </CardHeader>
       <CardContent className="p-7">
-        <form className="grid gap-7" onSubmit={(event) => event.preventDefault()}>
-          <BookingFields
-            form={form}
-            products={data.products.data ?? []}
-            therapists={data.therapists.data ?? []}
-            availability={data.availability}
-            selectedTherapist={data.selectedTherapist}
-            isManaged
-          />
-          <div className="border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            <span className="inline-flex items-center gap-2 font-semibold"><LockKeyhole className="h-4 w-4" />Accion operativa protegida</span>
-            <p className="mt-1">El OpenAPI actualizado indica que `POST /appointments` requiere rol PATIENT. Admin y terapeuta pueden consultar disponibilidad y revisar reglas, pero no crear una sesion por otro paciente hasta que exista un endpoint operativo dedicado.</p>
+        {mutation.isSuccess ? (
+          <div className="border border-emerald-200 bg-emerald-50 p-6 text-emerald-900">
+            <p className="font-semibold">Cita registrada</p>
+            <p className="mt-2 text-sm leading-6">La solicitud quedó creada para el paciente seleccionado y será gestionada según las reglas del servicio.</p>
+            <Button type="button" variant="outline" className="mt-4 rounded-none" onClick={() => { mutation.reset(); form.reset({ ...form.getValues(), patientUserId: "", scheduledTime: "" }); }}>
+              Registrar otra cita
+            </Button>
           </div>
-          {mutation.isError ? <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{humanizeApiError(mutation.error)}</p> : null}
-          <Button disabled type="button" variant="outline" className="w-full rounded-none md:w-fit">Creacion operativa pendiente de endpoint</Button>
-        </form>
+        ) : (
+          <form className="grid gap-7" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+            <BookingFields
+              form={form}
+              products={data.products.data ?? []}
+              therapists={data.therapists.data ?? []}
+              availability={data.availability}
+              selectedTherapist={data.selectedTherapist}
+              isManaged
+              patients={{ options: patientsQuery.data ?? [], isLoading: patientsQuery.isLoading, error: patientsQuery.error }}
+            />
+            {mutation.isError ? <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{humanizeApiError(mutation.error)}</p> : null}
+            <Button disabled={mutation.isPending} type="submit" className="w-full rounded-none bg-teal-900 hover:bg-teal-950 md:w-fit">
+              {mutation.isPending ? "Registrando..." : "Registrar cita para el paciente"}
+            </Button>
+          </form>
+        )}
       </CardContent>
     </Card>
   );

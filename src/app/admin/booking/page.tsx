@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Disponibilidad administrativa" };
 export default function AdminBookingPage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Disponibilidad administrativa" description="Vista operativa para consultar terapeuta, servicio y horario. Crear sesiones por otro paciente no esta expuesto en el OpenAPI actual." />
+      <PageHeader title="Disponibilidad administrativa" description="Agenda citas para un paciente concreto: selecciona el usuario final, el terapeuta, el servicio y el horario disponible." />
       <ManagedBookingForm actorLabel="administrador" />
     </div>
   );

@@ -1,11 +1,11 @@
+import { CreateAccountButton } from "@/features/accounting/accounting-create";
 import { AccountingTable } from "@/features/accounting/accounting-table";
-import { Button } from "@/shared/ui/button";
 import { PageHeader } from "@/shared/ui/page-header";
 
 export default function AccountsPage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Cuentas contables" description="Búsqueda y paginación resueltas desde el sistema, no sobre filas locales." actions={<Button>Crear cuenta</Button>} />
+      <PageHeader title="Cuentas contables" description="Plan de cuentas consultado y creado directamente contra el sistema." actions={<CreateAccountButton />} />
       <AccountingTable resource="accounts" />
     </div>
   );
