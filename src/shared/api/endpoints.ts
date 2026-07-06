@@ -26,7 +26,7 @@ export const ENDPOINTS = {
     mine: `${API_PREFIX}/appointments/mine`,
     adminList: `${API_PREFIX}/appointments/admin/list`,
     updateStatus: `${API_PREFIX}/appointments/:appointmentId/status`,
-    // Booking operativo: mismo POST /appointments, con patientUserId en el body para agendar por un paciente concreto.
+    // Booking operativo administrativo no existe en el backend actual; se deja como alias bloqueado por el cliente.
     createForPatient: `${API_PREFIX}/appointments`
   },
   booking: {
@@ -87,8 +87,8 @@ export const ENDPOINTS = {
   publicUi: {
     pageBundle: `${API_PREFIX}/public/pages/:slug`,
     pageBySlug: `${API_PREFIX}/public/pages/:slug`,
-    pageElementByCode: `${API_PREFIX}/public/pages/:slug/elements/:code`,
-    pageElementById: `${API_PREFIX}/public/page-elements/:id`,
+    pageElementByCode: `${API_PREFIX}/public/pages/:slug`,
+    pageElementById: `${API_PREFIX}/public/pages/:slug`,
     elementsList: `${API_PREFIX}/public/pages/:slug`,
     elementsCreate: `${API_PREFIX}/admin/cms/pages`,
     elementsUpdate: `${API_PREFIX}/admin/cms/pages/:pageId/elements`,

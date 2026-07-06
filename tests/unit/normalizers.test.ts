@@ -34,11 +34,15 @@ describe("backend response normalization", () => {
   it("builds backend query params for server-side search and pagination", () => {
     const query = buildQueryString({ search: "ana", page: 3, pageSize: 25, status: "activo", sortBy: "nombre", sortDir: "asc" });
     expect(query).toContain("search=ana");
-    expect(query).toContain("p_search=ana");
     expect(query).toContain("page=3");
-    expect(query).toContain("p_limit=25");
-    expect(query).toContain("p_estado=activo");
-    expect(query).toContain("sortBy=nombre");
-    expect(query).toContain("sortDir=asc");
+    expect(query).toContain("pageSize=25");
+    expect(query).toContain("sort=nombre");
+    expect(query).toContain("order=asc");
+    expect(query).not.toContain("p_search");
+    expect(query).not.toContain("p_limit");
+    expect(query).not.toContain("p_estado");
+    expect(query).not.toContain("status");
+    expect(query).not.toContain("sortBy");
+    expect(query).not.toContain("sortDir");
   });
 });

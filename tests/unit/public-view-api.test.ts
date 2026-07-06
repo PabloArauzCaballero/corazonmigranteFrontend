@@ -26,7 +26,7 @@ describe("public view api endpoints", () => {
       "https://api.corazondemigrante.com/api/v1/public/pages/inicio",
     ]);
     expect(buildConfiguredPublicViewElementCandidates("hero").map((item) => item.url)).toEqual([
-      "https://api.corazondemigrante.com/api/v1/public/pages/inicio/elements/hero",
+      "https://api.corazondemigrante.com/api/v1/public/pages/inicio",
     ]);
   });
 
@@ -61,7 +61,28 @@ describe("public view api endpoints", () => {
       "https://api.corazondemigrante.com/api/v1/public/pages/inicio",
     );
     expect(buildConfiguredPublicViewElementCandidates("hero").map((item) => item.url)[0]).toBe(
-      "https://api.corazondemigrante.com/api/v1/public/pages/inicio/elements/hero",
+      "https://api.corazondemigrante.com/api/v1/public/pages/inicio",
     );
   });
+  it("corrige endpoints legacy con /public-views/1 y elimina elements/:code", async () => {
+    process.env = {
+      ...originalEnv,
+      NEXT_PUBLIC_API_BASE_URL: "https://api.corazondemigrante.com",
+      NEXT_PUBLIC_PUBLIC_VIEW_ENDPOINT: "/api/v1/public-views/1",
+      NEXT_PUBLIC_PUBLIC_VIEW_ELEMENT_ENDPOINT: "/api/v1/public-views/1/elements/:code",
+    };
+
+    const {
+      buildConfiguredPublicViewCandidates,
+      buildConfiguredPublicViewElementCandidates,
+    } = await importPublicViewApi();
+
+    expect(buildConfiguredPublicViewCandidates().map((item) => item.url)[0]).toBe(
+      "https://api.corazondemigrante.com/api/v1/public/pages/inicio",
+    );
+    expect(buildConfiguredPublicViewElementCandidates("hero").map((item) => item.url)[0]).toBe(
+      "https://api.corazondemigrante.com/api/v1/public/pages/inicio",
+    );
+  });
+
 });

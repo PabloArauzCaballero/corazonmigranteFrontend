@@ -123,7 +123,7 @@ export function AuthorsAdmin() {
         headline: fstr(form, "headline") || undefined,
         bio: fstr(form, "bio") || undefined,
         status: fstr(form, "status") || "ACTIVE",
-        email: selectedUser?.email
+        userId: userId || undefined
       });
     },
     onSuccess: () => {

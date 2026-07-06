@@ -22,11 +22,12 @@ export type TransactionRow = {
 
 export type AccountingResource = "accounts" | "accountGroups" | "costCenters";
 
-const accountingEndpoints: Record<AccountingResource, string> = {
+const accountingEndpoints: Partial<Record<AccountingResource, string>> = {
   accounts: ENDPOINTS.accounting.accountsList,
-  accountGroups: ENDPOINTS.accounting.accountGroupsList,
-  costCenters: ENDPOINTS.accounting.costCentersList
+  accountGroups: ENDPOINTS.accounting.accountGroupsList
 };
+
+const resourcesWithoutListEndpoint = new Set<AccountingResource>(["costCenters"]);
 
 export function mapAccountingRow(item: unknown, index: number): AccountingRow {
   const record = isRecord(item) ? item : {};
@@ -54,29 +55,20 @@ function emptyResult<T>(query: SistemaListQuery): PaginatedResult<T> {
   return { items: [], page: query.page ?? 1, pageSize: query.pageSize ?? 20, total: 0, totalPages: 1, raw: null };
 }
 
-function isMissingListEndpoint(error: unknown) {
-  return error instanceof ApiError && [404, 405, 501].includes(error.status ?? 0);
-}
-
 export async function listAccountingRows(resource: AccountingResource, query: SistemaListQuery = {}): Promise<PaginatedResult<AccountingRow>> {
-  try {
-    const payload = await apiRequest<unknown>(`${accountingEndpoints[resource]}${buildQueryString(query)}`);
-    return normalizePaginatedResponse(payload, mapAccountingRow, query);
-  } catch (error) {
-    // Si el backend aún no expone el GET (solo POST), la vista no se bloquea: se muestra vacía y se permite crear.
-    if (isMissingListEndpoint(error)) return emptyResult<AccountingRow>(query);
-    throw error;
-  }
+  if (resourcesWithoutListEndpoint.has(resource)) return emptyResult<AccountingRow>(query);
+
+  const endpoint = accountingEndpoints[resource];
+  if (!endpoint) return emptyResult<AccountingRow>(query);
+
+  const payload = await apiRequest<unknown>(`${endpoint}${buildQueryString(query)}`);
+  return normalizePaginatedResponse(payload, mapAccountingRow, query);
 }
 
 export async function listTransactions(query: SistemaListQuery = {}): Promise<PaginatedResult<TransactionRow>> {
-  try {
-    const payload = await apiRequest<unknown>(`${ENDPOINTS.accounting.transactionsList}${buildQueryString(query)}`);
-    return normalizePaginatedResponse(payload, mapTransactionRow, query);
-  } catch (error) {
-    if (isMissingListEndpoint(error)) return emptyResult<TransactionRow>(query);
-    throw error;
-  }
+  // El backend actual solo expone POST /admin/accounting/transactions; no existe GET.
+  // Devolver vacío evita generar 404 en consola al abrir la vista.
+  return emptyResult<TransactionRow>(query);
 }
 
 export type CreateAccountGroupInput = {

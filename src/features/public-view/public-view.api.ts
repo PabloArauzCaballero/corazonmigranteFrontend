@@ -50,8 +50,14 @@ function resolveTemplate(template: string) {
 
 function normalizeLegacyPublicPagePath(pathOrUrl: string) {
   return pathOrUrl
+    // Backend real incluido: GET /api/v1/public/pages/:slug.
+    // No existe GET /api/v1/public-views/:id ni /public/pages/:slug/elements/:code.
+    .replace(/\/api\/v1\/public-views\/1(?=\/|$)/g, "/api/v1/public/pages/inicio")
+    .replace(/\/api\/v1\/public-views\/2(?=\/|$)/g, "/api/v1/public/pages/biblioteca")
+    .replace(/\/api\/v1\/public-views\/[^/?#]+(?=\/|$)/g, `/api/v1/public/pages/${encodeToken(publicViewIdentity().slug)}`)
     .replace(/(\/api\/v1\/public\/pages\/)1(?=\/|$)/g, "$1inicio")
-    .replace(/(\/api\/v1\/public\/pages\/)2(?=\/|$)/g, "$1biblioteca");
+    .replace(/(\/api\/v1\/public\/pages\/)2(?=\/|$)/g, "$1biblioteca")
+    .replace(/(\/api\/v1\/public\/pages\/[^/?#]+)\/elements\/[^/?#]+/g, "$1");
 }
 
 function absoluteUrl(pathOrUrl: string) {
@@ -67,10 +73,18 @@ function configuredEndpointCandidate(): PublicEndpointCandidate | undefined {
   return { label: "custom", url: absoluteUrl(resolveTemplate(custom)) };
 }
 
-function configuredElementEndpointCandidate(code: string): PublicEndpointCandidate | undefined {
+function configuredElementEndpointCandidate(_code: string): PublicEndpointCandidate | undefined {
   const custom = env.NEXT_PUBLIC_PUBLIC_VIEW_ELEMENT_ENDPOINT?.trim();
   if (!custom) return undefined;
-  return { label: "custom-element", url: absoluteUrl(resolveTemplate(custom.replaceAll(":code", encodeURIComponent(code)))) };
+
+  // El backend incluido en este zip no tiene /public/pages/:slug/elements/:code.
+  // Si llega una variable legacy con esa forma, se reconduce al endpoint real de página.
+  const normalized = custom
+    .replace(/\/elements\/:code$/i, "")
+    .replace(/\/elements\/[^/]+$/i, "")
+    .replace(/\/public\/page-elements\/:id$/i, "/public/pages/:slug");
+
+  return { label: "custom-page-for-element", url: absoluteUrl(resolveTemplate(normalized)) };
 }
 
 export function buildConfiguredPublicViewUrl() {
@@ -96,13 +110,13 @@ export function buildConfiguredPublicViewElementCandidates(code: string): Public
   const candidates: PublicEndpointCandidate[] = [];
 
   if (custom) candidates.push(custom);
-  candidates.push({ label: "public-page-element", url: absoluteUrl(resolveTemplate(`/api/v1/public/pages/:slug/elements/${encodeURIComponent(code)}`)) });
+  candidates.push({ label: "public-page-slug", url: absoluteUrl(resolveTemplate("/api/v1/public/pages/:slug")) });
 
   return uniqueCandidates(candidates);
 }
 
-export function buildPublicPageElementUrl(elementId: string) {
-  return absoluteUrl(`/api/v1/public/page-elements/${encodeURIComponent(elementId)}`);
+export function buildPublicPageElementUrl(_elementId: string) {
+  return absoluteUrl(resolveTemplate("/api/v1/public/pages/:slug"));
 }
 
 function responseMessage(payload: unknown, fallback: string) {
@@ -127,6 +141,26 @@ function responseMessage(payload: unknown, fallback: string) {
     }
   }
   return fallback;
+}
+
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function unwrapData(value: unknown): unknown {
+  if (isRecord(value) && "data" in value) return unwrapData(value.data);
+  return value;
+}
+
+function findElementByCode(payload: unknown, code: string) {
+  const source = unwrapData(payload);
+  const record = isRecord(source) ? source : {};
+  const elements = Array.isArray(record.elements) ? record.elements : [];
+  return elements.find((element) => {
+    if (!isRecord(element)) return false;
+    return String(element.code ?? element.codigo ?? "").trim().toLowerCase() === code.trim().toLowerCase();
+  });
 }
 
 async function readJsonOrText(response: Response) {
@@ -221,7 +255,18 @@ export async function loadConfiguredPublicViewElement(code: string): Promise<{ o
         continue;
       }
 
-      return { ok: true, endpoint: candidate.url, data: payload };
+      const element = findElementByCode(payload, code);
+      if (!element) {
+        lastFailure = {
+          endpoint: candidate.url,
+          status: 404,
+          message: `No se encontró el elemento público ${code} dentro de la página configurada.`,
+          details: payload
+        };
+        continue;
+      }
+
+      return { ok: true, endpoint: candidate.url, data: element };
     } catch (error) {
       lastFailure = {
         endpoint: candidate.url,

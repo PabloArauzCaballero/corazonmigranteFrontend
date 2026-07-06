@@ -111,41 +111,47 @@ export async function listBookingProducts() {
   return normalizePaginatedResponse(payload, mapBookingProduct, { page: 1, pageSize: 100 }).items;
 }
 
-function normalizeTherapistResult(payload: unknown) {
-  const result = normalizePaginatedResponse(payload, mapBookingTherapist, { page: 1, pageSize: 100 });
-  return result.items.filter((therapist) => therapist.id && !therapist.id.startsWith("terapeuta-"));
+function hasTherapistContractMarker(item: unknown) {
+  const record = isRecord(item) ? item : {};
+  const role = String(record.role ?? record.rol ?? record.roleCode ?? record.role_code ?? "").trim().toUpperCase();
+  if (["THERAPIST", "TERAPEUTA"].includes(role)) return true;
+  if (isRecord(record.therapistProfile) || isRecord(record.therapist_profile) || isRecord(record.perfilTerapeuta)) return true;
+  return Boolean(
+    getString(record, ["title", "titulo", "professionalTitle"], "") ||
+      getString(record, ["mainSpecialty", "main_specialty", "specialty", "especialidad"], "") ||
+      getString(record, ["approvalStatus", "approval_status"], "")
+  );
 }
 
-const therapistDirectoryQuery = buildQueryString({
-  page: 1,
-  pageSize: 100,
-  role: "THERAPIST",
-  rol: "TERAPEUTA",
-  status: "activo"
-});
+function normalizeTherapistResult(payload: unknown, options: { requireMarker?: boolean } = {}) {
+  const source = unwrapPayload(payload);
+  const result = normalizePaginatedResponse(source, mapBookingTherapist, { page: 1, pageSize: 100 });
+  const rawItems = normalizePaginatedResponse(source, (item) => item, { page: 1, pageSize: 100 }).items;
+  return result.items.filter((therapist, index) => {
+    if (!therapist.id || therapist.id.startsWith("terapeuta-")) return false;
+    return options.requireMarker ? hasTherapistContractMarker(rawItems[index]) : true;
+  });
+}
+
+const therapistDirectoryQuery = buildQueryString({ page: 1, pageSize: 100 });
 
 /**
- * Directorio de terapeutas consciente del rol:
- * - ADMIN / SUPER_ADMIN / CONTADOR usan `GET /admin/users?role=THERAPIST` (autorizado por el OpenAPI).
- * - PACIENTE / TERAPEUTA / anónimo NUNCA envían su token a la ruta administrativa (eso causaba el 403).
- *   Para ellos se intentan fuentes públicas en orden y se devuelve la primera que responda.
+ * Directorio de terapeutas ajustado al backend real:
+ * - El backend actual NO acepta role/rol/status en GET /admin/users.
+ * - Si /admin/users no expone rol/perfil, no inventamos terapeutas a partir de usuarios genéricos.
+ * - Como respaldo se revisan páginas CMS públicas que podrían contener tarjetas de equipo.
  */
 export async function listBookingTherapists(options: { canUseAdminDirectory?: boolean } = {}) {
   if (options.canUseAdminDirectory) {
-    const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${therapistDirectoryQuery}`);
-    return normalizeTherapistResult(payload);
+    try {
+      const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${therapistDirectoryQuery}`);
+      const items = normalizeTherapistResult(payload, { requireMarker: true });
+      if (items.length > 0) return items;
+    } catch {
+      // continúa con CMS público
+    }
   }
 
-  // 1) Intento público directo (sin Authorization) por si el backend expone el directorio sin rol admin.
-  try {
-    const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${therapistDirectoryQuery}`, { auth: false });
-    const items = normalizeTherapistResult(payload);
-    if (items.length > 0) return items;
-  } catch {
-    // continúa con las siguientes fuentes
-  }
-
-  // 2) Páginas CMS públicas que pueden alojar el directorio de terapeutas.
   const cmsSlugs = ["terapeutas", "equipo", "booking"];
   for (const slug of cmsSlugs) {
     try {
@@ -158,8 +164,8 @@ export async function listBookingTherapists(options: { canUseAdminDirectory?: bo
   }
 
   throw new ApiError(
-    "El directorio público de terapeutas no está disponible todavía en el backend. Un administrador puede reservar por ti mientras se habilita.",
-    404
+    "El backend actual no expone un directorio público de terapeutas. La ruta de disponibilidad existe, pero necesita un therapistUserId real; agrega un endpoint de directorio o publica terapeutas en CMS.",
+    501
   );
 }
 
@@ -186,8 +192,6 @@ export async function listPatientOptions(search = "") {
   const query = buildQueryString({
     page: 1,
     pageSize: 100,
-    role: "PATIENT",
-    rol: "PACIENTE",
     search: search || undefined
   });
   const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${query}`);
@@ -195,7 +199,7 @@ export async function listPatientOptions(search = "") {
   return result.items.filter((patient) => patient.id && !patient.id.startsWith("paciente-"));
 }
 
-async function fetchAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
+export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
   const query = buildQueryString({
     therapistUserId: input.therapistUserId,
     productId: input.productId,
@@ -205,27 +209,6 @@ async function fetchAvailability(input: { therapistUserId: string; productId: st
   });
   const payload = await apiRequest<unknown>(`${ENDPOINTS.booking.availability}${query}`, { auth: false });
   return normalizeAvailability(payload);
-}
-
-/**
- * El OpenAPI documenta `from`/`to` como fecha simple (YYYY-MM-DD), pero el backend en producción
- * rechaza ese formato con HTTP_400 "formato inválido" para ese mismo par de fechas. Como fallback
- * reintentamos con límites de día completo en ISO-8601 (formato date-time), que es lo que acepta
- * el validador real del backend.
- */
-export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
-  try {
-    return await fetchAvailability(input);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 400) {
-      return await fetchAvailability({
-        ...input,
-        from: `${input.from}T00:00:00.000Z`,
-        to: `${input.to}T23:59:59.999Z`
-      });
-    }
-    throw error;
-  }
 }
 
 export async function createPatientBooking(input: PatientBookingInput) {
@@ -242,23 +225,10 @@ export async function createPatientBooking(input: PatientBookingInput) {
   });
 }
 
-/**
- * Booking operativo: crea la cita para un paciente concreto seleccionado por admin/terapeuta.
- * Envía `patientUserId` en el body de `POST /appointments`; si el backend rechaza al actor,
- * el error del servidor se muestra humanizado en el formulario.
- */
-export async function createManagedBooking(input: ManagedBookingInput) {
-  return apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createForPatient, {
-    method: "POST",
-    body: {
-      patientUserId: input.patientUserId,
-      patient_user_id: input.patientUserId,
-      therapistUserId: input.therapistUserId,
-      productId: input.productId,
-      scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
-      timezone: input.timezone,
-      notesForTherapist: input.notesForTherapist
-    },
-    auth: true
-  });
+/** Booking operativo aún no soportado por el backend incluido en este zip. */
+export async function createManagedBooking(_input: ManagedBookingInput) {
+  throw new ApiError(
+    "El backend actual solo permite POST /api/v1/appointments desde un usuario PACIENTE y no acepta patientUserId. Para booking administrativo falta un endpoint específico en el backend.",
+    501
+  );
 }

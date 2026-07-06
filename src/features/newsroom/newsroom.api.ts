@@ -56,7 +56,7 @@ export const newsroomApi = {
   tags() { return apiRequest<unknown>(`${API_PREFIX}/admin/content/tags`).then(items<Tag>); },
   createTag(input: { name: string; slug?: string }) { return apiRequest<Tag>(`${API_PREFIX}/admin/content/tags`, { method: "POST", body: input }); },
   authors() { return apiRequest<unknown>(`${API_PREFIX}/admin/content/authors`).then(items<Author>); },
-  createAuthor(input: { displayName: string; headline?: string; bio?: string; status?: string; email?: string }) { return apiRequest<Author>(`${API_PREFIX}/admin/content/authors`, { method: "POST", body: input }); },
+  createAuthor(input: { displayName: string; headline?: string; bio?: string; status?: string; userId?: string }) { return apiRequest<Author>(`${API_PREFIX}/admin/content/authors`, { method: "POST", body: input }); },
   publicNews(query: PublicationQuery = {}) { return apiRequest<unknown>(`${API_PREFIX}/publications/news${publicListQuery(query)}`, { auth: false }).then((payload) => normalizePaginatedResponse(payload, (item) => item as Publication, query)); },
   publicColumns(query: PublicationQuery = {}) { return apiRequest<unknown>(`${API_PREFIX}/publications/columns${publicListQuery(query)}`, { auth: false }).then((payload) => normalizePaginatedResponse(payload, (item) => item as Publication, query)); },
   publicPublication(slug: string, kind: "news" | "columns") { return apiRequest<Publication>(`${API_PREFIX}/publications/${kind}/${slug}`, { auth: false }); },

@@ -5,24 +5,22 @@ import { buildFileDownloadUrl } from "@/shared/api/files";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
 import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
 import { ROLES, type UserRole } from "@/shared/auth/roles";
-import type { AdminUser, AdminUserStatus } from "@/features/users/users.types";
+import type { AdminUser, AdminUserRole, AdminUserStatus } from "@/features/users/users.types";
 import { ApiError } from "@/shared/api/errors";
 
-function replacePathParam(path: string, param: string, value: string) {
-  return path.replace(`:${param}`, encodeURIComponent(value));
-}
 
-function normalizeRole(value: unknown): UserRole {
+function normalizeRole(value: unknown): AdminUserRole {
   const role = String(value ?? "").trim().toUpperCase();
-  return ROLES.includes(role as UserRole) ? (role as UserRole) : "PACIENTE";
+  return ROLES.includes(role as UserRole) ? (role as UserRole) : "NO_EXPUESTO";
 }
 
 function resolveUserName(record: Record<string, unknown>) {
   const direct = getString(record, ["name", "nombre", "full_name", "nombre_completo", "displayName"], "");
   if (direct) return direct;
 
-  const firstName = getString(record, ["firstName", "first_name", "nombres"], "");
-  const lastName = getString(record, ["lastName", "last_name", "apellidos"], "");
+  const profile = isRecord(record.patientProfile) ? record.patientProfile : isRecord(record.therapistProfile) ? record.therapistProfile : isRecord(record.adminProfile) ? record.adminProfile : {};
+  const firstName = getString(record, ["firstName", "first_name", "nombres"], getString(profile, ["firstName", "first_name", "nombres"], ""));
+  const lastName = getString(record, ["lastName", "last_name", "apellidos"], getString(profile, ["lastName", "last_name", "apellidos"], ""));
   const combined = [firstName, lastName].filter(Boolean).join(" ").trim();
   return combined || "Sin nombre";
 }
@@ -45,7 +43,7 @@ export function mapUser(item: unknown, index: number): AdminUser {
     id: getString(record, ["id", "user_id", "id_usuario", "uuid"], `usuario-${index + 1}`),
     name: resolveUserName(record),
     email: getString(record, ["email", "correo", "correo_electronico"], "sin-correo@corazonmigrante.local"),
-    role: normalizeRole(record.role ?? record.rol ?? record.tipo_usuario),
+    role: normalizeRole(record.role ?? record.rol ?? record.tipo_usuario ?? record.roleCode ?? record.role_code),
     status: normalizeStatus(record.status ?? record.estado ?? record.activo) as AdminUserStatus,
     avatarUrl: resolveUserAvatar(record)
   };
@@ -105,13 +103,6 @@ export async function createUser(input: CreateUserInput) {
   throw new ApiError("El OpenAPI actual solo expone creacion de pacientes y terapeutas. Admin, super admin y contador requieren un endpoint administrativo dedicado.", 501);
 }
 
-const statusToBackend: Record<AdminUserStatus, string> = {
-  activo: "ACTIVE",
-  inactivo: "INACTIVE",
-  bloqueado: "BLOCKED",
-  pendiente: "PENDING"
-};
-
 export type UpdateTherapistProfileInput = {
   firstName?: string;
   lastName?: string;
@@ -122,21 +113,15 @@ export type UpdateTherapistProfileInput = {
   personalPhrase?: string;
 };
 
-/** Edición administrativa de la información del terapeuta (PATCH /admin/users/:userId/therapist-profile). */
-export async function updateTherapistProfileByAdmin(userId: string, input: UpdateTherapistProfileInput) {
-  const body: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(input)) {
-    if (typeof value === "string" && value.trim()) body[key] = value.trim();
-  }
-  return apiRequest<unknown>(replacePathParam(ENDPOINTS.users.updateTherapist, "userId", userId), {
-    method: "PATCH",
-    body
-  });
+/**
+ * El backend incluido en este zip todavía no expone edición administrativa de perfil
+ * ni cambio de estado por usuario. Se bloquea en cliente para no disparar 404/400
+ * confusos ni enviar campos fuera de contrato.
+ */
+export async function updateTherapistProfileByAdmin(_userId: string, _input: UpdateTherapistProfileInput) {
+  throw new ApiError("El backend actual no expone PATCH /api/v1/admin/users/:userId/therapist-profile. Edita el perfil desde la sesión del terapeuta o agrega ese endpoint al backend.", 501);
 }
 
-export async function updateUserStatus(userId: string, status: AdminUserStatus) {
-  return apiRequest<unknown>(replacePathParam(ENDPOINTS.users.updateStatus, "userId", userId), {
-    method: "PATCH",
-    body: { status: statusToBackend[status] }
-  });
+export async function updateUserStatus(_userId: string, _status: AdminUserStatus) {
+  throw new ApiError("El backend actual no expone PATCH /api/v1/admin/users/:userId/status. El cambio de estado requiere un endpoint administrativo en el backend.", 501);
 }

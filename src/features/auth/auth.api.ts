@@ -37,8 +37,7 @@ export async function registerPatient(input: RegisterPatientInput) {
       country: input.country,
       city: input.city,
       phone: input.phone,
-      occupation: input.occupation,
-      reason: input.reason
+      occupation: input.occupation
     },
     auth: false
   });

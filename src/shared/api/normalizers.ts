@@ -65,8 +65,8 @@ export function normalizePaginatedResponse<T>(payload: unknown, mapper: (item: u
   const sourceItems = findArray(payload);
   const items = sourceItems.map(mapper);
   const record = isRecord(payload) ? payload : {};
-  const page = getNumber(record, ["page", "currentPage", "pagina", "p_page"], query.page ?? 1);
-  const pageSize = getNumber(record, ["pageSize", "limit", "perPage", "per_page", "p_limit"], query.pageSize ?? Math.max(items.length, 1));
+  const page = getNumber(record, ["page", "currentPage", "pagina", "p_page"], nestedNumber(record, ["meta", "pagination", "paginacion"], ["page", "currentPage", "pagina"], query.page ?? 1));
+  const pageSize = getNumber(record, ["pageSize", "limit", "perPage", "per_page", "p_limit"], nestedNumber(record, ["meta", "pagination", "paginacion"], ["pageSize", "limit", "perPage", "per_page"], query.pageSize ?? Math.max(items.length, 1)));
   const total = Math.max(
     getNumber(record, ["total", "totalItems", "count", "totalCount", "cantidad"], nestedNumber(record, ["meta", "pagination", "paginacion"], ["total", "totalItems", "count"], items.length)),
     items.length

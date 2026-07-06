@@ -19,7 +19,6 @@ const publicChecks: ContractCheck[] = [
   { name: "public therapy products", path: ENDPOINTS.products.productsPublicList, expectedStatuses: [200] },
   { name: "public CMS landing", path: ENDPOINTS.cms.publicPage.replace(":slug", process.env.NEXT_PUBLIC_PUBLIC_VIEW_SLUG ?? "inicio"), expectedStatuses: [200] },
   { name: "public CMS biblioteca", path: ENDPOINTS.cms.publicPage.replace(":slug", process.env.NEXT_PUBLIC_CMS_LIBRARY_SLUG ?? "biblioteca"), expectedStatuses: [200] },
-  { name: "public CMS biblioteca hero", path: ENDPOINTS.publicUi.pageElementByCode.replace(":slug", process.env.NEXT_PUBLIC_CMS_LIBRARY_SLUG ?? "biblioteca").replace(":code", "hero"), expectedStatuses: [200] },
   {
     name: "booking availability validates required backend params",
     path: `${ENDPOINTS.booking.availability}?therapistUserId=invalid&productId=invalid&from=2026-07-01&to=2026-07-01&timezone=America/La_Paz`,

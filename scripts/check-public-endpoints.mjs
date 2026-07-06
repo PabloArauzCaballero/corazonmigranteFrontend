@@ -1,13 +1,13 @@
 const baseUrl = (process.env.BACKEND_INTEGRATION_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.corazondemigrante.com').replace(/\/$/, '');
 const timeoutMs = Number(process.env.PUBLIC_ENDPOINT_TIMEOUT_MS || 12000);
 
+// Contrato real del backend incluido: no existen /public-views/:id ni /public/pages/:slug/elements/:code.
 const endpoints = [
-  ['/api/v1/public-views/1', 'landing legacy public view'],
+  ['/api/v1/health', 'health'],
   ['/api/v1/public/pages/inicio', 'landing CMS page'],
-  ['/api/v1/public/pages/inicio/elements/hero', 'landing hero element'],
   ['/api/v1/public/pages/biblioteca', 'biblioteca CMS page'],
-  ['/api/v1/public/pages/biblioteca/elements/hero', 'biblioteca hero element'],
-  ['/api/v1/public-views/2', 'biblioteca legacy public view']
+  ['/api/v1/therapy/products?page=1&pageSize=1', 'public therapy products'],
+  ['/api/v1/publications/news?page=1&pageSize=1', 'public news']
 ];
 
 async function check(path, label) {

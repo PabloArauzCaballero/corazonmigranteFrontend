@@ -52,13 +52,11 @@ if (!/output\s*:\s*["']export["']/.test(nextConfig)) {
 }
 
 const publicViewApi = readFileSync(join(root, "src/features/public-view/public-view.api.ts"), "utf8");
-for (const expected of [
-  "/api/v1/public/pages/:slug",
-  "/api/v1/public/pages/:slug/elements/",
-]) {
-  if (!publicViewApi.includes(expected)) {
-    throw new Error(`Falta endpoint publico configurable: ${expected}`);
-  }
+if (!publicViewApi.includes("/api/v1/public/pages/:slug")) {
+  throw new Error("Falta endpoint publico real: /api/v1/public/pages/:slug");
+}
+if (publicViewApi.includes('candidates.push({ label: "public-page-element"') || publicViewApi.includes('absoluteUrl(resolveTemplate("/api/v1/public/pages/:slug/elements/')) {
+  throw new Error("No se debe llamar directamente /public/pages/:slug/elements/:code porque el backend actual no expone esa ruta.");
 }
 
 console.log("Smoke estatico OK: rutas, documentacion y endpoints criticos existen.");
