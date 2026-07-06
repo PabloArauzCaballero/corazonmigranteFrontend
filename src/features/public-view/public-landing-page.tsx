@@ -199,7 +199,7 @@ function PublicNavbar({
             className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.18)]"
           >
             <Link href={actionHref(landing.navbar.cta, "/registro")}>
-              {landing.navbar.cta?.label || "Crear cuenta"}
+              {"Crear cuenta"}
             </Link>
           </Button>
         </div>

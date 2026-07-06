@@ -51,7 +51,7 @@ export function RegisterPatientForm() {
       </CardHeader>
       <CardContent>
         {mutation.isSuccess ? (
-          <div className="rounded-2xl bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
+          <div className="rounded-lg bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
             Tu solicitud fue registrada. Ingresa con tu cuenta cuando el equipo confirme la activación.
           </div>
         ) : (
@@ -78,7 +78,7 @@ export function RegisterPatientForm() {
                 <Label htmlFor="country">País actual</Label>
                 <select
                   id="country"
-                  className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm"
+                  className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
                   {...form.register("country")}
                   disabled={countriesCities.isLoading}
                 >
@@ -96,7 +96,7 @@ export function RegisterPatientForm() {
                 <Label htmlFor="city">Ciudad</Label>
                 <select
                   id="city"
-                  className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm"
+                  className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
                   {...form.register("city")}
                   disabled={!selectedCountry}
                 >
@@ -116,7 +116,7 @@ export function RegisterPatientForm() {
                 <Label htmlFor="occupation">Ocupación (opcional)</Label>
                 <select
                   id="occupation"
-                  className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm"
+                  className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
                   {...form.register("occupation")}
                   disabled={occupations.isLoading}
                 >
@@ -135,7 +135,7 @@ export function RegisterPatientForm() {
               <Textarea id="reason" {...form.register("reason")} />
               {form.formState.errors.reason ? <p className="text-sm text-destructive">{form.formState.errors.reason.message}</p> : null}
             </div>
-            {mutation.isError ? <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{humanizeApiError(mutation.error)}</p> : null}
+            {mutation.isError ? <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive transition-colors">{humanizeApiError(mutation.error)}</p> : null}
             <Button disabled={mutation.isPending} type="submit">
               {mutation.isPending ? "Registrando..." : "Crear cuenta"}
             </Button>

@@ -52,7 +52,7 @@ export function LoginForm({ defaultRole = "PACIENTE" as LoginInput["roleHint"], 
             {form.formState.errors.password ? <p className="text-sm text-destructive">{form.formState.errors.password.message}</p> : null}
           </div>
           <input type="hidden" {...form.register("roleHint")} />
-          {rootError ? <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{rootError}</p> : null}
+          {rootError ? <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive transition-colors">{rootError}</p> : null}
           <Button disabled={mutation.isPending} type="submit">
             {mutation.isPending ? "Ingresando..." : "Ingresar"}
           </Button>

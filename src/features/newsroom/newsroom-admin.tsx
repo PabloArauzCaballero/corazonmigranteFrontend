@@ -3,10 +3,11 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Archive, Home, Megaphone, Newspaper, Plus, Send, Tags, UserRoundPlus } from "lucide-react";
+import { Archive, Home, Megaphone, Newspaper, Plus, Send, Tags, UserRoundPlus, Users } from "lucide-react";
 import { adsApi, newsroomApi } from "@/features/newsroom/newsroom.api";
-import type { AdsCampaign, AdsCompany, AdsPlacement, Author, Category, Publication, PublicationType, Tag } from "@/features/newsroom/newsroom.types";
-import { csv, Field, fmtDate, fnum, fstr, isoLocal, NativeInput, NativeTextarea, Notice, Panel, Select, StatusBadge, Submit, typeLabel } from "@/features/newsroom/admin-kit";
+import { listUsers } from "@/features/users/users.api";
+import type { AdsCampaign, AdsCompany, AdsPlacement, Author, Category, ContentSubscriber, Publication, PublicationType, Tag } from "@/features/newsroom/newsroom.types";
+import { csv, Field, fmtDate, fnum, fstr, isoLocal, NativeInput, NativeTextarea, Notice, Panel, Select, StatusBadge, Submit, TagPicker, typeLabel } from "@/features/newsroom/admin-kit";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -23,8 +24,68 @@ function PublicationsForm({ onDone }: { onDone: () => void }) {
   const authors = useQuery({ queryKey: ["newsroom-authors"], queryFn: () => newsroomApi.authors() });
   const categories = useQuery({ queryKey: ["newsroom-categories"], queryFn: () => newsroomApi.categories() });
   const tags = useQuery({ queryKey: ["newsroom-tags"], queryFn: () => newsroomApi.tags() });
-  const mutation = useMutation({ mutationFn: async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); notice.clear(); const form = new FormData(event.currentTarget); return newsroomApi.createPublication({ authorId: fstr(form, "authorId"), categoryId: fstr(form, "categoryId"), title: fstr(form, "title"), slug: fstr(form, "slug") || undefined, summary: fstr(form, "summary"), body: fstr(form, "body"), publicationType: fstr(form, "publicationType") as PublicationType, accessType: fstr(form, "accessType"), scheduledAt: isoLocal(fstr(form, "scheduledAt")), tagIds: csv(fstr(form, "tagIds")), commentsEnabled: true, reactionsEnabled: true, seoMetadata: { description: fstr(form, "seoDescription") || fstr(form, "summary") } }); }, onSuccess: () => { notice.ok("Publicación creada. Queda en borrador o programada según el formulario."); onDone(); }, onError: notice.fail });
-  return <Panel title="Crear publicación" description="Formulario editorial absorbido, adaptado al estilo de Corazón Migrante." icon={<Plus className="h-5 w-5" />}><form className="grid gap-4 xl:grid-cols-3" onSubmit={(e) => mutation.mutate(e)}><Field label="Título" className="xl:col-span-2"><NativeInput name="title" required minLength={4} /></Field><Field label="Slug opcional"><NativeInput name="slug" /></Field><Field label="Autor"><Select name="authorId" required defaultValue=""><option value="" disabled>{authors.isLoading ? "Cargando..." : "Seleccionar"}</option>{(authors.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.displayName}</option>)}</Select></Field><Field label="Categoría"><Select name="categoryId" required defaultValue=""><option value="" disabled>{categories.isLoading ? "Cargando..." : "Seleccionar"}</option>{(categories.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field><Field label="Tipo"><Select name="publicationType" defaultValue="NEWS">{TYPES.map((type) => <option key={type} value={type}>{typeLabel(type)}</option>)}</Select></Field><Field label="Acceso"><Select name="accessType" defaultValue="PUBLIC"><option value="PUBLIC">Público</option><option value="PREMIUM">Premium</option><option value="INTERNAL_ONLY">Interno</option></Select></Field><Field label="Programar"><NativeInput name="scheduledAt" type="datetime-local" /></Field><Field label="IDs de tags" hint="Separados por coma. Abajo tienes referencia."><NativeInput name="tagIds" /></Field><Field label="Resumen" className="xl:col-span-3"><NativeTextarea name="summary" required minLength={10} className="min-h-24" /></Field><Field label="Cuerpo" className="xl:col-span-3"><NativeTextarea name="body" required minLength={20} className="min-h-64" /></Field><Field label="Descripción SEO" className="xl:col-span-2"><NativeInput name="seoDescription" /></Field><div className="xl:col-span-3"><Submit pending={mutation.isPending} label="Crear publicación" /></div><div className="xl:col-span-3"><Notice message={notice.message} error={notice.error} /></div></form>{tags.data?.length ? <div className="mt-5 flex flex-wrap gap-2">{tags.data.map((t) => <Badge key={t.id} variant="muted">{t.name}: {t.id}</Badge>)}</div> : null}</Panel>;
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const [commentsEnabled, setCommentsEnabled] = useState(true);
+  const [reactionsEnabled, setReactionsEnabled] = useState(true);
+  const mutation = useMutation({
+    mutationFn: async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      notice.clear();
+      const form = new FormData(event.currentTarget);
+      return newsroomApi.createPublication({
+        authorId: fstr(form, "authorId"),
+        categoryId: fstr(form, "categoryId"),
+        title: fstr(form, "title"),
+        slug: fstr(form, "slug") || undefined,
+        summary: fstr(form, "summary"),
+        body: fstr(form, "body"),
+        publicationType: fstr(form, "publicationType") as PublicationType,
+        accessType: fstr(form, "accessType"),
+        scheduledAt: isoLocal(fstr(form, "scheduledAt")),
+        tagIds,
+        commentsEnabled,
+        reactionsEnabled,
+        seoMetadata: { description: fstr(form, "seoDescription") || fstr(form, "summary") }
+      });
+    },
+    onSuccess: () => {
+      notice.ok("Publicación creada. Queda en borrador o programada según el formulario.");
+      setTagIds([]);
+      onDone();
+    },
+    onError: notice.fail
+  });
+  return (
+    <Panel title="Crear publicación" description="Formulario editorial adaptado al estilo de Corazón Migrante." icon={<Plus className="h-5 w-5" />}>
+      <form className="grid gap-4 xl:grid-cols-3" onSubmit={(e) => mutation.mutate(e)}>
+        <Field label="Título" className="xl:col-span-2"><NativeInput name="title" required minLength={4} /></Field>
+        <Field label="Slug opcional"><NativeInput name="slug" /></Field>
+        <Field label="Autor"><Select name="authorId" required defaultValue=""><option value="" disabled>{authors.isLoading ? "Cargando..." : "Seleccionar"}</option>{(authors.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.displayName}</option>)}</Select></Field>
+        <Field label="Categoría"><Select name="categoryId" required defaultValue=""><option value="" disabled>{categories.isLoading ? "Cargando..." : "Seleccionar"}</option>{(categories.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>
+        <Field label="Tipo"><Select name="publicationType" defaultValue="NEWS">{TYPES.map((type) => <option key={type} value={type}>{typeLabel(type)}</option>)}</Select></Field>
+        <Field label="Acceso"><Select name="accessType" defaultValue="PUBLIC"><option value="PUBLIC">Público</option><option value="PREMIUM">Premium</option><option value="INTERNAL_ONLY">Interno</option></Select></Field>
+        <Field label="Programar"><NativeInput name="scheduledAt" type="datetime-local" /></Field>
+        <Field label="Tags" className="xl:col-span-2" hint="Busca por nombre y haz clic para agregar; haz clic en la X para quitar.">
+          <TagPicker options={(tags.data ?? []).map((t) => ({ id: t.id, name: t.name }))} value={tagIds} onChange={setTagIds} loading={tags.isLoading} />
+        </Field>
+        <Field label="Resumen" className="xl:col-span-3"><NativeTextarea name="summary" required minLength={10} className="min-h-24" /></Field>
+        <Field label="Cuerpo" className="xl:col-span-3"><NativeTextarea name="body" required minLength={20} className="min-h-64" /></Field>
+        <Field label="Descripción SEO" className="xl:col-span-2"><NativeInput name="seoDescription" /></Field>
+        <div className="flex items-center gap-6 xl:col-span-3">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" checked={commentsEnabled} onChange={(e) => setCommentsEnabled(e.target.checked)} className="h-4 w-4 rounded border" />
+            Permitir comentarios
+          </label>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" checked={reactionsEnabled} onChange={(e) => setReactionsEnabled(e.target.checked)} className="h-4 w-4 rounded border" />
+            Permitir reacciones
+          </label>
+        </div>
+        <div className="xl:col-span-3"><Submit pending={mutation.isPending} label="Crear publicación" /></div>
+        <div className="xl:col-span-3"><Notice message={notice.message} error={notice.error} /></div>
+      </form>
+    </Panel>
+  );
 }
 
 function PublicationActions({ row, onDone }: { row: Publication; onDone: () => void }) {
@@ -44,7 +105,144 @@ export function PublicationsAdmin() {
 export function CategoriesAdmin() { const qc = useQueryClient(); const notice = useNotice(); const query = useQuery({ queryKey: ["newsroom-categories"], queryFn: () => newsroomApi.categories() }); const mutation = useMutation({ mutationFn: async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); notice.clear(); const form = new FormData(e.currentTarget); return newsroomApi.createCategory({ name: fstr(form, "name"), slug: fstr(form, "slug") || undefined, description: fstr(form, "description") || undefined, isActive: fstr(form, "isActive") === "true", sortOrder: fnum(form, "sortOrder", 0) }); }, onSuccess: () => { notice.ok("Categoría creada."); void qc.invalidateQueries({ queryKey: ["newsroom-categories"] }); }, onError: notice.fail }); return <TaxonomyShell title="Categorías editoriales" notice={notice} mutationPending={mutation.isPending} onSubmit={(e) => mutation.mutate(e)}>{query.isLoading ? <LoadingState title="Cargando categorías" /> : null}{query.isError ? <ErrorState title="No se pudo cargar categorías" description={humanizeApiError(query.error)} /> : null}{query.data ? <DataTable<Category> data={query.data} getRowKey={(r) => r.id} columns={[{ key: "name", header: "Nombre", render: (r) => <b>{r.name}</b> }, { key: "slug", header: "Slug", render: (r) => r.slug }, { key: "status", header: "Estado", render: (r) => <StatusBadge status={r.isActive} /> }, { key: "id", header: "ID", render: (r) => <code className="text-xs">{r.id}</code> }]} /> : null}</TaxonomyShell>; }
 function TaxonomyShell({ title, notice, mutationPending, onSubmit, children }: { title: string; notice: ReturnType<typeof useNotice>; mutationPending: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void; children: ReactNode }) { return <div className="grid gap-6"><Panel title={`Crear ${title.toLowerCase()}`} icon={<Tags className="h-5 w-5" />}><form className="grid gap-4 md:grid-cols-4" onSubmit={onSubmit}><Field label="Nombre"><NativeInput name="name" required minLength={2} /></Field><Field label="Slug"><NativeInput name="slug" /></Field><Field label="Orden"><NativeInput name="sortOrder" type="number" defaultValue={0} /></Field><Field label="Estado"><Select name="isActive" defaultValue="true"><option value="true">Activo</option><option value="false">Inactivo</option></Select></Field><Field label="Descripción" className="md:col-span-4"><NativeTextarea name="description" /></Field><div className="md:col-span-4"><Submit pending={mutationPending} label="Crear" /></div><div className="md:col-span-4"><Notice message={notice.message} error={notice.error} /></div></form></Panel><Panel title={title}>{children}</Panel></div>; }
 export function TagsAdmin() { const qc = useQueryClient(); const notice = useNotice(); const query = useQuery({ queryKey: ["newsroom-tags"], queryFn: () => newsroomApi.tags() }); const mutation = useMutation({ mutationFn: async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); notice.clear(); const form = new FormData(e.currentTarget); return newsroomApi.createTag({ name: fstr(form, "name"), slug: fstr(form, "slug") || undefined }); }, onSuccess: () => { notice.ok("Tag creado."); void qc.invalidateQueries({ queryKey: ["newsroom-tags"] }); }, onError: notice.fail }); return <div className="grid gap-6"><Panel title="Crear tag" icon={<Tags className="h-5 w-5" />}><form className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end" onSubmit={(e) => mutation.mutate(e)}><Field label="Nombre"><NativeInput name="name" required /></Field><Field label="Slug"><NativeInput name="slug" /></Field><Submit pending={mutation.isPending} label="Crear" /><div className="md:col-span-3"><Notice message={notice.message} error={notice.error} /></div></form></Panel><Panel title="Tags existentes">{query.isLoading ? <LoadingState title="Cargando tags" /> : null}{query.data ? <DataTable<Tag> data={query.data} getRowKey={(r) => r.id} columns={[{ key: "name", header: "Nombre", render: (r) => <b>{r.name}</b> }, { key: "slug", header: "Slug", render: (r) => r.slug }, { key: "id", header: "ID", render: (r) => <code className="text-xs">{r.id}</code> }]} /> : null}</Panel></div>; }
-export function AuthorsAdmin() { const qc = useQueryClient(); const notice = useNotice(); const query = useQuery({ queryKey: ["newsroom-authors"], queryFn: () => newsroomApi.authors() }); const mutation = useMutation({ mutationFn: async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); notice.clear(); const form = new FormData(e.currentTarget); return newsroomApi.createAuthor({ displayName: fstr(form, "displayName"), headline: fstr(form, "headline") || undefined, bio: fstr(form, "bio") || undefined, status: fstr(form, "status") || "ACTIVE" }); }, onSuccess: () => { notice.ok("Autor creado."); void qc.invalidateQueries({ queryKey: ["newsroom-authors"] }); }, onError: notice.fail }); return <div className="grid gap-6"><Panel title="Crear autor" icon={<UserRoundPlus className="h-5 w-5" />}><form className="grid gap-4 md:grid-cols-3" onSubmit={(e) => mutation.mutate(e)}><Field label="Nombre"><NativeInput name="displayName" required /></Field><Field label="Titular"><NativeInput name="headline" /></Field><Field label="Estado"><Select name="status" defaultValue="ACTIVE"><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option></Select></Field><Field label="Bio" className="md:col-span-3"><NativeTextarea name="bio" /></Field><div className="md:col-span-3"><Submit pending={mutation.isPending} label="Crear autor" /></div><div className="md:col-span-3"><Notice message={notice.message} error={notice.error} /></div></form></Panel><Panel title="Autores existentes">{query.isLoading ? <LoadingState title="Cargando autores" /> : null}{query.data ? <DataTable<Author> data={query.data} getRowKey={(r) => r.id} columns={[{ key: "name", header: "Autor", render: (r) => <b>{r.displayName}</b> }, { key: "headline", header: "Titular", render: (r) => r.headline ?? "—" }, { key: "bio", header: "Bio", render: (r) => <span className="line-clamp-2">{r.bio ?? "—"}</span> }, { key: "status", header: "Estado", render: (r) => <StatusBadge status={r.status} /> }]} /> : null}</Panel></div>; }
+export function AuthorsAdmin() {
+  const qc = useQueryClient();
+  const notice = useNotice();
+  const query = useQuery({ queryKey: ["newsroom-authors"], queryFn: () => newsroomApi.authors() });
+  const [userSearch, setUserSearch] = useState("");
+  const [userId, setUserId] = useState("");
+  const users = useQuery({ queryKey: ["newsroom-author-users", userSearch], queryFn: () => listUsers({ search: userSearch, page: 1, pageSize: 8 }) });
+  const selectedUser = users.data?.items.find((u) => u.id === userId);
+  const mutation = useMutation({
+    mutationFn: async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      notice.clear();
+      const form = new FormData(e.currentTarget);
+      return newsroomApi.createAuthor({
+        displayName: fstr(form, "displayName"),
+        headline: fstr(form, "headline") || undefined,
+        bio: fstr(form, "bio") || undefined,
+        status: fstr(form, "status") || "ACTIVE",
+        email: selectedUser?.email
+      });
+    },
+    onSuccess: () => {
+      notice.ok("Autor creado.");
+      setUserId("");
+      setUserSearch("");
+      void qc.invalidateQueries({ queryKey: ["newsroom-authors"] });
+    },
+    onError: notice.fail
+  });
+  return (
+    <div className="grid gap-6">
+      <Panel title="Crear autor" icon={<UserRoundPlus className="h-5 w-5" />}>
+        <form className="grid gap-4 md:grid-cols-3" onSubmit={(e) => mutation.mutate(e)}>
+          <Field label="Nombre"><NativeInput name="displayName" required /></Field>
+          <Field label="Titular"><NativeInput name="headline" /></Field>
+          <Field label="Estado"><Select name="status" defaultValue="ACTIVE"><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option></Select></Field>
+          <Field label="Vincular usuario" className="md:col-span-3" hint="Busca por nombre o correo para asociar el autor a una cuenta existente (opcional).">
+            <div className="grid gap-2">
+              <NativeInput
+                value={userId ? (selectedUser?.name ?? "") : userSearch}
+                onChange={(e) => { setUserId(""); setUserSearch(e.target.value); }}
+                placeholder={users.isLoading ? "Cargando usuarios..." : "Buscar usuario..."}
+              />
+              {!userId && userSearch.trim() && users.data?.items.length ? (
+                <div className="flex flex-wrap gap-2 rounded-none border bg-card p-2">
+                  {users.data.items.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      className="rounded-full border px-3 py-1 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
+                      onClick={() => { setUserId(u.id); setUserSearch(""); }}
+                    >
+                      {u.name} · {u.email}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {userId ? (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{selectedUser?.email}</Badge>
+                  <button type="button" className="text-xs text-muted-foreground underline" onClick={() => setUserId("")}>Quitar</button>
+                </div>
+              ) : null}
+            </div>
+          </Field>
+          <Field label="Bio" className="md:col-span-3"><NativeTextarea name="bio" /></Field>
+          <div className="md:col-span-3"><Submit pending={mutation.isPending} label="Crear autor" /></div>
+          <div className="md:col-span-3"><Notice message={notice.message} error={notice.error} /></div>
+        </form>
+      </Panel>
+      <Panel title="Autores existentes">
+        {query.isLoading ? <LoadingState title="Cargando autores" /> : null}
+        {query.data ? <DataTable<Author> data={query.data} getRowKey={(r) => r.id} columns={[{ key: "name", header: "Autor", render: (r) => <b>{r.displayName}</b> }, { key: "headline", header: "Titular", render: (r) => r.headline ?? "—" }, { key: "bio", header: "Bio", render: (r) => <span className="line-clamp-2">{r.bio ?? "—"}</span> }, { key: "status", header: "Estado", render: (r) => <StatusBadge status={r.status} /> }]} /> : null}
+      </Panel>
+    </div>
+  );
+}
+
+export function SubscribersAdmin() {
+  const qc = useQueryClient();
+  const notice = useNotice();
+  const query = useQuery({ queryKey: ["newsroom-subscribers"], queryFn: () => newsroomApi.subscribers({ page: 1, pageSize: 50 }) });
+  const refresh = () => void qc.invalidateQueries({ queryKey: ["newsroom-subscribers"] });
+  const mutation = useMutation({
+    mutationFn: async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      notice.clear();
+      const form = new FormData(e.currentTarget);
+      return newsroomApi.upsertSubscriber({
+        email: fstr(form, "email"),
+        displayName: fstr(form, "displayName") || undefined,
+        status: fstr(form, "status") || "ACTIVE",
+        subscriptionTier: fstr(form, "subscriptionTier") || "FREE",
+        premiumUntil: isoLocal(fstr(form, "premiumUntil")),
+        source: "admin"
+      });
+    },
+    onSuccess: () => { notice.ok("Suscriptor guardado."); refresh(); },
+    onError: notice.fail
+  });
+  const toggleTier = useMutation({
+    mutationFn: (subscriber: ContentSubscriber) => newsroomApi.updateSubscriber(subscriber.id, { subscriptionTier: subscriber.subscriptionTier === "PREMIUM" ? "FREE" : "PREMIUM" }),
+    onSuccess: refresh,
+    onError: notice.fail
+  });
+  return (
+    <div className="grid gap-6">
+      <Panel title="Registrar suscriptor" description="Vincula un correo a una suscripción y define su nivel de acceso." icon={<Users className="h-5 w-5" />}>
+        <form className="grid gap-4 md:grid-cols-3" onSubmit={(e) => mutation.mutate(e)}>
+          <Field label="Correo"><NativeInput name="email" type="email" required /></Field>
+          <Field label="Nombre"><NativeInput name="displayName" /></Field>
+          <Field label="Nivel"><Select name="subscriptionTier" defaultValue="FREE"><option value="FREE">Gratuito</option><option value="PREMIUM">Premium</option></Select></Field>
+          <Field label="Estado"><Select name="status" defaultValue="ACTIVE"><option value="ACTIVE">Activo</option><option value="UNSUBSCRIBED">Desuscrito</option><option value="SUSPENDED">Suspendido</option></Select></Field>
+          <Field label="Premium hasta" hint="Solo aplica si el nivel es premium."><NativeInput name="premiumUntil" type="datetime-local" /></Field>
+          <div className="flex items-end md:col-span-1"><Submit pending={mutation.isPending} label="Guardar suscriptor" /></div>
+          <div className="md:col-span-3"><Notice message={notice.message} error={notice.error} /></div>
+        </form>
+      </Panel>
+      <Panel title="Suscriptores">
+        {query.isLoading ? <LoadingState title="Cargando suscriptores" /> : null}
+        {query.isError ? <ErrorState title="No se pudo cargar suscriptores" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}
+        {query.data ? (
+          <DataTable<ContentSubscriber>
+            data={query.data.items}
+            getRowKey={(r) => r.id}
+            columns={[
+              { key: "email", header: "Correo", render: (r) => <div><b>{r.displayName || r.email}</b>{r.displayName ? <p className="text-xs text-muted-foreground">{r.email}</p> : null}</div> },
+              { key: "tier", header: "Nivel", render: (r) => <Badge variant={r.subscriptionTier === "PREMIUM" ? "success" : "muted"}>{r.subscriptionTier}</Badge> },
+              { key: "status", header: "Estado", render: (r) => <StatusBadge status={r.status} /> },
+              { key: "premiumUntil", header: "Premium hasta", render: (r) => fmtDate(r.premiumUntil) },
+              { key: "actions", header: "Acciones", render: (r) => <Button size="sm" variant="outline" disabled={toggleTier.isPending} onClick={() => toggleTier.mutate(r)}>{r.subscriptionTier === "PREMIUM" ? "Quitar premium" : "Hacer premium"}</Button> }
+            ]}
+          />
+        ) : null}
+      </Panel>
+    </div>
+  );
+}
 
 export function AdvertisingAdmin() { const qc = useQueryClient(); const notice = useNotice(); const companies = useQuery({ queryKey: ["ads-companies"], queryFn: () => adsApi.companies() }); const placements = useQuery({ queryKey: ["ads-placements"], queryFn: () => adsApi.placements() }); const campaigns = useQuery({ queryKey: ["ads-campaigns"], queryFn: () => adsApi.campaigns({ page: 1, pageSize: 50 }) }); const refresh = () => { void qc.invalidateQueries({ queryKey: ["ads-companies"] }); void qc.invalidateQueries({ queryKey: ["ads-placements"] }); void qc.invalidateQueries({ queryKey: ["ads-campaigns"] }); };
  const companyMutation = useMutation({ mutationFn: async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); notice.clear(); const form = new FormData(e.currentTarget); return adsApi.createCompany({ businessName: fstr(form, "businessName"), commercialName: fstr(form, "commercialName"), contactEmail: fstr(form, "contactEmail") || undefined, contactPhone: fstr(form, "contactPhone") || undefined, status: "ACTIVE" }); }, onSuccess: () => { notice.ok("Empresa creada."); refresh(); }, onError: notice.fail });

@@ -2,7 +2,7 @@ import { apiRequest } from "@/shared/api/client";
 import { API_PREFIX } from "@/shared/api/endpoints";
 import { normalizePaginatedResponse, type PaginatedResult } from "@/shared/api/normalizers";
 import type { SistemaListQuery } from "@/shared/api/query";
-import type { AdsCampaign, AdsCompany, AdsCreative, AdsPlacement, Author, Category, HomepagePayload, Publication, PublicationType, Tag } from "@/features/newsroom/newsroom.types";
+import type { AdsCampaign, AdsCompany, AdsCreative, AdsPlacement, Author, Category, ContentSubscriber, HomepagePayload, Publication, PublicationType, Tag } from "@/features/newsroom/newsroom.types";
 
 type PublicationQuery = SistemaListQuery & { publicationType?: PublicationType | ""; accessType?: string; categorySlug?: string; tagSlug?: string; authorId?: string; sort?: string; order?: "asc" | "desc" };
 type AdsQuery = SistemaListQuery & { companyId?: string; sort?: string; order?: "asc" | "desc" };
@@ -56,11 +56,20 @@ export const newsroomApi = {
   tags() { return apiRequest<unknown>(`${API_PREFIX}/admin/content/tags`).then(items<Tag>); },
   createTag(input: { name: string; slug?: string }) { return apiRequest<Tag>(`${API_PREFIX}/admin/content/tags`, { method: "POST", body: input }); },
   authors() { return apiRequest<unknown>(`${API_PREFIX}/admin/content/authors`).then(items<Author>); },
-  createAuthor(input: { displayName: string; headline?: string; bio?: string; status?: string }) { return apiRequest<Author>(`${API_PREFIX}/admin/content/authors`, { method: "POST", body: input }); },
+  createAuthor(input: { displayName: string; headline?: string; bio?: string; status?: string; email?: string }) { return apiRequest<Author>(`${API_PREFIX}/admin/content/authors`, { method: "POST", body: input }); },
   publicNews(query: PublicationQuery = {}) { return apiRequest<unknown>(`${API_PREFIX}/publications/news${publicListQuery(query)}`, { auth: false }).then((payload) => normalizePaginatedResponse(payload, (item) => item as Publication, query)); },
   publicColumns(query: PublicationQuery = {}) { return apiRequest<unknown>(`${API_PREFIX}/publications/columns${publicListQuery(query)}`, { auth: false }).then((payload) => normalizePaginatedResponse(payload, (item) => item as Publication, query)); },
   publicPublication(slug: string, kind: "news" | "columns") { return apiRequest<Publication>(`${API_PREFIX}/publications/${kind}/${slug}`, { auth: false }); },
-  homepagePreview() { return apiRequest<HomepagePayload>(`${API_PREFIX}/admin/homepage/preview`); }
+  homepagePreview() { return apiRequest<HomepagePayload>(`${API_PREFIX}/admin/homepage/preview`); },
+  subscribers(query: SistemaListQuery = {}): Promise<PaginatedResult<ContentSubscriber>> {
+    return apiRequest<unknown>(`${API_PREFIX}/admin/content/subscribers${listQuery(query)}`).then((payload) => normalizePaginatedResponse(payload, (item) => item as ContentSubscriber, query));
+  },
+  upsertSubscriber(input: { email: string; displayName?: string; userId?: string; status?: string; subscriptionTier?: string; premiumUntil?: string; source?: string }) {
+    return apiRequest<ContentSubscriber>(`${API_PREFIX}/admin/content/subscribers`, { method: "POST", body: input });
+  },
+  updateSubscriber(id: string, input: Partial<{ userId: string; email: string; displayName: string; status: string; subscriptionTier: string; premiumUntil: string; source: string }>) {
+    return apiRequest<ContentSubscriber>(`${API_PREFIX}/admin/content/subscribers/${id}`, { method: "PATCH", body: input });
+  }
 };
 
 export const adsApi = {

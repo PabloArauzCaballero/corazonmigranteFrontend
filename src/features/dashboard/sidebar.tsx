@@ -43,6 +43,7 @@ export const adminNav: SidebarItem[] = [
   { href: "/admin/contenido/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/contenido/tags", label: "Tags", icon: Tags },
   { href: "/admin/contenido/autores", label: "Autores", icon: UserRound },
+  { href: "/admin/contenido/suscriptores", label: "Suscriptores", icon: UsersRound },
   { href: "/admin/contenido/homepage", label: "Portada", icon: Home },
   { href: "/admin/publicidad", label: "Publicidad", icon: Megaphone },
   { href: "/admin/contabilidad", label: "Contabilidad", icon: ReceiptText },
