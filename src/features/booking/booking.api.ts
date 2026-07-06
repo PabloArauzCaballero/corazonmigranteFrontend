@@ -195,7 +195,7 @@ export async function listPatientOptions(search = "") {
   return result.items.filter((patient) => patient.id && !patient.id.startsWith("paciente-"));
 }
 
-export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
+async function fetchAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
   const query = buildQueryString({
     therapistUserId: input.therapistUserId,
     productId: input.productId,
@@ -205,6 +205,27 @@ export async function getBookingAvailability(input: { therapistUserId: string; p
   });
   const payload = await apiRequest<unknown>(`${ENDPOINTS.booking.availability}${query}`, { auth: false });
   return normalizeAvailability(payload);
+}
+
+/**
+ * El OpenAPI documenta `from`/`to` como fecha simple (YYYY-MM-DD), pero el backend en producción
+ * rechaza ese formato con HTTP_400 "formato inválido" para ese mismo par de fechas. Como fallback
+ * reintentamos con límites de día completo en ISO-8601 (formato date-time), que es lo que acepta
+ * el validador real del backend.
+ */
+export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
+  try {
+    return await fetchAvailability(input);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 400) {
+      return await fetchAvailability({
+        ...input,
+        from: `${input.from}T00:00:00.000Z`,
+        to: `${input.to}T23:59:59.999Z`
+      });
+    }
+    throw error;
+  }
 }
 
 export async function createPatientBooking(input: PatientBookingInput) {
