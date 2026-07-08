@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowRight, Crown, LockKeyhole, ShieldCheck } from "lucide-react";
-import { getMyContentSubscription, listPremiumCandidates } from "@/features/newsroom/premium-content.api";
+import { getMyContentSubscription, getSubscriptionPaymentConfig, listPremiumCandidates, requestPremiumSubscription } from "@/features/newsroom/premium-content.api";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -18,8 +18,14 @@ function formatDate(value?: string | null) {
 }
 
 export function PatientPremiumPage() {
+  const queryClient = useQueryClient();
   const subscription = useQuery({ queryKey: ["patient-premium-subscription"], queryFn: getMyContentSubscription });
+  const paymentConfig = useQuery({ queryKey: ["patient-premium-payment-config"], queryFn: getSubscriptionPaymentConfig });
   const content = useQuery({ queryKey: ["patient-premium-content"], queryFn: listPremiumCandidates });
+  const requestMutation = useMutation({
+    mutationFn: requestPremiumSubscription,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-premium-subscription"] })
+  });
 
   return (
     <div className="grid gap-6">
@@ -44,9 +50,23 @@ export function PatientPremiumPage() {
                     {subscription.data.isPremiumActive ? "Premium activo" : "Premium no activo"}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm leading-6 text-slate-600">
-                  <p>Plan: <b>{subscription.data.subscriptionTier ?? "FREE"}</b></p>
-                  <p>Vigencia: {formatDate(subscription.data.premiumUntil)}</p>
+                <CardContent className="space-y-4 text-sm leading-6 text-slate-600">
+                  <div>
+                    <p>Plan: <b>{subscription.data.subscriptionTier ?? "FREE"}</b></p>
+                    <p>Vigencia: {formatDate(subscription.data.premiumUntil)}</p>
+                  </div>
+                  {!subscription.data.isPremiumActive ? (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                      <p className="font-semibold">Este contenido es premium.</p>
+                      <p>{paymentConfig.data?.message ?? "Suscríbete para acceder a lecturas premium."}</p>
+                      {paymentConfig.data?.qrImageUrl ? <img src={paymentConfig.data.qrImageUrl} alt="QR de pago premium" className="mt-3 max-h-44 rounded-xl border bg-white p-2" /> : null}
+                      <Button className="mt-4 rounded-none" disabled={requestMutation.isPending} onClick={() => requestMutation.mutate()}>
+                        {requestMutation.isPending ? "Registrando solicitud..." : "Solicitar suscripción premium"}
+                      </Button>
+                      {requestMutation.isSuccess ? <p className="mt-3 text-xs font-semibold text-emerald-700">Solicitud registrada. Administración podrá revisar y activar tu acceso.</p> : null}
+                      {requestMutation.isError ? <p className="mt-3 text-xs font-semibold text-red-700">{humanizeApiError(requestMutation.error)}</p> : null}
+                    </div>
+                  ) : null}
                 </CardContent>
               </Card>
             ) : null}
@@ -68,7 +88,7 @@ export function PatientPremiumPage() {
               <h2 className="mt-4 font-serif text-2xl font-bold leading-tight text-slate-950">{item.title}</h2>
               <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">{item.summary}</p>
               <Button asChild variant="outline" className="mt-5 rounded-none">
-                <Link href={{ pathname: "/novedades/detalle", query: { slug: item.slug, premium: "1", kind: item.publicationType === "COLUMN" ? "columns" : "news" } }}>
+                <Link href={{ pathname: "/novedades/detalle", query: { slug: item.slug, premium: "1", kind: ["COLUMN", "OPINION"].includes(item.publicationType) ? "columns" : "news" } }}>
                   Abrir lectura <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>

@@ -4,7 +4,7 @@ import { normalizePaginatedResponse, type PaginatedResult } from "@/shared/api/n
 import type { SistemaListQuery } from "@/shared/api/query";
 import type { AdsCampaign, AdsCompany, AdsCreative, AdsPlacement, Author, Category, ContentSubscriber, HomepagePayload, Publication, PublicationType, Tag } from "@/features/newsroom/newsroom.types";
 
-type PublicationQuery = SistemaListQuery & { publicationType?: PublicationType | ""; accessType?: string; categorySlug?: string; tagSlug?: string; authorId?: string; sort?: string; order?: "asc" | "desc" };
+type PublicationQuery = SistemaListQuery & { publicationType?: PublicationType | ""; accessType?: string; categorySlug?: string; tagSlug?: string; pageSlug?: string; authorId?: string; sort?: string; order?: "asc" | "desc" };
 type AdsQuery = SistemaListQuery & { companyId?: string; sort?: string; order?: "asc" | "desc" };
 
 function setParam(params: URLSearchParams, key: string, value: unknown) {
@@ -19,7 +19,7 @@ function listQuery(query: PublicationQuery | AdsQuery = {}) {
   setParam(params, "page", query.page);
   setParam(params, "pageSize", query.pageSize ?? 20);
   setParam(params, "status", query.status);
-  // Evitamos sort/order por defecto para no provocar 400 en backends con DTO estricto.
+  // Evitamos sort/order por defecto para no provocar 400 en servidores con DTO estricto.
   Object.entries(query).forEach(([key, value]) => {
     if (["search", "page", "pageSize", "status", "sort", "order", "sortBy", "sortDir"].includes(key)) return;
     setParam(params, key, value);
@@ -35,10 +35,33 @@ function publicListQuery(query: PublicationQuery = {}) {
   setParam(params, "pageSize", query.pageSize ?? 20);
   setParam(params, "categorySlug", query.categorySlug);
   setParam(params, "tagSlug", query.tagSlug);
+  setParam(params, "pageSlug", query.pageSlug);
   const out = params.toString();
   return out ? `?${out}` : "";
 }
 function items<T>(payload: unknown): T[] { return normalizePaginatedResponse<T>(payload, (item) => item as T).items; }
+function mapCategory(item: unknown): Category {
+  const record = (typeof item === "object" && item !== null ? item : {}) as Record<string, unknown>;
+  return {
+    id: String(record.id ?? record.categoryId ?? record.category_id ?? ""),
+    slug: String(record.slug ?? record.codigo ?? record.name ?? "").trim(),
+    name: String(record.name ?? record.nombre ?? "Sin categoría").trim(),
+    description: typeof record.description === "string" ? record.description : undefined,
+    isActive: record.isActive === undefined ? record.is_active !== false : Boolean(record.isActive),
+    sortOrder: Number(record.sortOrder ?? record.sort_order ?? 0)
+  };
+}
+function mapTag(item: unknown): Tag {
+  const record = (typeof item === "object" && item !== null ? item : {}) as Record<string, unknown>;
+  return {
+    id: String(record.id ?? record.tagId ?? record.tag_id ?? ""),
+    slug: String(record.slug ?? record.codigo ?? record.name ?? "").trim(),
+    name: String(record.name ?? record.nombre ?? "Sin tag").trim()
+  };
+}
+function compactValid<T extends { id: string; name: string }>(values: T[]) {
+  return values.filter((item) => item.id && item.name && !item.id.startsWith("undefined"));
+}
 function qs(params: Record<string, string | number | undefined>) { const out = new URLSearchParams(); Object.entries(params).forEach(([k,v]) => { if (v !== undefined && String(v).trim()) out.set(k, String(v)); }); const s = out.toString(); return s ? `?${s}` : ""; }
 
 export const newsroomApi = {
@@ -50,9 +73,29 @@ export const newsroomApi = {
   },
   publish(id: string) { return apiRequest<Publication>(`${API_PREFIX}/admin/content/publications/${id}/publish`, { method: "POST" }); },
   archive(id: string) { return apiRequest<Publication>(`${API_PREFIX}/admin/content/publications/${id}/archive`, { method: "POST" }); },
-  categories(activeOnly = false) { return apiRequest<unknown>(activeOnly ? `${API_PREFIX}/publications/categories` : `${API_PREFIX}/admin/content/categories`, { auth: !activeOnly }).then(items<Category>); },
+  async categories(activeOnly = false) {
+    try {
+      const payload = await apiRequest<unknown>(activeOnly ? `${API_PREFIX}/publications/categories` : `${API_PREFIX}/admin/content/categories`, { auth: !activeOnly });
+      const values = compactValid(items<unknown>(payload).map(mapCategory));
+      if (values.length || activeOnly) return values;
+    } catch (error) {
+      if (activeOnly) throw error;
+    }
+    const fallback = await apiRequest<unknown>(`${API_PREFIX}/publications/categories`, { auth: false });
+    return compactValid(items<unknown>(fallback).map(mapCategory));
+  },
   createCategory(input: { name: string; slug?: string; description?: string; isActive?: boolean; sortOrder?: number }) { return apiRequest<Category>(`${API_PREFIX}/admin/content/categories`, { method: "POST", body: input }); },
-  tags() { return apiRequest<unknown>(`${API_PREFIX}/admin/content/tags`).then(items<Tag>); },
+  async tags() {
+    try {
+      const payload = await apiRequest<unknown>(`${API_PREFIX}/admin/content/tags`);
+      const values = compactValid(items<unknown>(payload).map(mapTag));
+      if (values.length) return values;
+    } catch {
+      // Fallback público para que los selects no queden vacíos por permisos administrativos incompletos.
+    }
+    const fallback = await apiRequest<unknown>(`${API_PREFIX}/publications/tags`, { auth: false });
+    return compactValid(items<unknown>(fallback).map(mapTag));
+  },
   createTag(input: { name: string; slug?: string }) { return apiRequest<Tag>(`${API_PREFIX}/admin/content/tags`, { method: "POST", body: input }); },
   authors() { return apiRequest<unknown>(`${API_PREFIX}/admin/content/authors`).then(items<Author>); },
   createAuthor(input: { displayName: string; headline?: string; bio?: string; status?: string; userId?: string }) { return apiRequest<Author>(`${API_PREFIX}/admin/content/authors`, { method: "POST", body: input }); },
@@ -68,17 +111,23 @@ export const newsroomApi = {
   },
   updateSubscriber(id: string, input: Partial<{ userId: string; email: string; displayName: string; status: string; subscriptionTier: string; premiumUntil: string; source: string }>) {
     return apiRequest<ContentSubscriber>(`${API_PREFIX}/admin/content/subscribers/${id}`, { method: "PATCH", body: input });
-  }
+  },
+  updateSubscriberByUser(userId: string, input: Partial<{ status: string; subscriptionTier: string; premiumUntil: string; source: string; metadata: Record<string, unknown> }>) {
+    return apiRequest<ContentSubscriber>(`${API_PREFIX}/admin/content/subscribers/${userId}/subscription`, { method: "PATCH", body: input });
+  },
+  publicSlots(placementCode = "home_hero", publicationId?: string, pageSlug?: string) { return apiRequest<unknown>(`${API_PREFIX}/advertising/slots${qs({ placementCode, publicationId, pageSlug })}`, { auth: false }); }
 };
 
 export const adsApi = {
   companies() { return apiRequest<unknown>(`${API_PREFIX}/admin/advertising/companies`).then(items<AdsCompany>); },
-  createCompany(input: { businessName: string; commercialName: string; taxId?: string; contactName?: string; contactEmail?: string; contactPhone?: string; status?: string }) { return apiRequest<AdsCompany>(`${API_PREFIX}/admin/advertising/companies`, { method: "POST", body: input }); },
+  createCompany(input: { businessName: string; commercialName: string; taxId?: string; contactName?: string; contactEmail?: string; contactPhone?: string; status?: string; metadata?: Record<string, unknown> }) { return apiRequest<AdsCompany>(`${API_PREFIX}/admin/advertising/companies`, { method: "POST", body: input }); },
+  updateCompany(id: string, input: Partial<{ businessName: string; commercialName: string; taxId: string; contactName: string; contactEmail: string; contactPhone: string; status: string; metadata: Record<string, unknown> }>) { return apiRequest<AdsCompany>(`${API_PREFIX}/admin/advertising/companies/${id}`, { method: "PATCH", body: input }); },
   placements() { return apiRequest<unknown>(`${API_PREFIX}/admin/advertising/placements`).then(items<AdsPlacement>); },
   createPlacement(input: { code: string; name: string; description?: string; context?: string; isActive?: boolean; dimensions?: Record<string, unknown> }) { return apiRequest<AdsPlacement>(`${API_PREFIX}/admin/advertising/placements`, { method: "POST", body: input }); },
   campaigns(query: AdsQuery = {}) { return apiRequest<unknown>(`${API_PREFIX}/admin/advertising/campaigns${listQuery(query)}`).then((payload) => normalizePaginatedResponse(payload, (item) => item as AdsCampaign, query)); },
-  createCampaign(input: { companyId: string; name: string; objective?: string; startsAt: string; endsAt: string; budgetAmount?: number; currency?: string; priority?: number; placementIds?: string[]; notes?: string }) { return apiRequest<AdsCampaign>(`${API_PREFIX}/admin/advertising/campaigns`, { method: "POST", body: input }); },
+  createCampaign(input: { companyId: string; name: string; objective?: string; startsAt: string; endsAt: string; budgetAmount?: number; currency?: string; priority?: number; placementIds?: string[]; publicationIds?: string[]; categoryIds?: string[]; pageSlugs?: string[]; notes?: string }) { return apiRequest<AdsCampaign>(`${API_PREFIX}/admin/advertising/campaigns`, { method: "POST", body: input }); },
   setStatus(id: string, status: string) { return apiRequest<AdsCampaign>(`${API_PREFIX}/admin/advertising/campaigns/${id}/status`, { method: "POST", body: { status } }); },
-  createCreative(campaignId: string, input: { title: string; mediaType?: string; assetUrl: string; destinationUrl: string; altText: string; mimeType?: string; width?: number; height?: number; sizeBytes?: number; isPrimary?: boolean }) { return apiRequest<AdsCreative>(`${API_PREFIX}/admin/advertising/campaigns/${campaignId}/creatives`, { method: "POST", body: input }); },
-  publicSlots(placementCode = "home_hero") { return apiRequest<unknown>(`${API_PREFIX}/advertising/slots${qs({ placementCode })}`, { auth: false }); }
+  createCreative(campaignId: string, input: { title: string; mediaType?: string; fileId?: string; assetUrl: string; destinationUrl: string; altText: string; mimeType?: string; width?: number; height?: number; sizeBytes?: number; isPrimary?: boolean }) { return apiRequest<AdsCreative>(`${API_PREFIX}/admin/advertising/campaigns/${campaignId}/creatives`, { method: "POST", body: input }); },
+  createAd(input: { campaignId: string; title: string; mediaType?: string; fileId?: string; assetUrl: string; destinationUrl: string; altText: string; mimeType?: string; width?: number; height?: number; sizeBytes?: number; isPrimary?: boolean; publicationId?: string; publicationIds?: string[]; categoryId?: string; categoryIds?: string[]; placementId?: string; placementIds?: string[]; pageSlug?: string; pageSlugs?: string[] }) { return apiRequest<AdsCreative>(`${API_PREFIX}/admin/advertising/ads`, { method: "POST", body: input }); },
+  publicSlots(placementCode = "home_hero", publicationId?: string, pageSlug?: string) { return apiRequest<unknown>(`${API_PREFIX}/advertising/slots${qs({ placementCode, publicationId, pageSlug })}`, { auth: false }); }
 };

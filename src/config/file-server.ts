@@ -1,21 +1,21 @@
 import { env } from "@/config/env";
 
 const DEFAULT_FILE_SERVER = {
-  logoUrl: "https://storage.googleapis.com/vistas_publicas_assets/global_assets/media/LOGO%20CORAZON%20MIGRANTE.png",
-  authImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/story_page_image.avif",
-  landingHeroImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Ana_migrante-1.jpg",
-  therapyImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Dise_o_sin_t_tulo_7__c464ecd0-68bd-4a35-afed-c7bad56c7670.png",
-  familyImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/mission_page_image.jpg",
-  libraryImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/carrusel_img_1.jpg",
-  editorialHeroImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/carrusel_img_3.jpg",
-  editorialFallbackImageUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/carrusel_img_4.jpg",
-  specialtiesUrl: "https://storage.googleapis.com/vistas_publicas_assets/admin_portal/options/ESPECIALIDADES_SALUD_MENTAL.json",
-  professionsUrl: "https://storage.googleapis.com/vistas_publicas_assets/admin_portal/options/PROFESIONES_SALUD_MENTAL.json",
-  countriesCitiesUrl: "https://storage.googleapis.com/vistas_publicas_assets/admin_portal/options/PAISES_CIUDADES.json",
-  occupationsUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/text_content/OCUPACIONES.json",
-  symptomsUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/text_content/SINTOMAS_PSICOLOGICOS_PSIQUIATRICOS.json",
-  therapyGoalsUrl: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/text_content/OBJETIVOS_TERAPIA.json",
-  publicAssetsBaseUrl: "https://storage.googleapis.com/vistas_publicas_assets"
+  logoUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/global_assets/media/logo-corazon-migrante.png",
+  authImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/story_page_image.avif",
+  landingHeroImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/landing_hero.jpg",
+  therapyImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/therapy.jpg",
+  familyImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/family.jpg",
+  libraryImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/library.jpg",
+  editorialHeroImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/editorial_hero.jpg",
+  editorialFallbackImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/editorial_fallback.jpg",
+  specialtiesUrl: "",
+  professionsUrl: "",
+  countriesCitiesUrl: "",
+  occupationsUrl: "",
+  symptomsUrl: "",
+  therapyGoalsUrl: "",
+  publicAssetsBaseUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante"
 } as const;
 
 function removeTrailingSlash(value?: string) {

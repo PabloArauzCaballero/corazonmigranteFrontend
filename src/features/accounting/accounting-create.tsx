@@ -55,7 +55,7 @@ export function CreateAccountGroupButton() {
           <div className="grid gap-2"><Label>Nombre</Label><Input name="name" required /></div>
           <div className="grid gap-2">
             <Label>Tipo</Label>
-            <select name="type" required className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm">
+            <select name="type" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
               <option value="ASSET">Activo (ASSET)</option>
               <option value="LIABILITY">Pasivo (LIABILITY)</option>
               <option value="EQUITY">Patrimonio (EQUITY)</option>
@@ -101,7 +101,7 @@ export function CreateAccountButton() {
         <form className="grid gap-4" onSubmit={onSubmit}>
           <div className="grid gap-2">
             <Label>Grupo contable</Label>
-            <select name="groupId" required className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm" disabled={groups.isLoading}>
+            <select name="groupId" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={groups.isLoading}>
               <option value="">{groups.isLoading ? "Cargando grupos..." : "Seleccionar grupo"}</option>
               {groups.data?.items.map((group) => (
                 <option key={group.id} value={group.id}>{group.code} — {group.name}</option>
@@ -113,7 +113,7 @@ export function CreateAccountButton() {
           <div className="grid gap-2"><Label>Nombre</Label><Input name="name" required /></div>
           <div className="grid gap-2">
             <Label>Saldo normal</Label>
-            <select name="normalBalance" required className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm">
+            <select name="normalBalance" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
               <option value="DEBIT">Deudor (DEBIT)</option>
               <option value="CREDIT">Acreedor (CREDIT)</option>
             </select>
@@ -228,7 +228,7 @@ export function CreateTransactionButton() {
                     required
                     value={entry.accountId}
                     onChange={(event) => updateEntry(entry.key, { accountId: event.target.value })}
-                    className="focus-ring h-10 rounded-lg border bg-background px-2 text-sm"
+                    className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">{accounts.isLoading ? "Cargando cuentas..." : "Seleccionar cuenta"}</option>
                     {accounts.data?.items.map((account) => (
@@ -241,7 +241,7 @@ export function CreateTransactionButton() {
                   <select
                     value={entry.costCenterId}
                     onChange={(event) => updateEntry(entry.key, { costCenterId: event.target.value })}
-                    className="focus-ring h-10 rounded-lg border bg-background px-2 text-sm"
+                    className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Sin centro</option>
                     {costCenters.data?.items.map((center) => (

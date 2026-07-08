@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, CalendarDays, ReceiptText, UsersRound } from "lucide-react";
+import { Activity, CalendarDays, Megaphone, ReceiptText, UsersRound } from "lucide-react";
 import { AdminOverview } from "@/features/dashboard/admin-overview";
 import { ProfileCard } from "@/features/dashboard/profile-card";
 import { Button } from "@/shared/ui/button";
@@ -14,10 +14,11 @@ export default function AdminDashboardPage() {
       <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <ProfileCard />
         <Card>
-          <CardContent className="grid gap-4 p-6 md:grid-cols-3">
+          <CardContent className="grid gap-4 p-6 md:grid-cols-4">
             {[
               { href: "/admin/solicitudes", icon: CalendarDays, title: "Solicitudes" },
               { href: "/admin/usuarios", icon: UsersRound, title: "Usuarios" },
+              { href: "/admin/publicidad", icon: Megaphone, title: "Publicidad" },
               { href: "/admin/contabilidad", icon: ReceiptText, title: "Contabilidad" }
             ].map((item) => (
               <Button asChild className="h-auto justify-start p-4" variant="outline" key={item.href}>

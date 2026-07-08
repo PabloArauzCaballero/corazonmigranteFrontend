@@ -32,7 +32,7 @@ function apiBaseUrl() {
 
     if (isLocalFrontendOrigin) {
       throw new ApiError(
-        "NEXT_PUBLIC_API_BASE_URL está apuntando a la aplicación frontend. Este proyecto corre por defecto en 4173; configura el backend en otro puerto, por ejemplo NEXT_PUBLIC_API_BASE_URL=http://localhost:3000.",
+        "NEXT_PUBLIC_API_BASE_URL está apuntando a la aplicación frontend. Este proyecto corre por defecto en 4173; configura el servidor en otro puerto, por ejemplo NEXT_PUBLIC_API_BASE_URL=http://localhost:3000.",
         500
       );
     }
@@ -58,17 +58,29 @@ function collectStrings(value: unknown): string[] {
   return [];
 }
 
+function messageFromRecord(record: Record<string, unknown>): string | undefined {
+  const direct = record.message;
+  if (Array.isArray(direct)) return direct.join(" ");
+  if (typeof direct === "string" && direct.trim()) return direct;
+
+  const nestedError = record.error;
+  if (typeof nestedError === "object" && nestedError !== null) {
+    return messageFromRecord(nestedError as Record<string, unknown>);
+  }
+
+  return undefined;
+}
+
 function extractErrorMessage(payload: unknown) {
+  if (typeof payload === "object" && payload !== null) {
+    const explicit = messageFromRecord(payload as Record<string, unknown>);
+    if (explicit) return explicit;
+  }
+
   const strings = collectStrings(payload);
-  const meaningful = strings.find((item) => item && !/^HTTP_\d+$/.test(item) && item !== "Bad Request" && item !== "Unauthorized");
+  const meaningful = strings.find((item) => item && !/^HTTP_\d+$/.test(item) && !/^[A-Z0-9_]+$/.test(item) && item !== "Bad Request" && item !== "Unauthorized");
 
   if (meaningful) return meaningful;
-
-  if (typeof payload === "object" && payload !== null && "message" in payload) {
-    const message = (payload as { message: unknown }).message;
-    if (Array.isArray(message)) return message.join(" ");
-    if (typeof message === "string") return message;
-  }
 
   return "Error de comunicación con el servidor";
 }
@@ -117,6 +129,49 @@ function stripQueryFromPath(path: string) {
   return index >= 0 ? path.slice(0, index) : path;
 }
 
+const SENSITIVE_KEY_PATTERN = /password|token|secret|authorization/i;
+
+function sanitizeForLog(value: unknown): unknown {
+  if (value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map(sanitizeForLog);
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, nested]) => [key, SENSITIVE_KEY_PATTERN.test(key) ? "[redacted]" : sanitizeForLog(nested)])
+  );
+}
+
+function truncateForLog(value: unknown, maxLength = 4000) {
+  const text = typeof value === "string" ? value : JSON.stringify(value);
+  if (text === undefined) return undefined;
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…[truncado]` : text;
+}
+
+/**
+ * Envía cada request/response al backend hacia /api/debug-log para dejar rastro en
+ * logs/api-requests.log. Nunca debe interrumpir el flujo principal: cualquier fallo
+ * (offline, ruta no disponible en build de producción) se ignora en silencio.
+ */
+function logApiCall(entry: { method: string; url: string; status?: number; ok?: boolean; requestBody?: unknown; responseBody?: unknown; durationMs: number; error?: string }) {
+  if (typeof window === "undefined" || process.env.NODE_ENV === "test") return;
+  try {
+    void fetch("/api/debug-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        method: entry.method,
+        url: entry.url,
+        status: entry.status,
+        ok: entry.ok,
+        durationMs: entry.durationMs,
+        request: truncateForLog(sanitizeForLog(entry.requestBody)),
+        response: truncateForLog(sanitizeForLog(entry.responseBody)),
+        error: entry.error
+      })
+    }).catch(() => {});
+  } catch {
+    // el logging nunca debe romper la app
+  }
+}
+
 async function parseResponse(response: Response): Promise<ParsedResponse> {
   const contentType = response.headers.get("content-type") ?? "";
   const payload: unknown = contentType.includes("application/json") ? await response.json().catch(() => null) : await response.text().catch(() => null);
@@ -124,12 +179,22 @@ async function parseResponse(response: Response): Promise<ParsedResponse> {
 }
 
 async function performRequest(path: string, options: RequestOptions, body: BodyInit | undefined, headers: Headers): Promise<ParsedResponse> {
-  const response = await fetch(buildRequestUrl(path), {
-    ...options,
-    headers,
-    body
-  });
-  return parseResponse(response);
+  const url = buildRequestUrl(path);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      body
+    });
+    return parseResponse(response);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new ApiError(
+      `No se pudo conectar con el servidor (${url}). Detalle: ${message}`,
+      0,
+      { url, method: options.method ?? "GET", originalError: message }
+    );
+  }
 }
 
 function buildBody(body: unknown): BodyInit | undefined {
@@ -139,6 +204,9 @@ function buildBody(body: unknown): BodyInit | undefined {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const method = String(options.method ?? "GET").toUpperCase();
+  const url = buildRequestUrl(path);
+  const startedAt = Date.now();
   const headers = new Headers(options.headers);
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
@@ -152,14 +220,19 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   let requestBody = buildBody(options.body);
-  let parsed = await performRequest(path, options, requestBody, headers);
+  let parsed: ParsedResponse;
+
+  try {
+    parsed = await performRequest(path, options, requestBody, headers);
+  } catch (error) {
+    logApiCall({ method, url, requestBody: options.body, durationMs: Date.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
 
   if (!parsed.response.ok && parsed.response.status === 400) {
     const rejected = extractRejectedProperties(parsed.payload);
 
     if (rejected.length > 0) {
-      const method = String(options.method ?? "GET").toUpperCase();
-
       if (method === "GET" && path.includes("?")) {
         parsed = await performRequest(stripQueryFromPath(path), options, undefined, headers);
       } else if (!isFormData && options.body !== undefined) {
@@ -169,6 +242,16 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       }
     }
   }
+
+  logApiCall({
+    method,
+    url,
+    status: parsed.response.status,
+    ok: parsed.response.ok,
+    requestBody: options.body,
+    responseBody: parsed.payload,
+    durationMs: Date.now() - startedAt
+  });
 
   if (!parsed.response.ok) {
     throw new ApiError(extractErrorMessage(parsed.payload), parsed.response.status, parsed.payload);

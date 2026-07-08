@@ -48,7 +48,7 @@ function findArray(payload: unknown): unknown[] {
   if (Array.isArray(payload)) return payload;
   if (!isRecord(payload)) return [];
 
-  const directKeys = ["data", "items", "rows", "results", "result", "records", "usuarios", "solicitudes", "productos", "enfoques", "cuentas", "grupos", "centros", "transacciones", "elementos", "elements"];
+  const directKeys = ["data", "items", "rows", "results", "result", "records", "usuarios", "users", "patients", "pacientes", "solicitudes", "productos", "enfoques", "cuentas", "grupos", "centros", "transacciones", "elementos", "elements", "pages", "paginas", "cmsPages", "categories", "categorias", "tags", "etiquetas", "publications", "publicaciones"];
   for (const key of directKeys) {
     const value = payload[key];
     if (Array.isArray(value)) return value;

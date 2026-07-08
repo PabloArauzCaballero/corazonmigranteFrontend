@@ -56,12 +56,12 @@ describe("landing_v2 real schema", () => {
         7: {
           id: 7,
           type: "image",
-          url: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/mapa.png",
+          url: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/mapa.png",
         },
       },
     } as unknown as NormalizedPublicLanding;
 
-    expect(resolveV2Image({ id_ui: 7 }, normalized)).toContain("storage.googleapis.com/vistas_publicas_assets");
+    expect(resolveV2Image({ id_ui: 7 }, normalized)).toContain("res.cloudinary.com/demo/image/upload/corazon-migrante");
   });
   it("preserva el landing_v2 completo desde el payload publico del backend", () => {
     const payload = {
@@ -109,7 +109,7 @@ describe("landing_v2 real schema", () => {
                   name: "Marlene Cossio",
                   role: "Psicologa Clinica",
                   story: ["Soy psicologa clinica y tambien soy madre de cinco hijos."],
-                  image: { src: "https://storage.googleapis.com/vistas_publicas_assets/landing_page/media/Marlene_optimized.jpg" },
+                  image: { src: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/Marlene_optimized.jpg" },
                 },
               ],
             },

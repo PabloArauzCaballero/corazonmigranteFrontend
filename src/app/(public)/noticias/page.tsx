@@ -1,8 +1,8 @@
 import { NewsPublicPage } from "@/features/newsroom/news-public";
 
 export const metadata = {
-  title: "Novedades | Corazon Migrante",
-  description: "Lecturas, columnas y novedades de acompanamiento emocional de Corazon Migrante."
+  title: "Contenido Público | Corazon Migrante",
+  description: "Lecturas, columnas, recursos y publicaciones de acompanamiento emocional de Corazon Migrante."
 };
 
 export default function NoticiasCompatPage() {

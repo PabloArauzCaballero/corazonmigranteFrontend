@@ -35,17 +35,21 @@ export const adminNav: SidebarItem[] = [
   { href: "/admin/solicitudes", label: "Solicitudes", icon: CalendarDays },
   { href: "/admin/booking", label: "Disponibilidad", icon: HeartPulse },
   { href: "/admin/usuarios", label: "Usuarios", icon: UsersRound },
+  { href: "/admin/publicidad/empresas", label: "Publicidad · Empresas", icon: Megaphone },
+  { href: "/admin/publicidad/ubicaciones", label: "Publicidad · Ubicaciones", icon: Megaphone },
+  { href: "/admin/publicidad/campanas", label: "Publicidad · Campañas", icon: Megaphone },
+  { href: "/admin/publicidad/creativos", label: "Publicidad · Creativos", icon: Megaphone },
   { href: "/admin/productos/enfoques", label: "Enfoques", icon: HeartPulse },
   { href: "/admin/productos/servicios", label: "Servicios", icon: Package },
-  { href: "/admin/vistas-publicas", label: "Vistas publicas", icon: Files },
-  { href: "/admin/contenido/editorial", label: "Biblioteca CMS", icon: BookOpen },
+  { href: "/admin/contenido/paginas", label: "Páginas públicas", icon: Files },
+  { href: "/admin/archivos", label: "Archivos", icon: Files },
+  { href: "/admin/contenido/publico", label: "Contenido Público", icon: BookOpen },
   { href: "/admin/contenido/publicaciones", label: "Publicaciones", icon: Newspaper },
   { href: "/admin/contenido/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/contenido/tags", label: "Tags", icon: Tags },
   { href: "/admin/contenido/autores", label: "Autores", icon: UserRound },
   { href: "/admin/contenido/suscriptores", label: "Suscriptores", icon: UsersRound },
   { href: "/admin/contenido/homepage", label: "Portada", icon: Home },
-  { href: "/admin/publicidad", label: "Publicidad", icon: Megaphone },
   { href: "/admin/contabilidad", label: "Contabilidad", icon: ReceiptText },
   { href: "/admin/contabilidad/cuentas", label: "Cuentas", icon: UserCog }
 ];
@@ -66,7 +70,7 @@ export function DashboardShell({ navItems, title, children }: { navItems: Sideba
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><HeartPulse className="h-6 w-6" /></span>
           <span>{title}<span className="block text-xs font-medium text-muted-foreground">Corazon Migrante</span></span>
         </Link>
-        <nav className="mt-8 grid gap-2" aria-label="Navegacion del panel">
+        <nav className="mt-8 grid max-h-[calc(100vh-10rem)] gap-2 overflow-y-auto pb-24 pr-1" aria-label="Navegacion del panel">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (

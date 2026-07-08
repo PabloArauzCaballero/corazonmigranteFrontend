@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/state";
 
 function formatDate(value?: string) {
-  if (!value) return "Publicado desde CMS";
+  if (!value) return "Publicado desde la biblioteca editorial";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("es-BO", { dateStyle: "medium" }).format(date);
@@ -24,7 +24,7 @@ export function EditorialArticlePage({ slug }: { slug: string }) {
     queryFn: () => getPublicCmsPage(librarySlug)
   });
 
-  if (pageQuery.isLoading) return <main className="container py-12"><LoadingState title="Cargando recurso desde CMS" /></main>;
+  if (pageQuery.isLoading) return <main className="container py-12"><LoadingState title="Cargando recurso editorial" /></main>;
   if (pageQuery.isError) {
     return (
       <main className="container py-12">
@@ -84,7 +84,7 @@ export function EditorialArticlePage({ slug }: { slug: string }) {
             </div>
           ) : (
             <div className="p-7 md:p-12">
-              <EmptyState title="Contenido pendiente" description="El elemento existe en CMS, pero su JSON todavía no incluye body, blocks o contenido de lectura." />
+              <EmptyState title="Contenido pendiente" description="El elemento existe, pero todavía no incluye cuerpo, bloques o contenido de lectura." />
             </div>
           )}
 

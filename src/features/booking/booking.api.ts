@@ -1,6 +1,6 @@
 import { apiRequest } from "@/shared/api/client";
-import { ENDPOINTS } from "@/shared/api/endpoints";
 import { ApiError } from "@/shared/api/errors";
+import { ENDPOINTS } from "@/shared/api/endpoints";
 import { buildScheduledStartAt, type ManagedBookingInput, type PatientBookingInput } from "@/features/booking/booking.schemas";
 import { buildQueryString } from "@/shared/api/query";
 import { getNumber, getString, isRecord, normalizePaginatedResponse } from "@/shared/api/normalizers";
@@ -136,19 +136,28 @@ function normalizeTherapistResult(payload: unknown, options: { requireMarker?: b
 const therapistDirectoryQuery = buildQueryString({ page: 1, pageSize: 100 });
 
 /**
- * Directorio de terapeutas ajustado al backend real:
- * - El backend actual NO acepta role/rol/status en GET /admin/users.
+ * Directorio de terapeutas ajustado al servidor real:
+ * - El servidor actual NO acepta role/rol/status en GET /admin/users.
  * - Si /admin/users no expone rol/perfil, no inventamos terapeutas a partir de usuarios genéricos.
- * - Como respaldo se revisan páginas CMS públicas que podrían contener tarjetas de equipo.
+ * - Como respaldo se revisan páginas públicas editoriales que podrían contener tarjetas de equipo.
  */
 export async function listBookingTherapists(options: { canUseAdminDirectory?: boolean } = {}) {
+  try {
+    const payload = await apiRequest<unknown>(`${ENDPOINTS.booking.therapists}${therapistDirectoryQuery}`, { auth: false });
+    const items = normalizeTherapistResult(payload);
+    if (items.length > 0) return items;
+  } catch {
+    // Compatibilidad: si el servidor desplegado aún no tiene /booking/therapists,
+    // probamos fuentes administrativas/públicas antiguas sin romper la pantalla.
+  }
+
   if (options.canUseAdminDirectory) {
     try {
       const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${therapistDirectoryQuery}`);
       const items = normalizeTherapistResult(payload, { requireMarker: true });
       if (items.length > 0) return items;
     } catch {
-      // continúa con CMS público
+      // continúa con contenido público
     }
   }
 
@@ -163,10 +172,7 @@ export async function listBookingTherapists(options: { canUseAdminDirectory?: bo
     }
   }
 
-  throw new ApiError(
-    "El backend actual no expone un directorio público de terapeutas. La ruta de disponibilidad existe, pero necesita un therapistUserId real; agrega un endpoint de directorio o publica terapeutas en CMS.",
-    501
-  );
+  return [];
 }
 
 export type PatientOption = {
@@ -177,14 +183,24 @@ export type PatientOption = {
 
 export function mapPatientOption(item: unknown, index: number): PatientOption {
   const record = isRecord(item) ? item : {};
-  const firstName = getString(record, ["firstName", "first_name", "nombres", "nombre"], "");
-  const lastName = getString(record, ["lastName", "last_name", "apellidos", "apellido"], "");
+  const profile = nestedRecord(record, ["patientProfile", "patient_profile", "perfilPaciente", "profile"]);
+  const firstName = firstString([profile, record], ["firstName", "first_name", "nombres", "nombre"], "");
+  const lastName = firstString([profile, record], ["lastName", "last_name", "apellidos", "apellido"], "");
   const composed = `${firstName} ${lastName}`.trim();
   return {
-    id: getString(record, ["id", "userId", "user_id", "uuid"], `paciente-${index + 1}`),
-    name: getString(record, ["name", "full_name", "nombre_completo", "fullName", "displayName"], composed || `Paciente ${index + 1}`),
+    id: firstString([record, profile], ["id", "userId", "user_id", "uuid"], `paciente-${index + 1}`),
+    name: firstString([record, profile], ["name", "full_name", "nombre_completo", "fullName", "displayName"], composed || `Paciente ${index + 1}`),
     email: getString(record, ["email", "correo", "correo_electronico"], "")
   };
+}
+
+function hasPatientContractMarker(item: unknown) {
+  const record = isRecord(item) ? item : {};
+  const role = String(record.role ?? record.rol ?? record.roleCode ?? record.role_code ?? "").trim().toUpperCase();
+  const roles = Array.isArray(record.roles) ? record.roles.map((value) => String(value).trim().toUpperCase()) : [];
+  if ([role, ...roles].some((value) => ["PATIENT", "PACIENTE"].includes(value))) return true;
+  if (isRecord(record.patientProfile) || isRecord(record.patient_profile) || isRecord(record.perfilPaciente)) return true;
+  return false;
 }
 
 /** Lista desplegable de usuarios finales (pacientes) para booking operativo. Requiere rol administrativo. */
@@ -194,12 +210,23 @@ export async function listPatientOptions(search = "") {
     pageSize: 100,
     search: search || undefined
   });
-  const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${query}`);
-  const result = normalizePaginatedResponse(payload, mapPatientOption, { page: 1, pageSize: 100 });
-  return result.items.filter((patient) => patient.id && !patient.id.startsWith("paciente-"));
+
+  try {
+    const payload = await apiRequest<unknown>(`${ENDPOINTS.users.patients}${query}`);
+    const source = unwrapPayload(payload);
+    return normalizePaginatedResponse(source, mapPatientOption, { page: 1, pageSize: 100 }).items
+      .filter((patient) => patient.id && !patient.id.startsWith("paciente-"));
+  } catch {
+    // Compatibilidad con servidores previos al endpoint dedicado /admin/users/patients.
+    const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${query}`);
+    const source = unwrapPayload(payload);
+    const raw = normalizePaginatedResponse(source, (item) => item, { page: 1, pageSize: 100 }).items;
+    const mapped = normalizePaginatedResponse(source, mapPatientOption, { page: 1, pageSize: 100 }).items;
+    return mapped.filter((patient, index) => patient.id && !patient.id.startsWith("paciente-") && hasPatientContractMarker(raw[index]));
+  }
 }
 
-export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
+async function fetchAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
   const query = buildQueryString({
     therapistUserId: input.therapistUserId,
     productId: input.productId,
@@ -209,6 +236,26 @@ export async function getBookingAvailability(input: { therapistUserId: string; p
   });
   const payload = await apiRequest<unknown>(`${ENDPOINTS.booking.availability}${query}`, { auth: false });
   return normalizeAvailability(payload);
+}
+
+/**
+ * El OpenAPI documenta `from`/`to` como fecha simple (YYYY-MM-DD), pero el servidor real
+ * rechaza ese formato con HTTP_400 para el mismo rango. Como respaldo reintentamos con
+ * límites de día completo en ISO-8601, que es lo que acepta el validador real del backend.
+ */
+export async function getBookingAvailability(input: { therapistUserId: string; productId: string; from: string; to: string; timezone: string }) {
+  try {
+    return await fetchAvailability(input);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 400) {
+      return await fetchAvailability({
+        ...input,
+        from: `${input.from}T00:00:00.000Z`,
+        to: `${input.to}T23:59:59.999Z`
+      });
+    }
+    throw error;
+  }
 }
 
 export async function createPatientBooking(input: PatientBookingInput) {
@@ -225,10 +272,18 @@ export async function createPatientBooking(input: PatientBookingInput) {
   });
 }
 
-/** Booking operativo aún no soportado por el backend incluido en este zip. */
-export async function createManagedBooking(_input: ManagedBookingInput) {
-  throw new ApiError(
-    "El backend actual solo permite POST /api/v1/appointments desde un usuario PACIENTE y no acepta patientUserId. Para booking administrativo falta un endpoint específico en el backend.",
-    501
-  );
+/** Booking asistido: ADMIN/SUPER_ADMIN/TERAPEUTA registran una cita para un paciente concreto. */
+export async function createManagedBooking(input: ManagedBookingInput) {
+  return apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createForPatient, {
+    method: "POST",
+    body: {
+      patientUserId: input.patientUserId,
+      therapistUserId: input.therapistUserId,
+      productId: input.productId,
+      scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
+      timezone: input.timezone,
+      notesForTherapist: input.notesForTherapist
+    },
+    auth: true
+  });
 }

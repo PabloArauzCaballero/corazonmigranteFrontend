@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 const PUBLIC_VIEWS = [
   { path: "/", label: "Inicio" },
   { path: "/biblioteca/", label: "Biblioteca" },
-  { path: "/novedades/", label: "Novedades" },
+  { path: "/novedades/", label: "Contenido Público" },
   { path: "/noticias/", label: "Noticias" },
   { path: "/booking/", label: "Booking público" },
   { path: "/login/", label: "Login" },

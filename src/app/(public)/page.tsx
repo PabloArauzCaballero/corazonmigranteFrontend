@@ -113,7 +113,7 @@ export default function HomePage() {
             <div>
               <Badge>Primer paso</Badge>
               <h2 className="mt-4 text-3xl font-bold">Solicita una cita con una experiencia clara y sin presión.</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">El flujo de booking está preparado para consultar disponibilidad real del backend y mostrar mensajes humanos cuando algo no esté disponible.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">El flujo de booking está preparado para consultar disponibilidad real del servidor y mostrar mensajes humanos cuando algo no esté disponible.</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
               <Button asChild size="lg">

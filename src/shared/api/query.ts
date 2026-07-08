@@ -4,7 +4,7 @@ export type SistemaListQuery = {
   pageSize?: number;
   /**
    * Solo se conserva para compatibilidad de tipos en tablas existentes.
-   * No se envía desde este helper porque el PaginationQueryDto real del backend
+   * No se envía desde este helper porque el PaginationQueryDto real del servidor
    * no acepta `status` en endpoints genéricos como /admin/users, /therapy/products
    * o /admin/accounting/*.
    */
@@ -22,7 +22,7 @@ export function buildQueryString(params: SistemaListQuery & Record<string, strin
   if (params.page && params.page > 0) searchParams.set("page", String(params.page));
   if (params.pageSize && params.pageSize > 0) searchParams.set("pageSize", String(params.pageSize));
 
-  // No enviamos sort/order desde el helper genérico. El backend tiene orden por defecto
+  // No enviamos sort/order desde el helper genérico. El servidor tiene orden por defecto
   // y varias versiones desplegadas rechazan esos campos con ValidationPipe estricto.
 
   for (const [key, value] of Object.entries(params)) {

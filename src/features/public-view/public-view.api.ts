@@ -50,7 +50,7 @@ function resolveTemplate(template: string) {
 
 function normalizeLegacyPublicPagePath(pathOrUrl: string) {
   return pathOrUrl
-    // Backend real incluido: GET /api/v1/public/pages/:slug.
+    // Servidor real incluido: GET /api/v1/public/pages/:slug.
     // No existe GET /api/v1/public-views/:id ni /public/pages/:slug/elements/:code.
     .replace(/\/api\/v1\/public-views\/1(?=\/|$)/g, "/api/v1/public/pages/inicio")
     .replace(/\/api\/v1\/public-views\/2(?=\/|$)/g, "/api/v1/public/pages/biblioteca")
@@ -77,7 +77,7 @@ function configuredElementEndpointCandidate(_code: string): PublicEndpointCandid
   const custom = env.NEXT_PUBLIC_PUBLIC_VIEW_ELEMENT_ENDPOINT?.trim();
   if (!custom) return undefined;
 
-  // El backend incluido en este zip no tiene /public/pages/:slug/elements/:code.
+  // El servidor incluido en este zip no tiene /public/pages/:slug/elements/:code.
   // Si llega una variable legacy con esa forma, se reconduce al endpoint real de página.
   const normalized = custom
     .replace(/\/elements\/:code$/i, "")

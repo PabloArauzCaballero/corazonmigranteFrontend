@@ -13,6 +13,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+import { PasswordInput } from "@/shared/ui/password-input";
 import { Textarea } from "@/shared/ui/textarea";
 
 export function RegisterPatientForm() {
@@ -69,7 +70,7 @@ export function RegisterPatientForm() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Contraseña</Label>
-                <Input id="password" type="password" autoComplete="new-password" {...form.register("password")} />
+                <PasswordInput id="password" autoComplete="new-password" {...form.register("password")} />
                 {form.formState.errors.password ? <p className="text-sm text-destructive">{form.formState.errors.password.message}</p> : null}
               </div>
             </div>
@@ -78,7 +79,7 @@ export function RegisterPatientForm() {
                 <Label htmlFor="country">País actual</Label>
                 <select
                   id="country"
-                  className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
+                  className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                   {...form.register("country")}
                   disabled={countriesCities.isLoading}
                 >
@@ -96,7 +97,7 @@ export function RegisterPatientForm() {
                 <Label htmlFor="city">Ciudad</Label>
                 <select
                   id="city"
-                  className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
+                  className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                   {...form.register("city")}
                   disabled={!selectedCountry}
                 >
@@ -116,7 +117,7 @@ export function RegisterPatientForm() {
                 <Label htmlFor="occupation">Ocupación (opcional)</Label>
                 <select
                   id="occupation"
-                  className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
+                  className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                   {...form.register("occupation")}
                   disabled={occupations.isLoading}
                 >

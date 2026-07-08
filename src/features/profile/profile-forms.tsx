@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { Camera } from "lucide-react";
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { fetchCountriesCities, fetchOccupations } from "@/features/auth/public-options";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { humanizeApiError } from "@/shared/api/errors";
@@ -13,6 +14,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+import { LoadingState } from "@/shared/ui/state";
 import { Textarea } from "@/shared/ui/textarea";
 import { initials } from "@/lib/utils";
 
@@ -107,8 +109,25 @@ function profileValue(me: MeProfile | undefined, profileKeys: string[], fieldKey
   return getString(profile, fieldKeys, getString(me, fieldKeys, ""));
 }
 
+const PATIENT_PROFILE_KEYS = ["patientProfile", "patient_profile", "perfilPaciente", "profile"];
+
 export function PatientProfileForm() {
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe });
+
+  if (me.isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <LoadingState title="Cargando perfil" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return <PatientProfileFormBody me={me} />;
+}
+
+function PatientProfileFormBody({ me }: { me: UseQueryResult<MeProfile> }) {
   const mutation = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
       apiRequest<unknown>(ENDPOINTS.users.updatePatientProfile, { method: "PATCH", body }),
@@ -116,6 +135,26 @@ export function PatientProfileForm() {
       await me.refetch();
     }
   });
+
+  const countriesCities = useQuery({ queryKey: ["public-options", "countries-cities"], queryFn: fetchCountriesCities });
+  const occupations = useQuery({ queryKey: ["public-options", "occupations"], queryFn: fetchOccupations });
+
+  const currentCountry = profileValue(me.data, PATIENT_PROFILE_KEYS, ["country", "pais"]);
+  const currentCity = profileValue(me.data, PATIENT_PROFILE_KEYS, ["city", "ciudad"]);
+
+  const [country, setCountry] = useState(currentCountry);
+  const [city, setCity] = useState(currentCity);
+  const previousCountry = useRef(country);
+
+  useEffect(() => {
+    if (previousCountry.current !== country) {
+      setCity("");
+      previousCountry.current = country;
+    }
+  }, [country]);
+
+  const countryNames = useMemo(() => Object.keys(countriesCities.data ?? {}).sort((a, b) => a.localeCompare(b)), [countriesCities.data]);
+  const cityOptions = useMemo(() => (country ? countriesCities.data?.[country] ?? [] : []), [countriesCities.data, country]);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -128,21 +167,59 @@ export function PatientProfileForm() {
     mutation.mutate(body);
   }
 
-  const keys = ["patientProfile", "patient_profile", "perfilPaciente", "profile"];
-
   return (
     <Card>
       <CardContent className="p-6">
         <h2 className="text-lg font-bold">Editar mis datos</h2>
         <p className="mt-1 text-sm text-muted-foreground">Actualiza tu información de paciente. Se guarda con PATCH /me/patient-profile.</p>
         <form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
-          <div className="grid gap-2"><Label>Nombre</Label><Input name="firstName" defaultValue={profileValue(me.data, keys, ["firstName", "first_name", "nombres"])} /></div>
-          <div className="grid gap-2"><Label>Apellido</Label><Input name="lastName" defaultValue={profileValue(me.data, keys, ["lastName", "last_name", "apellidos"])} /></div>
-          <div className="grid gap-2"><Label>Teléfono</Label><Input name="phone" defaultValue={profileValue(me.data, keys, ["phone", "telefono"])} /></div>
-          <div className="grid gap-2"><Label>Fecha de nacimiento</Label><Input name="birthDate" type="date" defaultValue={profileValue(me.data, keys, ["birthDate", "birth_date"])} /></div>
-          <div className="grid gap-2"><Label>País</Label><Input name="country" defaultValue={profileValue(me.data, keys, ["country", "pais"])} /></div>
-          <div className="grid gap-2"><Label>Ciudad</Label><Input name="city" defaultValue={profileValue(me.data, keys, ["city", "ciudad"])} /></div>
-          <div className="grid gap-2 md:col-span-2"><Label>Ocupación</Label><Input name="occupation" defaultValue={profileValue(me.data, keys, ["occupation", "ocupacion"])} /></div>
+          <div className="grid gap-2"><Label>Nombre</Label><Input name="firstName" defaultValue={profileValue(me.data, PATIENT_PROFILE_KEYS, ["firstName", "first_name", "nombres"])} /></div>
+          <div className="grid gap-2"><Label>Apellido</Label><Input name="lastName" defaultValue={profileValue(me.data, PATIENT_PROFILE_KEYS, ["lastName", "last_name", "apellidos"])} /></div>
+          <div className="grid gap-2"><Label>Teléfono</Label><Input name="phone" defaultValue={profileValue(me.data, PATIENT_PROFILE_KEYS, ["phone", "telefono"])} /></div>
+          <div className="grid gap-2"><Label>Fecha de nacimiento</Label><Input name="birthDate" type="date" defaultValue={profileValue(me.data, PATIENT_PROFILE_KEYS, ["birthDate", "birth_date"])} /></div>
+          <div className="grid gap-2">
+            <Label htmlFor="country">País</Label>
+            <select
+              id="country"
+              name="country"
+              className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
+              value={country}
+              onChange={(event) => setCountry(event.target.value)}
+              disabled={countriesCities.isLoading}
+            >
+              <option value="">{countriesCities.isLoading ? "Cargando países..." : "Seleccionar país"}</option>
+              {countryNames.map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
+            {countriesCities.isError ? <p className="text-xs text-destructive">No se pudo cargar la lista de países.</p> : null}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="city">Ciudad</Label>
+            <select
+              id="city"
+              name="city"
+              className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
+              value={city}
+              onChange={(event) => setCity(event.target.value)}
+              disabled={!country}
+            >
+              <option value="">Seleccionar ciudad</option>
+              {cityOptions.map((cityName) => <option key={cityName} value={cityName}>{cityName}</option>)}
+            </select>
+          </div>
+          <div className="grid gap-2 md:col-span-2">
+            <Label htmlFor="occupation">Ocupación</Label>
+            <select
+              id="occupation"
+              name="occupation"
+              className="focus-ring h-11 rounded-lg border bg-background px-3 text-sm hover:border-ring/60"
+              defaultValue={profileValue(me.data, PATIENT_PROFILE_KEYS, ["occupation", "ocupacion"])}
+              disabled={occupations.isLoading}
+            >
+              <option value="">{occupations.isLoading ? "Cargando ocupaciones..." : "Seleccionar ocupación"}</option>
+              {(occupations.data ?? []).map((occupation) => <option key={occupation} value={occupation}>{occupation}</option>)}
+            </select>
+            {occupations.isError ? <p className="text-xs text-destructive">No se pudo cargar la lista de ocupaciones.</p> : null}
+          </div>
           {mutation.isError ? <p className="text-sm text-destructive md:col-span-2">{humanizeApiError(mutation.error)}</p> : null}
           {mutation.isSuccess ? <p className="text-sm font-semibold text-emerald-700 md:col-span-2">Perfil actualizado correctamente.</p> : null}
           <div className="md:col-span-2"><Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? "Guardando..." : "Guardar cambios"}</Button></div>

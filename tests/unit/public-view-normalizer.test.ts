@@ -97,7 +97,7 @@ describe("public view configurable landing", () => {
           pagina_4: {
             titulo_principal: "Desde donde estés",
             parrafo_principal: "Atención remota.",
-            img: "https://storage.googleapis.com/vistas_publicas_assets/global_assets/media/mapa.png",
+            img: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/global_assets/media/mapa.png",
           },
         },
       },
@@ -112,7 +112,7 @@ describe("public view configurable landing", () => {
     expect(landing.sections[0]?.items?.[0]?.title).toBe("Escucha");
     expect(landing.sections[1]?.items?.[0]?.title).toBe("Ansiedad");
     expect(landing.sections[2]?.image?.src).toContain(
-      "storage.googleapis.com/vistas_publicas_assets",
+      "res.cloudinary.com/demo/image/upload/corazon-migrante",
     );
     expect(landing.phone).toBe("+59170000000");
   });

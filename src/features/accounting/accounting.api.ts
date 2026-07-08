@@ -24,10 +24,9 @@ export type AccountingResource = "accounts" | "accountGroups" | "costCenters";
 
 const accountingEndpoints: Partial<Record<AccountingResource, string>> = {
   accounts: ENDPOINTS.accounting.accountsList,
-  accountGroups: ENDPOINTS.accounting.accountGroupsList
+  accountGroups: ENDPOINTS.accounting.accountGroupsList,
+  costCenters: ENDPOINTS.accounting.costCentersList
 };
-
-const resourcesWithoutListEndpoint = new Set<AccountingResource>(["costCenters"]);
 
 export function mapAccountingRow(item: unknown, index: number): AccountingRow {
   const record = isRecord(item) ? item : {};
@@ -56,8 +55,6 @@ function emptyResult<T>(query: SistemaListQuery): PaginatedResult<T> {
 }
 
 export async function listAccountingRows(resource: AccountingResource, query: SistemaListQuery = {}): Promise<PaginatedResult<AccountingRow>> {
-  if (resourcesWithoutListEndpoint.has(resource)) return emptyResult<AccountingRow>(query);
-
   const endpoint = accountingEndpoints[resource];
   if (!endpoint) return emptyResult<AccountingRow>(query);
 
@@ -66,9 +63,8 @@ export async function listAccountingRows(resource: AccountingResource, query: Si
 }
 
 export async function listTransactions(query: SistemaListQuery = {}): Promise<PaginatedResult<TransactionRow>> {
-  // El backend actual solo expone POST /admin/accounting/transactions; no existe GET.
-  // Devolver vacío evita generar 404 en consola al abrir la vista.
-  return emptyResult<TransactionRow>(query);
+  const payload = await apiRequest<unknown>(`${ENDPOINTS.accounting.transactionsList}${buildQueryString(query)}`);
+  return normalizePaginatedResponse(payload, mapTransactionRow, query);
 }
 
 export type CreateAccountGroupInput = {

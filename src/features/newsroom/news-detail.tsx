@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Lock, Newspaper, UserRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, Lock, Megaphone, Newspaper, UserRound } from "lucide-react";
 import { newsroomApi } from "@/features/newsroom/newsroom.api";
 import { getMyContentSubscription, getPremiumPublication } from "@/features/newsroom/premium-content.api";
 import { useSession } from "@/shared/auth/use-session";
@@ -19,6 +19,43 @@ function formatDate(value?: string | null) {
 
 function blocks(body?: string) {
   return (body ?? "").split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
+}
+
+
+type PublicAdSlot = {
+  creativeId: string;
+  title: string;
+  assetUrl: string;
+  destinationUrl: string;
+  altText: string;
+  sponsorLabel?: string;
+  company?: string;
+};
+
+function normalizeAdSlots(payload: unknown): PublicAdSlot[] {
+  const source = Array.isArray(payload)
+    ? payload
+    : typeof payload === "object" && payload !== null
+      ? ((payload as Record<string, unknown>).items ?? (payload as Record<string, unknown>).data ?? (payload as Record<string, unknown>).slots)
+      : [];
+  if (!Array.isArray(source)) return [];
+  return source
+    .map((item, index) => {
+      const record = (typeof item === "object" && item !== null ? item : {}) as Record<string, unknown>;
+      const assetUrl = String(record.assetUrl ?? record.asset_url ?? record.imageUrl ?? record.url ?? "").trim();
+      const destinationUrl = String(record.destinationUrl ?? record.destination_url ?? record.href ?? "#").trim();
+      if (!assetUrl) return null;
+      return {
+        creativeId: String(record.creativeId ?? record.id ?? `ad-${index}`),
+        title: String(record.title ?? record.name ?? "Publicidad"),
+        assetUrl,
+        destinationUrl,
+        altText: String(record.altText ?? record.alt ?? record.title ?? "Publicidad"),
+        sponsorLabel: String(record.sponsorLabel ?? record.sponsor_label ?? "Contenido patrocinado"),
+        company: record.company ? String(record.company) : undefined
+      } satisfies PublicAdSlot;
+    })
+    .filter(Boolean) as PublicAdSlot[];
 }
 
 export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "news" | "columns" }) {
@@ -41,13 +78,26 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
     retry: false
   });
   const isEntitled = subscription.data?.isPremiumActive === true;
+  const resolvedKind: "news" | "columns" = ["COLUMN", "OPINION"].includes(query.data?.publicationType ?? "") ? "columns" : kind;
   const premiumDetail = useQuery({
-    queryKey: ["newsroom-premium-detail", slug, kind],
-    queryFn: () => getPremiumPublication(slug, kind),
+    queryKey: ["newsroom-premium-detail", slug, resolvedKind],
+    queryFn: () => getPremiumPublication(slug, resolvedKind),
     enabled: isPremium && isEntitled,
     retry: false
   });
   const publication = premiumDetail.data ?? query.data;
+  const adsQuery = useQuery({
+    queryKey: ["newsroom-public-ads", slug, publication?.id],
+    queryFn: async () => {
+      // /advertising/slots puede fallar (bug confirmado del servidor); la publicidad es
+      // decorativa, así que cada intento se degrada a "sin anuncios" en vez de romper la pantalla.
+      const articleSlots = await newsroomApi.publicSlots("article_sidebar", publication?.id).then(normalizeAdSlots).catch(() => []);
+      if (articleSlots.length > 0) return articleSlots;
+      return newsroomApi.publicSlots("home_hero", publication?.id).then(normalizeAdSlots).catch(() => []);
+    },
+    enabled: Boolean(publication),
+    retry: false
+  });
   const showPaywall = isPremium && !premiumDetail.data;
   const bodyBlocks = blocks(publication?.body);
   const previewBlocks = showPaywall ? bodyBlocks.slice(0, 2) : bodyBlocks;
@@ -56,7 +106,7 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
     <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
       <section className="border-b border-slate-200 bg-white/70">
         <div className="container py-8 md:py-12">
-          <Button asChild className="mb-8 rounded-none" variant="outline"><Link href="/novedades"><ArrowLeft className="h-4 w-4" /> Volver a novedades</Link></Button>
+          <Button asChild className="mb-8 rounded-none" variant="outline"><Link href="/novedades"><ArrowLeft className="h-4 w-4" /> Volver a contenido público</Link></Button>
           {query.isLoading ? <LoadingState title="Cargando publicación" /> : null}
           {query.isError ? <ErrorState title="No se pudo abrir la publicación" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}
           {publication ? (
@@ -105,6 +155,25 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
                     <div className="flex flex-wrap gap-2">{(publication.tags ?? []).map((tag) => <Badge key={tag.id} variant="muted">{tag.name}</Badge>)}</div>
                   </CardContent>
                 </Card>
+                {(adsQuery.data ?? []).length > 0 ? (
+                  <Card className="rounded-none border-slate-200 bg-white shadow-none">
+                    <CardContent className="grid gap-4 p-4">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                        <Megaphone className="h-4 w-4" aria-hidden="true" /> Publicidad
+                      </div>
+                      {(adsQuery.data ?? []).slice(0, 2).map((ad) => (
+                        <a key={ad.creativeId} href={ad.destinationUrl} target="_blank" rel="noreferrer" className="group block overflow-hidden border border-slate-200 bg-[#fbfaf8] transition hover:border-teal-900/40">
+                          <img src={ad.assetUrl} alt={ad.altText} className="h-40 w-full object-cover transition group-hover:scale-[1.02]" />
+                          <div className="space-y-1 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-800">{ad.sponsorLabel}</p>
+                            <p className="text-sm font-semibold text-slate-950">{ad.title}</p>
+                            {ad.company ? <p className="text-xs text-slate-500">{ad.company}</p> : null}
+                          </div>
+                        </a>
+                      ))}
+                    </CardContent>
+                  </Card>
+                ) : null}
                 <Card className="rounded-none border-slate-200 bg-teal-950 text-white shadow-none">
                   <CardContent className="p-6">
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/65">Acompañamiento</p>

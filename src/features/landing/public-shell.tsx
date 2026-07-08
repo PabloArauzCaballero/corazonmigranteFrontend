@@ -1,7 +1,11 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { HeartPulse, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { HeartPulse, LogOut, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { fileServer } from "@/config/file-server";
+import { dashboardForRole } from "@/shared/auth/roles";
+import { useSession } from "@/shared/auth/use-session";
 import {
   contactHref,
   formatContactPhone,
@@ -12,13 +16,15 @@ import { Button } from "@/shared/ui/button";
 const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/biblioteca", label: "Biblioteca" },
-  { href: "/novedades", label: "Novedades" },
+  { href: "/novedades", label: "Contenido Público" },
   { href: "/privacidad", label: "Privacidad" },
 ];
 
 export function PublicShell({ children }: { children: ReactNode }) {
   const phone = resolveContactPhone();
   const formattedPhone = formatContactPhone(phone);
+  const { session, isReady, logout } = useSession();
+  const portalHref = session ? dashboardForRole(session.role) : "/login";
 
   return (
     <div className="min-h-screen bg-[#fbf8f3]">
@@ -75,15 +81,32 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 {formattedPhone}
               </a>
             ) : null}
-            <Button asChild className="rounded-2xl" variant="ghost">
-              <Link href="/login">Ingresar</Link>
-            </Button>
-            <Button
-              asChild
-              className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.20)]"
-            >
-              <Link href="/registro">Crear cuenta</Link>
-            </Button>
+            {isReady && session ? (
+              <>
+                <Button asChild className="rounded-2xl" variant="ghost">
+                  <Link href={portalHref}>Mi portal</Link>
+                </Button>
+                <Button
+                  className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.20)]"
+                  onClick={logout}
+                  type="button"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" /> Salir
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild className="rounded-2xl" variant="ghost">
+                  <Link href="/login">Ingresar</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.20)]"
+                >
+                  <Link href="/registro">Crear cuenta</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -100,12 +123,21 @@ export function PublicShell({ children }: { children: ReactNode }) {
               {item.label}
             </Link>
           ))}
-          <Link
-            className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
-            href="/login"
-          >
-            Ingresar
-          </Link>
+          {isReady && session ? (
+            <Link
+              className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+              href={portalHref}
+            >
+              Mi portal
+            </Link>
+          ) : (
+            <Link
+              className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+              href="/login"
+            >
+              Ingresar
+            </Link>
+          )}
         </nav>
       </header>
       <main>{children}</main>

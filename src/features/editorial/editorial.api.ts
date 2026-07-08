@@ -1,7 +1,7 @@
 import { fileServer, buildPublicAssetUrl } from "@/config/file-server";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-import { buildFileDownloadUrl } from "@/shared/api/files";
+import { buildFileDownloadUrl, uploadFile } from "@/shared/api/files";
 import { getNumber, getString, isRecord } from "@/shared/api/normalizers";
 import type {
   CmsElement,
@@ -112,7 +112,7 @@ export function mapCmsPage(payload: unknown): CmsPage {
   return {
     id: getString(record, ["id", "pageId", "page_id", "uuid"], ""),
     slug: getString(record, ["slug", "path"], ""),
-    title: getString(record, ["title", "titulo", "name", "nombre"], "Página CMS"),
+    title: getString(record, ["title", "titulo", "name", "nombre"], "Página editorial"),
     status: upperStatus(record.status ?? record.estado, "DRAFT") as CmsPageStatus,
     seoMetadata: normalizeContent(record.seoMetadata ?? record.seo_metadata),
     publishedAt: getString(record, ["publishedAt", "published_at"], "") || undefined,
@@ -198,6 +198,49 @@ export async function getPublicCmsPage(slug: string): Promise<CmsPage> {
   throw lastError instanceof Error ? lastError : new Error(`No se pudo cargar la página pública ${slug}.`);
 }
 
+
+function extractCmsPages(payload: unknown): CmsPage[] {
+  const source = unwrap(payload);
+  const record = isRecord(source) ? source : {};
+  const nestedData = isRecord(record.data) ? record.data : undefined;
+  const raw = Array.isArray(source)
+    ? source
+    : Array.isArray(record.items)
+      ? record.items
+      : Array.isArray(record.data)
+        ? record.data
+        : Array.isArray(record.pages)
+          ? record.pages
+          : Array.isArray(record.paginas)
+            ? record.paginas
+            : nestedData && Array.isArray(nestedData.items)
+              ? nestedData.items
+              : nestedData && Array.isArray(nestedData.pages)
+                ? nestedData.pages
+                : [];
+  return raw.map(mapCmsPage).filter((page) => page.id || page.slug);
+}
+
+export async function listCmsPages(): Promise<CmsPage[]> {
+  try {
+    const payload = await apiRequest<unknown>(ENDPOINTS.cms.adminListPages);
+    const pages = extractCmsPages(payload);
+    if (pages.length > 0) return pages;
+  } catch {
+    // Si el usuario admin no trae permisos finos de cms:read, intentamos el índice público.
+  }
+
+  try {
+    const payload = await apiRequest<unknown>(ENDPOINTS.cms.publicPages, { auth: false });
+    const pages = extractCmsPages(payload);
+    if (pages.length > 0) return pages;
+  } catch {
+    // Último fallback: al menos permite trabajar con biblioteca mientras se corrigen permisos o datos iniciales.
+  }
+
+  return [];
+}
+
 export async function createCmsPage(input: CreateCmsPageInput): Promise<CmsPage> {
   const payload = await apiRequest<unknown>(ENDPOINTS.cms.adminCreatePage, {
     method: "POST",
@@ -215,18 +258,14 @@ export async function addCmsElement(pageId: string, input: CreateCmsElementInput
 }
 
 export async function uploadCmsFile(file: File, entityId?: string): Promise<CmsFileAsset> {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("module", "CMS");
-  form.append("visibility", "PUBLIC");
-  if (entityId) form.append("entityId", entityId);
-  form.append("entityType", "CmsElement");
-
-  const payload = await apiRequest<unknown>(ENDPOINTS.files.upload, {
-    method: "POST",
-    body: form
+  const uploaded = await uploadFile({
+    file,
+    module: "CMS",
+    visibility: "PUBLIC",
+    entityType: "CmsElement",
+    entityId
   });
-  const record = isRecord(unwrap(payload)) ? (unwrap(payload) as Record<string, unknown>) : {};
+  const record = isRecord(unwrap(uploaded.raw)) ? (unwrap(uploaded.raw) as Record<string, unknown>) : {};
   const objectKey = getString(record, ["objectKey", "object_key"], "");
   return {
     id: getString(record, ["id", "fileId", "file_id"], ""),

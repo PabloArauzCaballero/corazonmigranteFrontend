@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { clearClientSession, persistClientSession, readClientSession } from "@/shared/auth/cookies";
 import type { NormalizedSession } from "@/shared/auth/session";
 
@@ -14,23 +14,39 @@ type SessionContextValue = {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSessionState] = useState<NormalizedSession | null>(() => readClientSession());
-  const isReady = true;
+  const [session, setSessionState] = useState<NormalizedSession | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // readClientSession() lee localStorage; debe ejecutarse solo tras la hidratación
+    // para que el primer render del cliente coincida con el HTML generado en el servidor
+    // (donde `window` no existe). Mover esto a un lazy initializer de useState causaría
+    // un mismatch de hidratación.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSessionState(readClientSession());
+    setIsReady(true);
+  }, []);
+
+  const setSession = useCallback((nextSession: NormalizedSession) => {
+    persistClientSession(nextSession);
+    setSessionState(nextSession);
+    setIsReady(true);
+  }, []);
+
+  const logout = useCallback(() => {
+    clearClientSession();
+    setSessionState(null);
+    setIsReady(true);
+  }, []);
 
   const value = useMemo<SessionContextValue>(
     () => ({
       session,
       isReady,
-      setSession(nextSession) {
-        persistClientSession(nextSession);
-        setSessionState(nextSession);
-      },
-      logout() {
-        clearClientSession();
-        setSessionState(null);
-      }
+      setSession,
+      logout
     }),
-    [isReady, session]
+    [isReady, logout, session, setSession]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

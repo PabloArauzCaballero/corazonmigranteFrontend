@@ -25,7 +25,7 @@ export function mapPublicContentRow(item: unknown, index: number): PublicContent
   return {
     id: getString(record, ["id", "elemento_id", "key", "uuid"], `elemento-${index + 1}`),
     name: getString(content, ["title", "titulo", "name", "nombre"], getString(record, ["code", "codigo", "section", "seccion"], "Sin nombre")),
-    page: getString(record, ["page", "pagina", "pageId", "page_id"], "CMS público"),
+    page: getString(record, ["page", "pagina", "pageId", "page_id"], "Página pública"),
     status: normalizeStatus(record.estado ?? record.status ?? record.visible)
   };
 }

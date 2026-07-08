@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const preferredPort = Number.parseInt(process.env.NEXT_PUBLIC_DEV_PORT ?? process.env.PORT ?? "4173", 10);
+const preferredPort = Number.parseInt(process.env.NEXT_PUBLIC_DEV_PORT ?? process.env.PORT ?? "5173", 10);
 const maxAttempts = Number.parseInt(process.env.NEXT_PUBLIC_DEV_PORT_SCAN_LIMIT ?? "30", 10);
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 

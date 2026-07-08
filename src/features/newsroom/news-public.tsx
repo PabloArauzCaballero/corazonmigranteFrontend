@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Newspaper, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { newsroomApi } from "@/features/newsroom/newsroom.api";
 import type { Category, Publication } from "@/features/newsroom/newsroom.types";
+import { typeLabel } from "@/features/newsroom/admin-kit";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -22,6 +23,19 @@ function categoryOptions(categories?: Category[]) {
   return [{ slug: "", name: "Todas" }, ...(categories ?? []).map((category) => ({ slug: category.slug, name: category.name }))];
 }
 
+function groupPublicationsByDate(items: Publication[]) {
+  const groups = new Map<string, Publication[]>();
+  items.forEach((item) => {
+    const key = formatDate(item.publishedAt ?? item.scheduledAt);
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  });
+  return Array.from(groups.entries()).map(([date, publications]) => ({ date, publications }));
+}
+
+function publicationKind(item: Publication): "news" | "columns" {
+  return ["COLUMN", "OPINION"].includes(item.publicationType) ? "columns" : "news";
+}
+
 function PublicationCard({ item, featured = false }: { item: Publication; featured?: boolean }) {
   return (
     <Card className={featured ? "overflow-hidden rounded-none border-slate-200 bg-white shadow-none lg:col-span-2" : "overflow-hidden rounded-none border-slate-200 bg-white shadow-none"}>
@@ -29,6 +43,8 @@ function PublicationCard({ item, featured = false }: { item: Publication; featur
         <div className="border-b border-slate-200 bg-[#f7f4ef] p-5">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-teal-900">
             <span>{item.category?.name ?? "Editorial"}</span>
+            <span className="text-slate-300">/</span>
+            <span>{typeLabel(item.publicationType)}</span>
             <span className="text-slate-300">/</span>
             <span>{formatDate(item.publishedAt)}</span>
           </div>
@@ -43,7 +59,7 @@ function PublicationCard({ item, featured = false }: { item: Publication; featur
               {(item.tags ?? []).slice(0, 3).map((tag) => <Badge key={tag.id} variant="muted">{tag.name}</Badge>)}
             </div>
             <Button asChild className="rounded-none bg-teal-900 hover:bg-teal-950">
-              <Link href={{ pathname: "/novedades/detalle", query: { slug: item.slug } }}>Leer <ArrowRight className="h-4 w-4" /></Link>
+              <Link href={{ pathname: "/novedades/detalle", query: { slug: item.slug, kind: publicationKind(item) } }}>Leer <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -68,6 +84,7 @@ export function NewsPublicPage() {
   const items = useMemo(() => list.data?.items ?? [], [list.data?.items]);
   const featured = items[0];
   const rest = useMemo(() => items.slice(1), [items]);
+  const groupedRest = useMemo(() => groupPublicationsByDate(rest), [rest]);
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
@@ -75,16 +92,16 @@ export function NewsPublicPage() {
         <div className="container grid gap-10 py-10 md:grid-cols-[1fr_0.72fr] md:py-16">
           <div className="space-y-8">
             <div className="inline-flex w-fit items-center gap-2 border border-teal-900/20 bg-teal-900/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-teal-900">
-              <Newspaper className="h-4 w-4" aria-hidden="true" /> Novedades y columnas
+              <Newspaper className="h-4 w-4" aria-hidden="true" /> Contenido Público
             </div>
             <div className="space-y-5">
               <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.98] tracking-tight text-slate-950 md:text-7xl">Lecturas serias para acompanar procesos migrantes.</h1>
-              <p className="max-w-2xl text-base leading-8 text-slate-600 md:text-lg">Novedades, columnas y recursos editoriales publicados por Corazon Migrante con una mirada clinica y humana.</p>
+              <p className="max-w-2xl text-base leading-8 text-slate-600 md:text-lg">Publicaciones, columnas y recursos editoriales publicados por Corazon Migrante con una mirada clinica y humana.</p>
             </div>
             <form className="grid max-w-2xl gap-3 border border-slate-200 bg-white p-2 sm:grid-cols-[1fr_auto]" onSubmit={(event) => { event.preventDefault(); setSubmittedSearch(search.trim()); }}>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por titular" className="rounded-none border-0 bg-transparent pl-9 shadow-none focus-visible:ring-0" />
+                <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por titular" className="rounded-xl border-0 bg-transparent pl-9 shadow-none focus-visible:ring-0" />
               </div>
               <Button type="submit" className="rounded-none bg-teal-900 hover:bg-teal-950">Buscar</Button>
             </form>
@@ -105,10 +122,10 @@ export function NewsPublicPage() {
 
       <section className="container grid gap-4 border-b border-slate-200 py-6 md:grid-cols-3">
         <button className={`flex items-start gap-3 border bg-white p-4 text-left transition ${mode === "news" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("news")} type="button">
-          <Newspaper className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Novedades</b><span className="text-sm">Actualizaciones y lecturas institucionales.</span></span>
+          <Newspaper className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Novedades</b><span className="text-sm">Noticias, reportes, entrevistas y análisis.</span></span>
         </button>
         <button className={`flex items-start gap-3 border bg-white p-4 text-left transition ${mode === "columns" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("columns")} type="button">
-          <BookOpen className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Columnas</b><span className="text-sm">Opinión y lectura editorial.</span></span>
+          <BookOpen className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Columnas</b><span className="text-sm">Columnas y opinión editorial.</span></span>
         </button>
         <div className="flex items-start gap-3 border border-slate-200 bg-white p-4 text-slate-600">
           <ShieldCheck className="mt-1 h-5 w-5 text-teal-800" aria-hidden="true" /> <span><b className="block text-slate-950">Publicación controlada</b><span className="text-sm">Solo aparecen contenidos publicados.</span></span>
@@ -124,7 +141,23 @@ export function NewsPublicPage() {
         {list.isLoading ? <LoadingState title="Cargando publicaciones" /> : null}
         {list.isError ? <ErrorState title="No se pudo cargar el contenido" description={humanizeApiError(list.error)} actionLabel="Reintentar" onAction={() => void list.refetch()} /> : null}
         {list.isSuccess && items.length === 0 ? <EmptyState title="No hay publicaciones para este filtro" description="Prueba otra categoría o limpia la búsqueda." /> : null}
-        {items.length > 0 ? <div className="grid gap-6 lg:grid-cols-3">{featured ? <PublicationCard item={featured} featured /> : null}{rest.map((item) => <PublicationCard key={item.id} item={item} />)}</div> : null}
+        {items.length > 0 ? (
+          <div className="grid gap-8">
+            {featured ? <div className="grid gap-6 lg:grid-cols-3"><PublicationCard item={featured} featured /></div> : null}
+            {groupedRest.map((group) => (
+              <section key={group.date} className="grid gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+                  <h2 className="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">{group.date}</h2>
+                  <div className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+                </div>
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {group.publications.map((item) => <PublicationCard key={item.id} item={item} />)}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : null}
       </section>
     </main>
   );

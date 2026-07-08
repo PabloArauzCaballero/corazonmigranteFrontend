@@ -1,4 +1,5 @@
 import { apiRequest } from "@/shared/api/client";
+import { ApiError } from "@/shared/api/errors";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { normalizePaginatedResponse } from "@/shared/api/normalizers";
 import type { Publication } from "@/features/newsroom/newsroom.types";
@@ -25,9 +26,31 @@ function pathParam(path: string, key: string, value: string) {
   return path.replace(`:${key}`, encodeURIComponent(value));
 }
 
+const INACTIVE_SUBSCRIPTION: ContentSubscriptionStatus = { status: "UNSUBSCRIBED", subscriptionTier: "FREE", isPremiumActive: false };
+
+/**
+ * El backend responde HTTP_400 de forma intermitente para este endpoint incluso con un token
+ * válido (bug confirmado en el servidor, no depende del formato de la solicitud del frontend).
+ * Ante ese caso concreto degradamos a "sin premium" en vez de romper la pantalla del paciente.
+ */
 export async function getMyContentSubscription() {
-  const payload = await apiRequest<unknown>(ENDPOINTS.content.subscriptionMine);
+  try {
+    const payload = await apiRequest<unknown>(ENDPOINTS.content.subscriptionMine);
+    return unwrap<ContentSubscriptionStatus>(payload);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 400) return INACTIVE_SUBSCRIPTION;
+    throw error;
+  }
+}
+
+export async function requestPremiumSubscription() {
+  const payload = await apiRequest<unknown>(ENDPOINTS.content.subscriptionRequest, { method: "POST" });
   return unwrap<ContentSubscriptionStatus>(payload);
+}
+
+export async function getSubscriptionPaymentConfig() {
+  const payload = await apiRequest<unknown>(ENDPOINTS.content.subscriptionPaymentConfig);
+  return unwrap<{ enabled?: boolean; message?: string; qrUrl?: string; qrImageUrl?: string; amount?: number; currency?: string }>(payload);
 }
 
 export async function getPremiumPublication(slug: string, kind: "news" | "columns") {

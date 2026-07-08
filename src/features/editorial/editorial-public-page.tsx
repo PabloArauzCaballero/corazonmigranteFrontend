@@ -17,10 +17,10 @@ function normalize(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-export function EditorialPublicPage() {
+export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
   const [search, setSearch] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
-  const pageSlug = env.NEXT_PUBLIC_CMS_LIBRARY_SLUG;
+  const pageSlug = slug?.trim() || env.NEXT_PUBLIC_CMS_LIBRARY_SLUG;
   const pageQuery = useQuery({
     queryKey: ["cms-public-page", pageSlug],
     queryFn: () => getPublicCmsPage(pageSlug)
@@ -65,7 +65,7 @@ export function EditorialPublicPage() {
             >
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar guías, temas o categorías" className="rounded-none border-0 bg-transparent pl-9 shadow-none focus-visible:ring-0" />
+                <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar guías, temas o categorías" className="rounded-xl border-0 bg-transparent pl-9 shadow-none focus-visible:ring-0" />
               </div>
               <Button type="submit" className="rounded-none bg-teal-900 hover:bg-teal-950">Buscar</Button>
             </form>

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CalendarDays, Check, Clock3, Globe2, Stethoscope } from "lucide-react";
+import { CalendarDays, Check, Clock3, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -19,6 +19,7 @@ import {
   type PatientOption
 } from "@/features/booking/booking.api";
 import {
+  bookingTimezoneOptions,
   managedBookingSchema,
   patientBookingSchema,
   timezoneDefault,
@@ -86,14 +87,14 @@ function initials(name: string) {
 
 function BookingAuthCard({ title, description, href, cta }: { title: string; description: string; href: string; cta: string }) {
   return (
-    <Card className="mx-auto max-w-3xl overflow-hidden rounded-none border-slate-200 bg-white shadow-none">
+    <Card className="mx-auto max-w-3xl overflow-hidden rounded-xl border-slate-200 bg-white shadow-none">
       <CardHeader className="border-b border-slate-200 bg-[#f7f4ef]">
         <Badge className="w-fit" variant="secondary">Reserva segura</Badge>
         <CardTitle className="font-serif text-3xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        <Button asChild className="rounded-none bg-teal-900 hover:bg-teal-950">
+        <Button asChild className="rounded-xl bg-teal-900 hover:bg-teal-950">
           <Link href={href}>{cta}</Link>
         </Button>
       </CardContent>
@@ -119,15 +120,15 @@ export function BookingAuthWall() {
   }
 
   return (
-    <Card className="mx-auto max-w-3xl rounded-none border-slate-200 bg-white shadow-none">
+    <Card className="mx-auto max-w-3xl rounded-xl border-slate-200 bg-white shadow-none">
       <CardHeader>
         <Badge className="w-fit" variant="secondary">Requiere sesion</Badge>
         <CardTitle className="font-serif text-3xl">Para reservar necesitas iniciar sesion</CardTitle>
         <CardDescription>Para proteger tu informacion, las reservas requieren una sesion activa. Admins y terapeutas trabajan sobre pacientes concretos desde sus portales.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-3">
-        <Button asChild className="rounded-none bg-teal-900 hover:bg-teal-950"><Link href="/login">Iniciar sesion</Link></Button>
-        <Button asChild variant="outline" className="rounded-none"><Link href="/registro">Crear cuenta de paciente</Link></Button>
+        <Button asChild className="rounded-xl bg-teal-900 hover:bg-teal-950"><Link href="/login">Iniciar sesion</Link></Button>
+        <Button asChild variant="outline" className="rounded-xl"><Link href="/registro">Crear cuenta de paciente</Link></Button>
       </CardContent>
     </Card>
   );
@@ -152,7 +153,7 @@ function TherapistPicker({
             type="button"
             onClick={() => onChange(therapist.id)}
             className={cn(
-              "grid min-h-36 grid-cols-[4.5rem_1fr] gap-4 border bg-white p-4 text-left transition",
+              "grid min-h-36 grid-cols-[4.5rem_1fr] gap-4 rounded-xl border bg-white p-4 text-left transition",
               selected ? "border-teal-900 ring-2 ring-teal-900/20" : "border-slate-200 hover:border-teal-900/50"
             )}
           >
@@ -175,12 +176,27 @@ function TherapistPicker({
 
 function ProductSelect({ products, registerName, register }: { products: BookingProduct[]; registerName: "productId"; register: ReturnType<typeof useForm<PatientBookingInput>>["register"] }) {
   return (
-    <select id={registerName} className="focus-ring h-12 rounded-none border border-slate-300 bg-white px-3 text-sm" {...register(registerName)}>
+    <select id={registerName} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" {...register(registerName)}>
       <option value="">Seleccionar servicio</option>
       {products.map((product) => (
         <option key={product.id} value={product.id}>
           {product.name} - {product.durationMinutes} min - {formatMoney(product)}
         </option>
+      ))}
+    </select>
+  );
+}
+
+function TimezoneSelect({ value, register }: { value: string; register: ReturnType<typeof useForm<PatientBookingInput>>["register"] }) {
+  const options = useMemo(() => {
+    if (!value || bookingTimezoneOptions.some((option) => option.value === value)) return bookingTimezoneOptions;
+    return [{ value, label: `${value} (detectada automáticamente)` }, ...bookingTimezoneOptions];
+  }, [value]);
+
+  return (
+    <select id="timezone" className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" {...register("timezone" as never)}>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>{option.label}</option>
       ))}
     </select>
   );
@@ -203,9 +219,10 @@ function AvailabilityPicker({
   isFetching: boolean;
   error: unknown;
 }) {
-  if (isFetching) return <p className="border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Consultando disponibilidad calculada...</p>;
-  if (error) return <p className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{humanizeApiError(error)}</p>;
-  if (slots.length === 0) return <p className="border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Selecciona terapeuta, servicio y fecha para ver horarios disponibles.</p>;
+  if (isFetching) return <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Consultando disponibilidad calculada...</p>;
+  if (error) return <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{humanizeApiError(error)}</p>;
+  if (slots.length === 0 && therapist) return <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">No hay horarios disponibles para esta fecha. Si eres administrador, registra horarios para este terapeuta desde Admin &gt; Usuarios &gt; Horarios.</p>;
+  if (slots.length === 0) return <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Selecciona terapeuta, servicio y fecha para ver horarios disponibles.</p>;
 
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -218,7 +235,7 @@ function AvailabilityPicker({
             type="button"
             onClick={() => onChange(slot.scheduledStartAt)}
             className={cn(
-              "border bg-white p-4 text-left transition",
+              "rounded-xl border bg-white p-4 text-left transition",
               selected ? "border-teal-900 bg-teal-900/5 ring-2 ring-teal-900/20" : "border-slate-200 hover:border-teal-900/50"
             )}
           >
@@ -264,7 +281,7 @@ function BookingFields<T extends BookingFormValues>({
           {patients && patients.options.length > 0 ? (
             <select
               id="patientUserId"
-              className="focus-ring h-12 rounded-none border border-slate-300 bg-white px-3 text-sm"
+              className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               {...form.register("patientUserId" as never)}
             >
               <option value="">Seleccionar paciente</option>
@@ -275,12 +292,11 @@ function BookingFields<T extends BookingFormValues>({
               ))}
             </select>
           ) : patients?.isLoading ? (
-            <p className="border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Cargando lista de pacientes...</p>
+            <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Cargando lista de pacientes...</p>
           ) : (
-            <>
-              <Input id="patientUserId" placeholder="UUID del paciente" className="rounded-none" {...form.register("patientUserId" as never)} />
-              {patients?.error ? <p className="text-xs text-amber-700">{humanizeApiError(patients.error)} Ingresa el ID manualmente.</p> : null}
-            </>
+            <p className="rounded-xl border border-dashed bg-white px-4 py-3 text-sm text-muted-foreground">
+              {patients?.error ? humanizeApiError(patients.error) : "No hay usuarios paciente disponibles para seleccionar."}
+            </p>
           )}
           {patientError ? <p className="text-sm text-destructive">{String(patientError.message)}</p> : null}
         </div>
@@ -289,7 +305,7 @@ function BookingFields<T extends BookingFormValues>({
       <section className="grid gap-3">
         <div>
           <Label>Terapeuta disponible</Label>
-          <p className="mt-1 text-xs text-slate-500">Elige desde el directorio del backend; ya no necesitas pegar el UUID manualmente.</p>
+          <p className="mt-1 text-xs text-slate-500">Elige desde el directorio del servidor; ya no necesitas pegar el UUID manualmente.</p>
         </div>
         <TherapistPicker therapists={therapists} value={therapistUserId} onChange={(value) => form.setValue("therapistUserId" as never, value as never, { shouldDirty: true, shouldValidate: true })} />
         {form.formState.errors.therapistUserId ? <p className="text-sm text-destructive">{String(form.formState.errors.therapistUserId.message)}</p> : null}
@@ -303,10 +319,7 @@ function BookingFields<T extends BookingFormValues>({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="timezone">Zona horaria del usuario</Label>
-          <div className="relative">
-            <Globe2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input id="timezone" className="rounded-none pl-9" {...form.register("timezone" as never)} />
-          </div>
+          <TimezoneSelect value={userTimezone} register={form.register as ReturnType<typeof useForm<PatientBookingInput>>["register"]} />
           {form.formState.errors.timezone ? <p className="text-sm text-destructive">{String(form.formState.errors.timezone.message)}</p> : null}
         </div>
       </section>
@@ -316,7 +329,7 @@ function BookingFields<T extends BookingFormValues>({
           <Label htmlFor="scheduledDate">Fecha</Label>
           <div className="relative">
             <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input id="scheduledDate" type="date" className="rounded-none pl-9" {...form.register("scheduledDate" as never)} />
+            <Input id="scheduledDate" type="date" className="rounded-xl pl-9" {...form.register("scheduledDate" as never)} />
           </div>
           {form.formState.errors.scheduledDate ? <p className="text-sm text-destructive">{String(form.formState.errors.scheduledDate.message)}</p> : null}
         </div>
@@ -334,7 +347,7 @@ function BookingFields<T extends BookingFormValues>({
 
       <div className="grid gap-2">
         <Label htmlFor="notesForTherapist">Notas para el terapeuta</Label>
-        <Textarea id="notesForTherapist" className="min-h-28 rounded-none" placeholder="Cuéntanos brevemente que necesitas trabajar en la sesion." {...form.register("notesForTherapist" as never)} />
+        <Textarea id="notesForTherapist" className="min-h-28 rounded-xl" placeholder="Cuéntanos brevemente que necesitas trabajar en la sesion." {...form.register("notesForTherapist" as never)} />
       </div>
     </div>
   );
@@ -368,7 +381,7 @@ function useBookingData(form: ReturnType<typeof useForm<PatientBookingInput>>) {
   return { products, therapists, selectedTherapist, availability };
 }
 
-export function PatientBookingForm({ title = "Reservar mi cita", description = "Selecciona terapeuta, servicio y horario calculado desde el backend." }: PatientBookingFormProps) {
+export function PatientBookingForm({ title = "Reservar mi cita", description = "Selecciona terapeuta, servicio y horario calculado desde el servidor." }: PatientBookingFormProps) {
   const form = useForm<PatientBookingInput>({
     resolver: zodResolver(patientBookingSchema),
     defaultValues: { therapistUserId: "", productId: "", scheduledDate: "", scheduledTime: "", timezone: browserTimezone(), notesForTherapist: "" }
@@ -381,7 +394,7 @@ export function PatientBookingForm({ title = "Reservar mi cita", description = "
   if (therapists.isError) return <ErrorState title="No se pudo consultar terapeutas" description={humanizeApiError(therapists.error)} actionLabel="Reintentar" onAction={() => void therapists.refetch()} />;
 
   return (
-    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-none border-slate-200 bg-white shadow-none">
+    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-xl border-slate-200 bg-white shadow-none">
       <CardHeader className="border-b border-slate-200 bg-[#f7f4ef] p-7">
         <Badge className="w-fit" variant="secondary">Paciente autenticado</Badge>
         <CardTitle className="font-serif text-4xl">{title}</CardTitle>
@@ -397,7 +410,7 @@ export function PatientBookingForm({ title = "Reservar mi cita", description = "
           <form className="grid gap-7" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
             <BookingFields form={form} products={products.data ?? []} therapists={therapists.data ?? []} availability={availability} selectedTherapist={selectedTherapist} />
             {mutation.isError ? <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{humanizeApiError(mutation.error)}</p> : null}
-            <Button disabled={mutation.isPending} type="submit" className="w-full rounded-none bg-teal-900 hover:bg-teal-950 md:w-fit">
+            <Button disabled={mutation.isPending} type="submit" className="w-full rounded-xl bg-teal-900 hover:bg-teal-950 md:w-fit">
               {mutation.isPending ? "Registrando..." : "Reservar cita"}
             </Button>
           </form>
@@ -421,7 +434,7 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
   if (data.therapists.isError) return <ErrorState title="No se pudo consultar terapeutas" description={humanizeApiError(data.therapists.error)} actionLabel="Reintentar" onAction={() => void data.therapists.refetch()} />;
 
   return (
-    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-none border-slate-200 bg-white shadow-none">
+    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-xl border-slate-200 bg-white shadow-none">
       <CardHeader className="border-b border-slate-200 bg-[#f7f4ef] p-7">
         <Badge className="w-fit" variant="secondary">Booking por {actorLabel}</Badge>
         <CardTitle className="font-serif text-4xl">Agendar cita para un paciente concreto</CardTitle>
@@ -432,7 +445,7 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
           <div className="border border-emerald-200 bg-emerald-50 p-6 text-emerald-900">
             <p className="font-semibold">Cita registrada</p>
             <p className="mt-2 text-sm leading-6">La solicitud quedó creada para el paciente seleccionado y será gestionada según las reglas del servicio.</p>
-            <Button type="button" variant="outline" className="mt-4 rounded-none" onClick={() => { mutation.reset(); form.reset({ ...form.getValues(), patientUserId: "", scheduledTime: "" }); }}>
+            <Button type="button" variant="outline" className="mt-4 rounded-xl" onClick={() => { mutation.reset(); form.reset({ ...form.getValues(), patientUserId: "", scheduledTime: "" }); }}>
               Registrar otra cita
             </Button>
           </div>
@@ -448,7 +461,7 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
               patients={{ options: patientsQuery.data ?? [], isLoading: patientsQuery.isLoading, error: patientsQuery.error }}
             />
             {mutation.isError ? <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{humanizeApiError(mutation.error)}</p> : null}
-            <Button disabled={mutation.isPending} type="submit" className="w-full rounded-none bg-teal-900 hover:bg-teal-950 md:w-fit">
+            <Button disabled={mutation.isPending} type="submit" className="w-full rounded-xl bg-teal-900 hover:bg-teal-950 md:w-fit">
               {mutation.isPending ? "Registrando..." : "Registrar cita para el paciente"}
             </Button>
           </form>

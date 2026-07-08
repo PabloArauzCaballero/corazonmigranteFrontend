@@ -46,6 +46,10 @@ async function listSchedules() {
   return normalizePaginatedResponse(payload, mapSchedule, { page: 1, pageSize: 100 }).items;
 }
 
+function todayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function browserTimezone() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/La_Paz";
@@ -80,7 +84,7 @@ export function TherapistScheduleManager() {
       startTime: String(form.get("startTime") ?? ""),
       endTime: String(form.get("endTime") ?? ""),
       timezone: String(form.get("timezone") ?? browserTimezone()),
-      effectiveFrom: String(form.get("effectiveFrom") ?? ""),
+      effectiveFrom: String(form.get("effectiveFrom") ?? todayDate()),
       ...(effectiveTo ? { effectiveTo } : {})
     });
   }
@@ -103,11 +107,11 @@ export function TherapistScheduleManager() {
       <Card>
         <CardContent className="p-6">
           <h2 className="text-lg font-bold">Nuevo horario recurrente</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Define los bloques base de atención por día de semana. El backend rechaza solapamientos.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Define los bloques base de atención por día de semana. El servidor rechaza solapamientos.</p>
           <form className="mt-5 grid gap-4 md:grid-cols-3" onSubmit={onCreateSchedule}>
             <div className="grid gap-2">
               <Label>Día de la semana</Label>
-              <select name="weekday" required className="focus-ring h-11 rounded-xl border bg-background px-3 text-sm">
+              <select name="weekday" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
                 {WEEKDAYS.map((day, index) => (
                   <option key={day} value={index}>{day}</option>
                 ))}
@@ -116,7 +120,7 @@ export function TherapistScheduleManager() {
             <div className="grid gap-2"><Label>Hora inicio</Label><Input name="startTime" type="time" required /></div>
             <div className="grid gap-2"><Label>Hora fin</Label><Input name="endTime" type="time" required /></div>
             <div className="grid gap-2"><Label>Zona horaria</Label><Input name="timezone" defaultValue={browserTimezone()} required /></div>
-            <div className="grid gap-2"><Label>Vigente desde</Label><Input name="effectiveFrom" type="date" required /></div>
+            <div className="grid gap-2"><Label>Vigente desde</Label><Input name="effectiveFrom" type="date" defaultValue={todayDate()} required /></div>
             <div className="grid gap-2"><Label>Vigente hasta (opcional)</Label><Input name="effectiveTo" type="date" /></div>
             {createSchedule.isError ? <p className="text-sm text-destructive md:col-span-3">{humanizeApiError(createSchedule.error)}</p> : null}
             {createSchedule.isSuccess ? <p className="text-sm font-semibold text-emerald-700 md:col-span-3">Horario creado correctamente.</p> : null}
