@@ -147,11 +147,13 @@ function truncateForLog(value: unknown, maxLength = 4000) {
 
 /**
  * Envía cada request/response al backend hacia /api/debug-log para dejar rastro en
- * logs/api-requests.log. Nunca debe interrumpir el flujo principal: cualquier fallo
- * (offline, ruta no disponible en build de producción) se ignora en silencio.
+ * logs/api-requests.log durante desarrollo local. Este proyecto se despliega con
+ * `output: "export"` (HTML estático en Cloudflare Pages), donde /api/debug-log no
+ * existe en absoluto (sin servidor Next.js), así que en producción ni se intenta:
+ * de lo contrario el navegador reporta 405 en la consola en cada llamada a la API.
  */
 function logApiCall(entry: { method: string; url: string; status?: number; ok?: boolean; requestBody?: unknown; responseBody?: unknown; durationMs: number; error?: string }) {
-  if (typeof window === "undefined" || process.env.NODE_ENV === "test") return;
+  if (typeof window === "undefined" || process.env.NODE_ENV !== "development") return;
   try {
     void fetch("/api/debug-log", {
       method: "POST",
