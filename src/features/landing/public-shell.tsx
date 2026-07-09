@@ -28,14 +28,14 @@ export function PublicShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#fbf8f3]">
-      <header className="sticky top-0 z-40 border-b border-[#1a342f]/10 bg-[#fbf8f3]/88 backdrop-blur-2xl">
+      <header className="sticky top-0 z-40 border-b border-[#331f1a]/10 bg-[#fbf8f3]/88 backdrop-blur-2xl">
         <div className="container flex h-20 items-center justify-between gap-4">
           <Link
             href="/"
             className="group flex items-center gap-3 font-bold"
             aria-label="Ir al inicio de Corazón Migrante"
           >
-            <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border border-[#1a342f]/10 bg-white shadow-sm transition group-hover:shadow-md">
+            <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border border-[#331f1a]/10 bg-white shadow-sm transition group-hover:shadow-md">
               {fileServer.logoUrl ? (
                 <img
                   src={fileServer.logoUrl}
@@ -46,7 +46,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 <HeartPulse className="h-6 w-6" aria-hidden="true" />
               )}
             </span>
-            <span className="leading-tight text-[#172b27]">
+            <span className="leading-tight text-[#2b1b17]">
               Corazón Migrante
               <span className="block text-xs font-medium text-[#6d675f]">
                 Acompañamiento emocional
@@ -87,7 +87,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   <Link href={portalHref}>Mi portal</Link>
                 </Button>
                 <Button
-                  className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.20)]"
+                  className="rounded-2xl shadow-[0_16px_40px_rgba(99,48,35,0.20)]"
                   onClick={logout}
                   type="button"
                 >
@@ -101,7 +101,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 </Button>
                 <Button
                   asChild
-                  className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.20)]"
+                  className="rounded-2xl shadow-[0_16px_40px_rgba(99,48,35,0.20)]"
                 >
                   <Link href="/registro">Crear cuenta</Link>
                 </Button>
@@ -116,7 +116,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
         >
           {navItems.map((item) => (
             <Link
-              className="shrink-0 rounded-full border border-[#1a342f]/10 bg-white/72 px-4 py-2 text-xs font-semibold text-[#625e57]"
+              className="shrink-0 rounded-full border border-[#331f1a]/10 bg-white/72 px-4 py-2 text-xs font-semibold text-[#625e57]"
               href={item.href}
               key={item.href}
             >
@@ -141,7 +141,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
       <main>{children}</main>
-      <footer className="relative overflow-hidden border-t border-white/10 bg-[#0c2622] text-white">
+      <footer className="relative overflow-hidden border-t border-white/10 bg-[#27120c] text-white">
         <div className="pointer-events-none absolute -left-32 -top-32 h-72 w-72 rounded-full bg-primary/16 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-40 -right-24 h-80 w-80 rounded-full bg-[#8c4a62]/14 blur-3xl" />
 

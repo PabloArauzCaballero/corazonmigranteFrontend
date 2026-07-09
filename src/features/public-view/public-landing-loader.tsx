@@ -10,8 +10,8 @@ import { Button } from "@/shared/ui/button";
 
 function PublicLandingLoading() {
   return (
-    <main className="grid min-h-screen place-items-center bg-[#fbf8f3] px-4 text-[#172b27]">
-      <div className="flex items-center gap-3 rounded-2xl border border-[#e3d8cb] bg-white/86 px-5 py-4 text-sm font-semibold shadow-[0_20px_60px_rgba(23,43,39,0.08)]">
+    <main className="grid min-h-screen place-items-center bg-[#fbf8f3] px-4 text-[#2b1b17]">
+      <div className="flex items-center gap-3 rounded-2xl border border-[#e3d8cb] bg-white/86 px-5 py-4 text-sm font-semibold shadow-[0_20px_60px_rgba(43,27,23,0.08)]">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         Cargando pagina principal...
       </div>
@@ -31,9 +31,9 @@ function PublicViewError({
   onRetry: () => void;
 }) {
   return (
-    <main className="min-h-screen bg-[#fbf8f3] px-4 py-10 text-[#172b27]">
+    <main className="min-h-screen bg-[#fbf8f3] px-4 py-10 text-[#2b1b17]">
       <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-4xl place-items-center">
-        <div className="w-full rounded-[2.25rem] border border-amber-200 bg-white/86 p-8 shadow-[0_30px_90px_rgba(23,43,39,0.10)] backdrop-blur md:p-10">
+        <div className="w-full rounded-[2.25rem] border border-amber-200 bg-white/86 p-8 shadow-[0_30px_90px_rgba(43,27,23,0.10)] backdrop-blur md:p-10">
           <div className="flex items-start gap-4">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-700">
               <AlertTriangle className="h-6 w-6" aria-hidden="true" />

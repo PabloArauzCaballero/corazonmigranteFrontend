@@ -14,6 +14,22 @@ const config: Config = {
     },
     extend: {
       colors: {
+        // Paleta de marca (rojo/marron del logo de Corazon Migrante) reemplazando el
+        // "teal" por defecto de Tailwind: el sitio usa clases teal-800/900/950 en
+        // muchos componentes, y remapear la paleta aqui evita tener que tocar cada uno.
+        teal: {
+          50: "#faf1ef",
+          100: "#f5e0db",
+          200: "#eac2b8",
+          300: "#dd9988",
+          400: "#cf7159",
+          500: "#b64f35",
+          600: "#96412c",
+          700: "#7e3725",
+          800: "#673022",
+          900: "#54271c",
+          950: "#361912"
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

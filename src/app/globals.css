@@ -4,13 +4,13 @@
 
 :root {
   --background: 38 44% 97%;
-  --foreground: 170 20% 13%;
+  --foreground: 12 20% 13%;
   --card: 0 0% 100%;
-  --card-foreground: 170 20% 13%;
-  --primary: 169 45% 25%;
+  --card-foreground: 12 20% 13%;
+  --primary: 12 55% 32%;
   --primary-foreground: 0 0% 100%;
   --secondary: 34 42% 91%;
-  --secondary-foreground: 170 20% 16%;
+  --secondary-foreground: 12 20% 16%;
   --muted: 36 28% 92%;
   --muted-foreground: 31 7% 39%;
   --accent: 342 31% 92%;
@@ -19,7 +19,7 @@
   --destructive-foreground: 0 0% 100%;
   --border: 34 20% 84%;
   --input: 34 20% 84%;
-  --ring: 169 45% 25%;
+  --ring: 12 55% 32%;
   --radius: 1rem;
 }
 
@@ -33,7 +33,7 @@ html {
 
 body {
   background:
-    radial-gradient(circle at 12% -10%, rgba(35, 99, 89, 0.12), transparent 30rem),
+    radial-gradient(circle at 12% -10%, rgba(99, 48, 35, 0.12), transparent 30rem),
     radial-gradient(circle at 88% 5%, rgba(130, 67, 88, 0.10), transparent 28rem),
     linear-gradient(180deg, #fbf8f3 0%, #f6f0e8 100%);
   color: hsl(var(--foreground));
@@ -42,7 +42,7 @@ body {
 }
 
 ::selection {
-  background: rgba(35, 99, 89, 0.22);
+  background: rgba(99, 48, 35, 0.22);
 }
 
 .focus-ring {

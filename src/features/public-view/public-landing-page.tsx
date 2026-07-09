@@ -34,7 +34,7 @@ import { extractLandingV2 } from "@/features/public-view/landing-v2.mapper";
 const hiddenPublicLabels = /^(proceso|agendar|booking|cita|citas)$/i;
 const hiddenPublicHrefs = /(booking|paciente|terapeuta|admin|#proceso)/i;
 const sectionTone = [
-  "bg-[#eef6f3] text-primary",
+  "bg-[#f6f0ee] text-primary",
   "bg-[#f6edf0] text-[#87485e]",
   "bg-[#f5efe4] text-[#7a5830]",
 ];
@@ -133,14 +133,14 @@ function PublicNavbar({
   const formattedPhone = formatContactPhone(phone);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#17372f]/10 bg-[#fbf8f3]/88 backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 border-b border-[#361d17]/10 bg-[#fbf8f3]/88 backdrop-blur-2xl">
       <div className="container flex h-20 items-center justify-between gap-4">
         <Link
           href="/"
           className="group flex min-w-0 items-center gap-3 font-bold"
           aria-label="Ir al inicio"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#17372f]/10 bg-white shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
+          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#361d17]/10 bg-white shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
             {logo ? (
               <img
                 src={logo}
@@ -154,7 +154,7 @@ function PublicNavbar({
               />
             )}
           </span>
-          <span className="truncate leading-tight text-[#172b27]">
+          <span className="truncate leading-tight text-[#2b1b17]">
             {brand}
             {landing.navbar.tagline ? (
               <span className="block truncate text-xs font-medium text-[#6d675f]">
@@ -196,7 +196,7 @@ function PublicNavbar({
           </Button>
           <Button
             asChild
-            className="rounded-2xl shadow-[0_16px_40px_rgba(35,99,89,0.18)]"
+            className="rounded-2xl shadow-[0_16px_40px_rgba(99,48,35,0.18)]"
           >
             <Link href={actionHref(landing.navbar.cta, "/registro")}>
               {"Crear cuenta"}
@@ -211,7 +211,7 @@ function PublicNavbar({
       >
         {links.map((item) => (
           <Link
-            className="shrink-0 rounded-full border border-[#17372f]/10 bg-white/76 px-4 py-2 text-xs font-semibold text-[#625e57]"
+            className="shrink-0 rounded-full border border-[#361d17]/10 bg-white/76 px-4 py-2 text-xs font-semibold text-[#625e57]"
             href={safeHref(item)}
             key={`${item.label}-${item.href}-mobile`}
           >
@@ -258,7 +258,7 @@ function Hero({
             {hero?.badge || hero?.eyebrow || "Acompañamiento emocional"}
           </div>
 
-          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-[#172b27] md:text-7xl">
+          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-[#2b1b17] md:text-7xl">
             {title}
           </h1>
           {hero?.subtitle ? (
@@ -271,7 +271,7 @@ function Hero({
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button
               asChild
-              className="h-[3.35rem] rounded-2xl px-7 shadow-[0_18px_45px_rgba(35,99,89,0.22)]"
+              className="h-[3.35rem] rounded-2xl px-7 shadow-[0_18px_45px_rgba(99,48,35,0.22)]"
               size="lg"
             >
               <Link href={actionHref(hero?.primaryCta, "/registro")}>
@@ -305,13 +305,13 @@ function Hero({
         </div>
 
         <div className="relative mx-auto w-full max-w-[38rem] lg:max-w-none">
-          <div className="absolute -left-5 top-8 z-10 hidden max-w-[15rem] rounded-[1.75rem] border border-white/70 bg-white/88 p-4 shadow-[0_20px_55px_rgba(23,43,39,0.13)] backdrop-blur md:block">
+          <div className="absolute -left-5 top-8 z-10 hidden max-w-[15rem] rounded-[1.75rem] border border-white/70 bg-white/88 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.13)] backdrop-blur md:block">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e4f0ec] text-primary">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f1e7e5] text-primary">
                 <ShieldCheck className="h-5 w-5" aria-hidden="true" />
               </span>
               <div>
-                <p className="text-sm font-bold text-[#172b27]">
+                <p className="text-sm font-bold text-[#2b1b17]">
                   Atención segura
                 </p>
                 <p className="text-xs leading-5 text-[#6d675f]">
@@ -321,7 +321,7 @@ function Hero({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[2.75rem] border border-white/80 bg-white/60 p-3 shadow-[0_38px_100px_rgba(23,43,39,0.18)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_46px_120px_rgba(23,43,39,0.22)]">
+          <div className="overflow-hidden rounded-[2.75rem] border border-white/80 bg-white/60 p-3 shadow-[0_38px_100px_rgba(43,27,23,0.18)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_46px_120px_rgba(43,27,23,0.22)]">
             <div className="relative min-h-[32rem] overflow-hidden rounded-[2.2rem] bg-[#d8d0c4] md:min-h-[38rem]">
               {heroImage ? (
                 <img
@@ -333,7 +333,7 @@ function Hero({
                   }}
                 />
               ) : null}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#102f2a]/90 via-[#102f2a]/24 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#2e1610]/90 via-[#2e1610]/24 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-7 text-white md:p-9">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/68">
                   {landing.navbar.brand || "Corazón Migrante"}
@@ -363,7 +363,7 @@ function SectionHeading({ section }: { section: LandingSection }) {
         </Badge>
       ) : null}
       {section.title ? (
-        <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#172b27] md:text-5xl">
+        <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#2b1b17] md:text-5xl">
           {section.title}
         </h2>
       ) : null}
@@ -387,7 +387,7 @@ function CardGrid({ section }: { section: LandingSection }) {
     <div className="mt-11 grid gap-5 md:grid-cols-3">
       {section.items.map((item, index) => (
         <Card
-          className="group overflow-hidden border-[#e3d8cb] bg-white/86 transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(23,43,39,0.13)]"
+          className="group overflow-hidden border-[#e3d8cb] bg-white/86 transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(43,27,23,0.13)]"
           key={`${item.title}-${index}`}
         >
           {item.image?.src ? (
@@ -409,7 +409,7 @@ function CardGrid({ section }: { section: LandingSection }) {
               </p>
             ) : null}
             {item.title ? (
-              <h3 className="mt-3 text-xl font-black tracking-tight text-[#172b27]">
+              <h3 className="mt-3 text-xl font-black tracking-tight text-[#2b1b17]">
                 {item.title}
               </h3>
             ) : null}
@@ -448,7 +448,7 @@ function SplitSection({
           </p>
         ) : null}
         {section.title ? (
-          <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#172b27] md:text-5xl">
+          <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#2b1b17] md:text-5xl">
             {section.title}
           </h2>
         ) : null}
@@ -478,7 +478,7 @@ function SplitSection({
           </Button>
         ) : null}
       </div>
-      <div className="rounded-[2.2rem] border border-white/80 bg-white/72 p-3 shadow-[0_28px_80px_rgba(23,43,39,0.13)]">
+      <div className="rounded-[2.2rem] border border-white/80 bg-white/72 p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
         {sectionImage ? (
           <img
             src={sectionImage}
@@ -486,7 +486,7 @@ function SplitSection({
             className="h-[28rem] w-full rounded-[1.75rem] object-cover"
           />
         ) : (
-          <div className="grid h-[28rem] place-items-center rounded-[1.75rem] bg-[#e4f0ec] text-center text-sm font-semibold text-primary">
+          <div className="grid h-[28rem] place-items-center rounded-[1.75rem] bg-[#f1e7e5] text-center text-sm font-semibold text-primary">
             Corazón Migrante
           </div>
         )}
@@ -513,7 +513,7 @@ function Section({
   if (section.layout === "cta" || section.layout === "quote") {
     return (
       <section id={section.id} className="container scroll-mt-28 py-16">
-        <div className="rounded-[2.4rem] border border-[#d7ccc0] bg-[#102f2a] p-8 text-white shadow-[0_30px_90px_rgba(23,43,39,0.18)] md:p-12">
+        <div className="rounded-[2.4rem] border border-[#d7ccc0] bg-[#2e1610] p-8 text-white shadow-[0_30px_90px_rgba(43,27,23,0.18)] md:p-12">
           {section.title ? (
             <h2 className="max-w-3xl text-3xl font-black tracking-tight md:text-5xl">
               {section.title}
@@ -540,7 +540,7 @@ function Section({
 function FloatingContact({ phone }: { phone?: string }) {
   return (
     <a
-      className="fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(35,99,89,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#1b5148]"
+      className="fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#50251b]"
       href={contactHref(phone)}
       target={phone ? "_blank" : undefined}
       rel={phone ? "noreferrer" : undefined}
@@ -562,7 +562,7 @@ function Footer({
   const brand = landing.navbar.brand || landing.title || "Corazón Migrante";
   const formattedPhone = formatContactPhone(phone);
   return (
-    <footer className="border-t border-[#1a342f]/10 bg-[#102f2a] text-white">
+    <footer className="border-t border-[#331f1a]/10 bg-[#2e1610] text-white">
       <div className="container grid gap-10 py-14 md:grid-cols-[1.15fr_0.85fr_1fr]">
         <div>
           <p className="text-lg font-black">{brand}</p>
@@ -628,7 +628,7 @@ function GenericPublicLandingPage({
   );
 
   return (
-    <div className="min-h-screen bg-[#fbf8f3] text-[#172b27]">
+    <div className="min-h-screen bg-[#fbf8f3] text-[#2b1b17]">
       <PublicNavbar landing={landing} phone={phone} />
       <main>
         <Hero landing={landing} phone={phone} />
@@ -638,14 +638,14 @@ function GenericPublicLandingPage({
           ))
         ) : (
           <section className="container py-16">
-            <div className="rounded-[2rem] border border-[#e3d8cb] bg-white/82 p-8 shadow-[0_26px_80px_rgba(23,43,39,0.10)]">
+            <div className="rounded-[2rem] border border-[#e3d8cb] bg-white/82 p-8 shadow-[0_26px_80px_rgba(43,27,23,0.10)]">
               <div className="flex items-start gap-3">
                 <BookOpenText
                   className="mt-1 h-5 w-5 text-primary"
                   aria-hidden="true"
                 />
                 <div>
-                  <h2 className="text-2xl font-black text-[#172b27]">
+                  <h2 className="text-2xl font-black text-[#2b1b17]">
                     Contenido en preparación
                   </h2>
                   <p className="mt-2 leading-7 text-[#625e57]">

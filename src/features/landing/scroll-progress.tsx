@@ -27,7 +27,7 @@ export function ScrollProgress() {
 
   return (
     <div
-      className="fixed left-0 top-0 z-[60] h-1 bg-primary shadow-[0_0_18px_rgba(35,99,89,0.38)] transition-[width] duration-150 ease-out"
+      className="fixed left-0 top-0 z-[60] h-1 bg-primary shadow-[0_0_18px_rgba(99,48,35,0.38)] transition-[width] duration-150 ease-out"
       style={{ width: `${progress}%` }}
       aria-hidden="true"
     />
