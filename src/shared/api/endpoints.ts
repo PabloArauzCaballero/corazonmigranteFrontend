@@ -40,6 +40,7 @@ export const ENDPOINTS = {
     therapistAgenda: `${API_PREFIX}/appointments/mine`,
     createAppointment: `${API_PREFIX}/appointments`,
     updateAppointmentStatus: `${API_PREFIX}/appointments/:appointmentId/status`,
+    adminUpdateAppointment: `${API_PREFIX}/appointments/admin/:appointmentId`,
     bookingAvailability: `${API_PREFIX}/booking/availability`,
     therapistSchedules: `${API_PREFIX}/therapists/me/schedules`,
     therapistBlockedTimes: `${API_PREFIX}/therapists/me/blocked-times`,

@@ -31,8 +31,9 @@ export function formatContactPhone(phone?: string | null) {
   return clean;
 }
 
-export function contactHref(phone?: string | null) {
+export function contactHref(phone?: string | null, message?: string) {
   const clean = cleanPhone(phone);
   if (!clean) return "/registro";
-  return `https://wa.me/${clean.replace(/\D/g, "")}`;
+  const base = `https://wa.me/${clean.replace(/\D/g, "")}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
