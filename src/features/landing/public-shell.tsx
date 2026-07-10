@@ -41,6 +41,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   src={fileServer.logoUrl}
                   alt="Corazón Migrante"
                   className="h-full w-full object-contain p-1.5"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
                 />
               ) : (
                 <HeartPulse className="h-6 w-6" aria-hidden="true" />

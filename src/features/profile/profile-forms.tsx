@@ -38,14 +38,38 @@ async function fetchMe() {
   return unwrap(payload);
 }
 
+const AVATAR_URL_KEYS = [
+  "avatarUrl", "avatar_url", "photoUrl", "photo_url", "imageUrl", "image_url",
+  "fotoUrl", "foto_url", "publicUrl", "public_url", "profileImageUrl",
+  "profilePhotoUrl", "pictureUrl", "picture_url", "secureUrl", "secure_url", "url"
+];
+const AVATAR_FILE_ID_KEYS = [
+  "avatarFileId", "avatar_file_id", "photoFileId", "photo_file_id",
+  "fileId", "file_id", "imageFileId", "image_file_id"
+];
+const AVATAR_NESTED_OBJECT_KEYS = [
+  "avatar", "photo", "foto", "image", "picture", "profileImage", "profilePhoto", "file"
+];
+
 function resolveAvatarUrl(me: MeProfile): string | undefined {
   const profiles = [me, nested(me, ["patientProfile", "patient_profile"]), nested(me, ["therapistProfile", "therapist_profile"]), nested(me, ["user"])];
   for (const source of profiles) {
-    const direct = getString(source, ["avatarUrl", "avatar_url", "photoUrl", "photo_url", "imageUrl", "image_url", "fotoUrl", "publicUrl"], "");
+    const direct = getString(source, AVATAR_URL_KEYS, "");
     if (direct) return direct;
-    const fileId = getString(source, ["avatarFileId", "avatar_file_id", "photoFileId", "photo_file_id"], "");
+
+    const fileId = getString(source, AVATAR_FILE_ID_KEYS, "");
     const built = buildFileDownloadUrl(fileId);
     if (built) return built;
+
+    for (const nestedKey of AVATAR_NESTED_OBJECT_KEYS) {
+      const nestedValue = source[nestedKey];
+      if (!isRecord(nestedValue)) continue;
+      const nestedDirect = getString(nestedValue, AVATAR_URL_KEYS, "");
+      if (nestedDirect) return nestedDirect;
+      const nestedFileId = getString(nestedValue, AVATAR_FILE_ID_KEYS.concat(["id"]), "");
+      const nestedBuilt = buildFileDownloadUrl(nestedFileId);
+      if (nestedBuilt) return nestedBuilt;
+    }
   }
   return undefined;
 }

@@ -146,6 +146,9 @@ function PublicNavbar({
                 src={logo}
                 alt={brand}
                 className="h-full w-full object-contain p-1.5"
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
               />
             ) : (
               <HeartHandshake
@@ -395,6 +398,9 @@ function CardGrid({ section }: { section: LandingSection }) {
               src={item.image.src}
               alt={item.image.alt || item.title || "Imagen"}
               className="h-48 w-full object-cover"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
             />
           ) : null}
           <CardContent className="p-7">
@@ -484,6 +490,9 @@ function SplitSection({
             src={sectionImage}
             alt={section.image?.alt || section.title || "Sección"}
             className="h-[28rem] w-full rounded-[1.75rem] object-cover"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
           />
         ) : (
           <div className="grid h-[28rem] place-items-center rounded-[1.75rem] bg-[#f1e7e5] text-center text-sm font-semibold text-primary">

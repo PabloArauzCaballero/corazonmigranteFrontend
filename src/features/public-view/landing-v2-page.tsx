@@ -130,6 +130,9 @@ function ImageBlock({
       src={src}
       alt={image?.alt || alt || "Imagen de Corazón Migrante"}
       className={className ?? "h-full w-full object-cover"}
+      onError={(event) => {
+        event.currentTarget.style.display = "none";
+      }}
     />
   );
 }
@@ -240,6 +243,9 @@ function Navbar({
                 src={brandLogo}
                 alt={brand}
                 className="h-full w-full object-contain p-1.5"
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
               />
             ) : (
               iconFor(content.navbar?.brand?.icon || content.footer?.brand?.icon || "favorite", "h-6 w-6")

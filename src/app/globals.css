@@ -54,3 +54,15 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.66);
   backdrop-filter: blur(22px);
 }
+
+@keyframes global-loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
