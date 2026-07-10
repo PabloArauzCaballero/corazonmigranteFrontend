@@ -8,7 +8,7 @@ export const metadata = {
 export default function AdminEditorialPage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Páginas públicas" description="Administra páginas, recursos y comunicación pública sin exponer detalles técnicos." />
+      <PageHeader title="Biblioteca y recursos públicos" description="Aquí administras los recursos y páginas de comunicación que ve el público, de forma simple y sin detalles técnicos." />
       <EditorialAdminPage />
     </div>
   );

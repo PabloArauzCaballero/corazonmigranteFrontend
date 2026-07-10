@@ -17,6 +17,9 @@ export type AppointmentRequestRow = {
   productId: string;
   status: "activo" | "inactivo" | "pendiente" | "bloqueado";
   rawStatus: string;
+  isPaid: boolean;
+  saleTransactionId: string;
+  price: string;
 };
 
 export type PatientAppointmentRow = {
@@ -84,7 +87,10 @@ export function mapAppointmentRequest(item: unknown, index: number): Appointment
     therapistUserId: getString(therapistUser ?? {}, ["id"], getString(record, ["therapistUserId", "therapist_user_id"], "")),
     productId: getString(product ?? {}, ["id"], getString(record, ["productId", "product_id"], "")),
     status: normalizeStatus(record.estado ?? record.status),
-    rawStatus: getString(record, ["status", "estado"], "REQUESTED")
+    rawStatus: getString(record, ["status", "estado"], "REQUESTED"),
+    isPaid: Boolean(record.isPaid ?? record.is_paid ?? false),
+    saleTransactionId: getString(record, ["saleTransactionId", "sale_transaction_id"], ""),
+    price: getString(record, ["price", "precio"], "")
   };
 }
 
@@ -119,6 +125,13 @@ export async function updateAdminAppointment(appointmentId: string, input: Updat
   return apiRequest<unknown>(ENDPOINTS.therapy.adminUpdateAppointment.replace(":appointmentId", appointmentId), {
     method: "PATCH",
     body
+  });
+}
+
+export async function updateAppointmentPayment(appointmentId: string, isPaid: boolean) {
+  return apiRequest<unknown>(ENDPOINTS.therapy.adminUpdateAppointmentPayment.replace(":appointmentId", appointmentId), {
+    method: "PATCH",
+    body: { isPaid }
   });
 }
 

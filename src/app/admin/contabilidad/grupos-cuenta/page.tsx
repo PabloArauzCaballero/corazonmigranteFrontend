@@ -5,7 +5,7 @@ import { PageHeader } from "@/shared/ui/page-header";
 export default function AccountGroupsPage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Grupos de cuenta" description="Catálogo contable con paginación server-side." actions={<CreateAccountGroupButton />} />
+      <PageHeader title="Grupos de cuenta" description="Agrupan varias cuentas contables parecidas entre sí, para que los reportes sean más claros y ordenados." actions={<CreateAccountGroupButton />} />
       <AccountingTable resource="accountGroups" />
     </div>
   );

@@ -9,7 +9,7 @@ import { PageHeader } from "@/shared/ui/page-header";
 export default function AdminDashboardPage() {
   return (
     <div className="grid gap-8">
-      <PageHeader title="Panel operativo" description="Centro de control para solicitudes, usuarios, contenido público, productos terapéuticos y contabilidad según permisos." />
+      <PageHeader title="Panel principal" description="Bienvenido. Desde aquí puedes entrar a cada sección del sistema: ver las solicitudes de citas de los pacientes, administrar usuarios, revisar la publicidad y controlar la contabilidad." />
       <AdminOverview />
       <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <ProfileCard />

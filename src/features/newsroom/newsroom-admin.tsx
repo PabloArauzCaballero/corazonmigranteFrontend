@@ -3,7 +3,7 @@
 import { type ChangeEvent, type FormEvent, type ReactNode, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Archive, Home, Megaphone, Newspaper, Plus, Send, Tags, UserRoundPlus, Users } from "lucide-react";
+import { Archive, CheckCircle2, Clock3, Home, Megaphone, Newspaper, Pencil, Plus, Send, Tags, UserRoundPlus, Users, X, XCircle } from "lucide-react";
 import { adsApi, newsroomApi } from "@/features/newsroom/newsroom.api";
 import { listCmsPages } from "@/features/editorial/editorial.api";
 import { listPatients, listUsers } from "@/features/users/users.api";
@@ -23,20 +23,29 @@ const ADS_PAGE_SIZE = 10;
 
 function useNotice() { const [message, setMessage] = useState(""); const [error, setError] = useState(""); return { message, error, ok: setMessage, fail: (e: unknown) => setError(humanizeApiError(e)), clear: () => { setMessage(""); setError(""); } }; }
 
-function PublicationsForm({ onDone }: { onDone: () => void }) {
+function toDatetimeLocal(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function PublicationsForm({ editing, onDone, onCancel }: { editing?: Publication | null; onDone: () => void; onCancel?: () => void }) {
   const notice = useNotice();
   const authors = useQuery({ queryKey: ["newsroom-authors"], queryFn: () => newsroomApi.authors() });
   const categories = useQuery({ queryKey: ["newsroom-categories"], queryFn: () => newsroomApi.categories() });
   const tags = useQuery({ queryKey: ["newsroom-tags"], queryFn: () => newsroomApi.tags() });
   const pages = useQuery({ queryKey: ["publication-embed-pages"], queryFn: listCmsPages, retry: false });
-  const [tagIds, setTagIds] = useState<string[]>([]);
-  const [embedPageSlugs, setEmbedPageSlugs] = useState<string[]>([]);
+  const embedPagesFromMetadata = Array.isArray(editing?.seoMetadata?.embedPageSlugs) ? (editing?.seoMetadata?.embedPageSlugs as unknown[]).map((slug) => String(slug)) : [];
+  const [tagIds, setTagIds] = useState<string[]>(editing?.tags.map((t) => t.id) ?? []);
+  const [embedPageSlugs, setEmbedPageSlugs] = useState<string[]>(embedPagesFromMetadata);
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
   const mutation = useMutation({
     mutationFn: async (form: FormData) => {
       notice.clear();
-      return newsroomApi.createPublication({
+      const payload = {
         authorId: fstr(form, "authorId"),
         categoryId: fstr(form, "categoryId"),
         title: fstr(form, "title"),
@@ -56,26 +65,34 @@ function PublicationsForm({ onDone }: { onDone: () => void }) {
             .filter((page) => embedPageSlugs.includes(page.slug))
             .map((page) => ({ id: page.id, slug: page.slug, title: page.title }))
         }
-      });
+      };
+      if (editing) return newsroomApi.updatePublication(editing.id, payload);
+      return newsroomApi.createPublication(payload);
     },
     onSuccess: () => {
-      notice.ok("Publicación creada. Queda en borrador o programada según el formulario.");
-      setTagIds([]);
-      setEmbedPageSlugs([]);
+      notice.ok(editing ? "Publicación actualizada." : "Publicación creada. Queda en borrador o programada según el formulario.");
+      if (!editing) {
+        setTagIds([]);
+        setEmbedPageSlugs([]);
+      }
       onDone();
     },
     onError: notice.fail
   });
   return (
-    <Panel title="Crear publicación" description="Formulario editorial adaptado al estilo de Corazón Migrante." icon={<Plus className="h-5 w-5" />}>
+    <Panel
+      title={editing ? `Editar publicación: ${editing.title}` : "Crear publicación"}
+      description="Formulario editorial adaptado al estilo de Corazón Migrante."
+      icon={editing ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+    >
       <form className="grid gap-4 xl:grid-cols-3" onSubmit={(e) => { e.preventDefault(); mutation.mutate(new FormData(e.currentTarget)); }}>
-        <Field label="Título" className="xl:col-span-2"><NativeInput name="title" required minLength={4} /></Field>
-        <Field label="Slug opcional"><NativeInput name="slug" /></Field>
-        <Field label="Autor"><Select name="authorId" required defaultValue=""><option value="" disabled>{authors.isLoading ? "Cargando..." : "Seleccionar"}</option>{(authors.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.displayName}</option>)}</Select></Field>
-        <Field label="Categoría"><Select name="categoryId" required defaultValue=""><option value="" disabled>{categories.isLoading ? "Cargando..." : "Seleccionar"}</option>{(categories.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>
-        <Field label="Tipo dentro de Contenido Público"><Select name="publicationType" defaultValue="NEWS">{TYPES.map((type) => <option key={type} value={type}>{typeLabel(type)}</option>)}</Select></Field>
-        <Field label="Acceso"><Select name="accessType" defaultValue="PUBLIC"><option value="PUBLIC">Público</option><option value="PREMIUM">Premium</option><option value="INTERNAL_ONLY">Interno</option></Select></Field>
-        <Field label="Programar"><NativeInput name="scheduledAt" type="datetime-local" /></Field>
+        <Field label="Título" className="xl:col-span-2"><NativeInput name="title" required minLength={4} defaultValue={editing?.title ?? ""} /></Field>
+        <Field label="Slug opcional"><NativeInput name="slug" defaultValue={editing?.slug ?? ""} /></Field>
+        <Field label="Autor"><Select name="authorId" required defaultValue={editing?.author?.id ?? ""}><option value="" disabled>{authors.isLoading ? "Cargando..." : "Seleccionar"}</option>{(authors.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.displayName}</option>)}</Select></Field>
+        <Field label="Categoría"><Select name="categoryId" required defaultValue={editing?.category?.id ?? ""}><option value="" disabled>{categories.isLoading ? "Cargando..." : "Seleccionar"}</option>{(categories.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>
+        <Field label="Tipo dentro de Contenido Público"><Select name="publicationType" defaultValue={editing?.publicationType ?? "NEWS"}>{TYPES.map((type) => <option key={type} value={type}>{typeLabel(type)}</option>)}</Select></Field>
+        <Field label="Acceso"><Select name="accessType" defaultValue={editing?.accessType ?? "PUBLIC"}><option value="PUBLIC">Público</option><option value="PREMIUM">Premium</option><option value="INTERNAL_ONLY">Interno</option></Select></Field>
+        <Field label="Programar"><NativeInput name="scheduledAt" type="datetime-local" defaultValue={toDatetimeLocal(editing?.scheduledAt)} /></Field>
         <Field label="Tags" className="xl:col-span-2" hint="Busca por nombre y haz clic para agregar; haz clic en la X para quitar.">
           <TagPicker options={(tags.data ?? []).map((t) => ({ id: t.id, name: t.name }))} value={tagIds} onChange={setTagIds} loading={tags.isLoading} />
         </Field>
@@ -91,9 +108,9 @@ function PublicationsForm({ onDone }: { onDone: () => void }) {
           {pages.isLoading ? <p className="text-xs text-muted-foreground">Cargando páginas públicas...</p> : null}
           {pages.isError ? <p className="text-xs text-red-700">No se pudieron cargar las páginas públicas; la publicación se guardará sin ubicación específica.</p> : null}
         </Field>
-        <Field label="Resumen" className="xl:col-span-3"><NativeTextarea name="summary" required minLength={10} className="min-h-24" /></Field>
-        <Field label="Cuerpo" className="xl:col-span-3"><NativeTextarea name="body" required minLength={20} className="min-h-64" /></Field>
-        <Field label="Descripción SEO" className="xl:col-span-2"><NativeInput name="seoDescription" /></Field>
+        <Field label="Resumen" className="xl:col-span-3"><NativeTextarea name="summary" required minLength={10} className="min-h-24" defaultValue={editing?.summary ?? ""} /></Field>
+        <Field label="Cuerpo" className="xl:col-span-3"><NativeTextarea name="body" required minLength={20} className="min-h-64" defaultValue={editing?.body ?? ""} /></Field>
+        <Field label="Descripción SEO" className="xl:col-span-2"><NativeInput name="seoDescription" defaultValue={typeof editing?.seoMetadata?.description === "string" ? editing.seoMetadata.description : ""} /></Field>
         <div className="flex items-center gap-6 xl:col-span-3">
           <label className="flex items-center gap-2 text-sm font-medium">
             <input type="checkbox" checked={commentsEnabled} onChange={(e) => setCommentsEnabled(e.target.checked)} className="h-4 w-4 rounded border" />
@@ -104,7 +121,10 @@ function PublicationsForm({ onDone }: { onDone: () => void }) {
             Permitir reacciones
           </label>
         </div>
-        <div className="xl:col-span-3"><Submit pending={mutation.isPending} label="Crear publicación" /></div>
+        <div className="flex items-center gap-3 xl:col-span-3">
+          <Submit pending={mutation.isPending} label={editing ? "Guardar cambios" : "Crear publicación"} />
+          {editing ? <Button type="button" variant="outline" onClick={onCancel}><X className="h-4 w-4" />Cancelar edición</Button> : null}
+        </div>
         <div className="xl:col-span-3"><Notice message={notice.message} error={notice.error} /></div>
       </form>
     </Panel>
@@ -122,18 +142,18 @@ function publicationPageLabels(row: Publication) {
   return slugs.length ? slugs.map((slug) => `/${slug}`).join(", ") : "Global";
 }
 
-function PublicationActions({ row, onDone }: { row: Publication; onDone: () => void }) {
+function PublicationActions({ row, onDone, onEdit }: { row: Publication; onDone: () => void; onEdit: (row: Publication) => void }) {
   const [error, setError] = useState("");
   const publish = useMutation({ mutationFn: () => newsroomApi.publish(row.id), onSuccess: onDone, onError: (e) => setError(humanizeApiError(e)) });
   const archive = useMutation({ mutationFn: () => newsroomApi.archive(row.id), onSuccess: onDone, onError: (e) => setError(humanizeApiError(e)) });
-  return <div className="grid gap-2"><div className="flex flex-wrap gap-2"><Button size="sm" asChild variant="outline"><Link href={{ pathname: "/novedades/detalle", query: { slug: row.slug } }}>Ver</Link></Button><Button size="sm" disabled={publish.isPending || row.status === "PUBLISHED"} onClick={() => publish.mutate()}><Send className="h-4 w-4" />Publicar</Button><Button size="sm" variant="outline" disabled={archive.isPending || row.status === "ARCHIVED"} onClick={() => archive.mutate()}><Archive className="h-4 w-4" />Archivar</Button></div>{error ? <p className="text-xs text-red-700">{error}</p> : null}</div>;
+  return <div className="grid gap-2"><div className="flex flex-wrap gap-2"><Button size="sm" asChild variant="outline"><Link href={{ pathname: "/novedades/detalle", query: { slug: row.slug } }}>Ver</Link></Button><Button size="sm" variant="outline" onClick={() => onEdit(row)}><Pencil className="h-4 w-4" />Editar</Button><Button size="sm" disabled={publish.isPending || row.status === "PUBLISHED"} onClick={() => publish.mutate()}><Send className="h-4 w-4" />Publicar</Button><Button size="sm" variant="outline" disabled={archive.isPending || row.status === "ARCHIVED"} onClick={() => archive.mutate()}><Archive className="h-4 w-4" />Archivar</Button></div>{error ? <p className="text-xs text-red-700">{error}</p> : null}</div>;
 }
 
 export function PublicationsAdmin() {
-  const qc = useQueryClient(); const [page, setPage] = useState(1); const [type, setType] = useState("");
+  const qc = useQueryClient(); const [page, setPage] = useState(1); const [type, setType] = useState(""); const [editing, setEditing] = useState<Publication | null>(null);
   const query = useQuery({ queryKey: ["newsroom-publications", page, type], queryFn: () => newsroomApi.listPublications({ page, pageSize: PAGE_SIZE, publicationType: type as PublicationType | "", sort: "createdAt", order: "desc" }) });
   const refresh = () => void qc.invalidateQueries({ queryKey: ["newsroom-publications"] });
-  return <div className="grid gap-6"><PublicationsForm onDone={refresh} /><Panel title="Publicaciones" description="Contenido editorial que se publica dentro de Contenido Público." icon={<Newspaper className="h-5 w-5" />}><div className="mb-5 max-w-xs"><Field label="Sección"><Select value={type} onChange={(e) => setType(e.target.value)}><option value="">Todos</option>{TYPES.map((t) => <option key={t} value={t}>{typeLabel(t)}</option>)}</Select></Field></div>{query.isLoading ? <LoadingState title="Cargando publicaciones" /> : null}{query.isError ? <ErrorState title="No se pudo cargar publicaciones" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}{query.data ? <div className="grid gap-4"><DataTable<Publication> data={query.data.items} getRowKey={(r) => r.id} columns={[{ key: "title", header: "Publicación", render: (r) => <div><p className="font-semibold">{r.title}</p><p className="line-clamp-2 text-xs text-muted-foreground">{r.summary}</p></div> }, { key: "type", header: "Sección", render: (r) => typeLabel(r.publicationType) }, { key: "category", header: "Categoría", render: (r) => r.category?.name ?? "—" }, { key: "pages", header: "Páginas", render: (r) => publicationPageLabels(r) }, { key: "status", header: "Estado", render: (r) => <StatusBadge status={r.status} /> }, { key: "date", header: "Fecha", render: (r) => fmtDate(r.publishedAt ?? r.scheduledAt) }, { key: "actions", header: "Acciones", render: (r) => <PublicationActions row={r} onDone={refresh} /> }]} /><PaginationBar page={query.data.page} totalPages={query.data.totalPages} onPrevious={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(query.data?.totalPages ?? p, p + 1))} /></div> : null}</Panel></div>;
+  return <div className="grid gap-6"><PublicationsForm key={editing?.id ?? "new"} editing={editing} onCancel={() => setEditing(null)} onDone={() => { setEditing(null); refresh(); }} /><Panel title="Publicaciones" description="Contenido editorial que se publica dentro de Contenido Público." icon={<Newspaper className="h-5 w-5" />}><div className="mb-5 max-w-xs"><Field label="Sección"><Select value={type} onChange={(e) => setType(e.target.value)}><option value="">Todos</option>{TYPES.map((t) => <option key={t} value={t}>{typeLabel(t)}</option>)}</Select></Field></div>{query.isLoading ? <LoadingState title="Cargando publicaciones" /> : null}{query.isError ? <ErrorState title="No se pudo cargar publicaciones" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}{query.data ? <div className="grid gap-4"><DataTable<Publication> data={query.data.items} getRowKey={(r) => r.id} columns={[{ key: "title", header: "Publicación", render: (r) => <div><p className="font-semibold">{r.title}</p><p className="line-clamp-2 text-xs text-muted-foreground">{r.summary}</p></div> }, { key: "type", header: "Sección", render: (r) => typeLabel(r.publicationType) }, { key: "category", header: "Categoría", render: (r) => r.category?.name ?? "—" }, { key: "pages", header: "Páginas", render: (r) => publicationPageLabels(r) }, { key: "status", header: "Estado", render: (r) => <StatusBadge status={r.status} /> }, { key: "date", header: "Fecha", render: (r) => fmtDate(r.publishedAt ?? r.scheduledAt) }, { key: "actions", header: "Acciones", render: (r) => <PublicationActions row={r} onDone={refresh} onEdit={setEditing} /> }]} /><PaginationBar page={query.data.page} totalPages={query.data.totalPages} onPrevious={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(query.data?.totalPages ?? p, p + 1))} /></div> : null}</Panel></div>;
 }
 
 export function CategoriesAdmin() { const qc = useQueryClient(); const notice = useNotice(); const query = useQuery({ queryKey: ["newsroom-categories"], queryFn: () => newsroomApi.categories() }); const mutation = useMutation({ mutationFn: async (form: FormData) => { notice.clear(); return newsroomApi.createCategory({ name: fstr(form, "name"), slug: fstr(form, "slug") || undefined, description: fstr(form, "description") || undefined, isActive: fstr(form, "isActive") === "true", sortOrder: fnum(form, "sortOrder", 0) }); }, onSuccess: () => { notice.ok("Categoría creada."); void qc.invalidateQueries({ queryKey: ["newsroom-categories"] }); }, onError: notice.fail }); return <TaxonomyShell title="Categorías editoriales" notice={notice} mutationPending={mutation.isPending} onSubmit={(e) => { e.preventDefault(); mutation.mutate(new FormData(e.currentTarget)); }}>{query.isLoading ? <LoadingState title="Cargando categorías" /> : null}{query.isError ? <ErrorState title="No se pudo cargar categorías" description={humanizeApiError(query.error)} /> : null}{query.data ? <DataTable<Category> data={query.data} getRowKey={(r) => r.id} columns={[{ key: "name", header: "Nombre", render: (r) => <b>{r.name}</b> }, { key: "slug", header: "Slug", render: (r) => r.slug }, { key: "status", header: "Estado", render: (r) => <StatusBadge status={r.isActive} /> }, { key: "id", header: "ID", render: (r) => <code className="text-xs">{r.id}</code> }]} /> : null}</TaxonomyShell>; }
@@ -253,8 +273,49 @@ export function SubscribersAdmin() {
     onSuccess: refresh,
     onError: notice.fail
   });
+  const approveRequest = useMutation({
+    mutationFn: (subscriber: ContentSubscriber) => newsroomApi.approveSubscriberRequest(subscriber.userId ?? subscriber.id),
+    onSuccess: refresh,
+    onError: notice.fail
+  });
+  const rejectRequest = useMutation({
+    mutationFn: (subscriber: ContentSubscriber) => newsroomApi.rejectSubscriberRequest(subscriber.userId ?? subscriber.id),
+    onSuccess: refresh,
+    onError: notice.fail
+  });
+  const pendingRequests = (query.data?.items ?? []).filter((subscriber) => subscriber.status === "PENDING");
   return (
     <div className="grid gap-6">
+      {pendingRequests.length > 0 ? (
+        <Panel
+          title="Solicitudes de suscripción premium"
+          description="Estos pacientes pidieron acceso al contenido premium. Revisa y aprueba o rechaza cada solicitud."
+          icon={<Clock3 className="h-5 w-5" />}
+        >
+          <DataTable<ContentSubscriber>
+            data={pendingRequests}
+            getRowKey={(r) => r.id}
+            columns={[
+              { key: "email", header: "Paciente", render: (r) => <div><b>{r.displayName || r.email}</b>{r.displayName ? <p className="text-xs text-muted-foreground">{r.email}</p> : null}</div> },
+              { key: "requestedAt", header: "Solicitado", render: (r) => fmtDate((r.metadata?.requestedPremiumAt as string) ?? r.updatedAt) },
+              {
+                key: "actions",
+                header: "Acciones",
+                render: (r) => (
+                  <div className="flex gap-2">
+                    <Button size="sm" disabled={approveRequest.isPending} onClick={() => approveRequest.mutate(r)}>
+                      <CheckCircle2 className="h-4 w-4" /> Aprobar
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={rejectRequest.isPending} onClick={() => rejectRequest.mutate(r)}>
+                      <XCircle className="h-4 w-4" /> Rechazar
+                    </Button>
+                  </div>
+                )
+              }
+            ]}
+          />
+        </Panel>
+      ) : null}
       <Panel title="Registrar paciente suscriptor" description="Los suscriptores premium se vinculan a usuarios pacientes existentes para evitar correos sueltos sin cuenta." icon={<Users className="h-5 w-5" />}>
         <form className="grid gap-4 md:grid-cols-3" onSubmit={(e) => { e.preventDefault(); mutation.mutate(new FormData(e.currentTarget)); }}>
           <Field label="Paciente" className="md:col-span-3" hint="Busca por correo o nombre y selecciona la cuenta paciente.">

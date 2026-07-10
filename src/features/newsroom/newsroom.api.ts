@@ -71,6 +71,9 @@ export const newsroomApi = {
   createPublication(input: { authorId: string; categoryId: string; title: string; slug?: string; summary: string; body: string; publicationType: PublicationType; accessType: string; scheduledAt?: string; tagIds?: string[]; commentsEnabled?: boolean; reactionsEnabled?: boolean; seoMetadata?: Record<string, unknown> }) {
     return apiRequest<Publication>(`${API_PREFIX}/admin/content/publications`, { method: "POST", body: input });
   },
+  updatePublication(id: string, input: Partial<{ authorId: string; categoryId: string; title: string; slug: string; summary: string; body: string; publicationType: PublicationType; accessType: string; scheduledAt?: string; tagIds: string[]; commentsEnabled: boolean; reactionsEnabled: boolean; seoMetadata: Record<string, unknown> }>) {
+    return apiRequest<Publication>(`${API_PREFIX}/admin/content/publications/${id}`, { method: "PATCH", body: input });
+  },
   publish(id: string) { return apiRequest<Publication>(`${API_PREFIX}/admin/content/publications/${id}/publish`, { method: "POST" }); },
   archive(id: string) { return apiRequest<Publication>(`${API_PREFIX}/admin/content/publications/${id}/archive`, { method: "POST" }); },
   async categories(activeOnly = false) {
@@ -114,6 +117,12 @@ export const newsroomApi = {
   },
   updateSubscriberByUser(userId: string, input: Partial<{ status: string; subscriptionTier: string; premiumUntil: string; source: string; metadata: Record<string, unknown> }>) {
     return apiRequest<ContentSubscriber>(`${API_PREFIX}/admin/content/subscribers/${userId}/subscription`, { method: "PATCH", body: input });
+  },
+  approveSubscriberRequest(userId: string, premiumUntil?: string) {
+    return apiRequest<ContentSubscriber>(`${API_PREFIX}/admin/content/subscribers/${userId}/approve`, { method: "POST", body: premiumUntil ? { premiumUntil } : {} });
+  },
+  rejectSubscriberRequest(userId: string) {
+    return apiRequest<ContentSubscriber>(`${API_PREFIX}/admin/content/subscribers/${userId}/reject`, { method: "POST" });
   },
   publicSlots(placementCode = "home_hero", publicationId?: string, pageSlug?: string) { return apiRequest<unknown>(`${API_PREFIX}/advertising/slots${qs({ placementCode, publicationId, pageSlug })}`, { auth: false }); }
 };

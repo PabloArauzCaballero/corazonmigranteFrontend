@@ -4,16 +4,16 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { PageHeader } from "@/shared/ui/page-header";
 
 const modules = [
-  { href: "/admin/contabilidad/cuentas", title: "Cuentas", description: "Plan de cuentas con filtros reales.", icon: BadgeDollarSign },
-  { href: "/admin/contabilidad/grupos-cuenta", title: "Grupos de cuenta", description: "Clasificación contable.", icon: Layers3 },
-  { href: "/admin/contabilidad/centros-costo", title: "Centros de costo", description: "Gestión de centros operativos.", icon: Building2 },
-  { href: "/admin/contabilidad/transacciones", title: "Transacciones", description: "Movimientos contables.", icon: ReceiptText }
+  { href: "/admin/contabilidad/cuentas", title: "Cuentas", description: "La lista de cuentas que usa el sistema para clasificar el dinero (por ejemplo: caja, banco, ventas).", icon: BadgeDollarSign },
+  { href: "/admin/contabilidad/grupos-cuenta", title: "Grupos de cuenta", description: "Agrupan cuentas parecidas entre sí para que los reportes sean más claros.", icon: Layers3 },
+  { href: "/admin/contabilidad/centros-costo", title: "Centros de costo", description: "Áreas o proyectos internos a los que se les puede asignar un gasto o un ingreso.", icon: Building2 },
+  { href: "/admin/contabilidad/transacciones", title: "Transacciones y ventas", description: "Todos los movimientos de dinero: pagos, gastos y las ventas registradas desde las citas pagadas.", icon: ReceiptText }
 ];
 
 export default function AccountingPage() {
   return (
     <div className="grid gap-6">
-      <PageHeader title="Contabilidad" description="Módulo protegido por permisos específicos. No debe estar disponible para terapeuta sin autorización." />
+      <PageHeader title="Contabilidad" description="Aquí se lleva el control del dinero del sistema: cuentas, movimientos y ventas. Solo el personal autorizado puede entrar a esta sección." />
       <div className="grid gap-5 md:grid-cols-2">
         {modules.map((item) => (
           <Link href={item.href} key={item.href}>

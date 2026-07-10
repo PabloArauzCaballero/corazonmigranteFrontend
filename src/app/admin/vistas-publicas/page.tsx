@@ -6,8 +6,8 @@ export default function PublicViewsPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Páginas públicas"
-        description="Previsualiza cómo se ven las páginas públicas sin salir del panel y administra sus publicaciones y bloques de contenido."
+        title="Vista previa del sitio web"
+        description="Aquí puedes ver cómo se ve el sitio web que visitan las personas (sin salir de este panel) y administrar el contenido que aparece en cada página."
       />
       <AdminPublicPreview />
       <PublicContentTable />

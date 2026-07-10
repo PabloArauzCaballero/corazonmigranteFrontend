@@ -74,24 +74,50 @@ function resolveAvatarUrl(me: MeProfile): string | undefined {
   return undefined;
 }
 
+function avatarStorageKey(userId: string) {
+  return `corazon-migrante:avatar:${userId}`;
+}
+
+function readStoredAvatarUrl(userId?: string): string | undefined {
+  if (!userId || typeof window === "undefined") return undefined;
+  return window.localStorage.getItem(avatarStorageKey(userId)) || undefined;
+}
+
+function storeAvatarUrl(userId: string, url: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(avatarStorageKey(userId), url);
+}
+
 export function ProfilePhotoUploader() {
   const { session } = useSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [persistedUrl, setPersistedUrl] = useState<string | undefined>(() => readStoredAvatarUrl(session?.userId));
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe, enabled: Boolean(session) });
 
   const mutation = useMutation({
     mutationFn: async (file: File) => {
       if (!session?.userId) throw new Error("Sesión no disponible");
-      return uploadUserPhoto(session.userId, file);
+      const result = await uploadUserPhoto(session.userId, file);
+      if (result.fileId) {
+        await apiRequest(ENDPOINTS.users.updateOwnAvatar, {
+          method: "PATCH",
+          body: { avatarFileId: result.fileId }
+        });
+      }
+      return result;
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
+      if (session?.userId && result.url) {
+        storeAvatarUrl(session.userId, result.url);
+        setPersistedUrl(result.url);
+      }
       await me.refetch();
     }
   });
 
   if (!session) return null;
-  const avatarUrl = previewUrl ?? resolveAvatarUrl(me.data ?? {});
+  const avatarUrl = resolveAvatarUrl(me.data ?? {}) || persistedUrl || previewUrl;
 
   function onFileChange(event: FormEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];

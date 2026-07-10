@@ -9,7 +9,7 @@ export default function AdminContenidoPublicoPage() {
       <PageHeader
         eyebrow="Contenido"
         title="Contenido Público"
-        description="Gestiona publicaciones públicas y premium, tipos, categorías, páginas relacionadas y estado editorial."
+        description="Aquí administras las noticias y columnas del sitio: puedes crearlas, editarlas, publicarlas o archivarlas, y decidir si son de acceso público o premium."
       />
       <PublicationsAdmin />
     </div>

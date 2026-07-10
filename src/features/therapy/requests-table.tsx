@@ -2,9 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Pencil, X } from "lucide-react";
-import { listAppointmentRequests, updateAdminAppointment, type AppointmentRequestRow } from "@/features/therapy/therapy.api";
+import { CircleDollarSign, Pencil, ReceiptText, X } from "lucide-react";
+import { listAppointmentRequests, updateAdminAppointment, updateAppointmentPayment, type AppointmentRequestRow } from "@/features/therapy/therapy.api";
 import { listBookingProducts, listBookingTherapists } from "@/features/booking/booking.api";
+import { createSaleFromAppointment, listAccountingRows } from "@/features/accounting/accounting.api";
 import { AppointmentsCalendar } from "@/features/therapy/appointments-calendar";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
@@ -108,15 +109,99 @@ function EditAppointmentPanel({ row, onClose }: { row: AppointmentRequestRow; on
   );
 }
 
+function TogglePaymentButton({ row }: { row: AppointmentRequestRow }) {
+  const qc = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: () => updateAppointmentPayment(row.id, !row.isPaid),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["appointment-requests"] })
+  });
+  return (
+    <Button
+      size="sm"
+      variant={row.isPaid ? "outline" : "default"}
+      disabled={mutation.isPending || Boolean(row.saleTransactionId)}
+      onClick={() => mutation.mutate()}
+      title={row.saleTransactionId ? "Ya tiene una venta registrada, no se puede desmarcar." : undefined}
+    >
+      <CircleDollarSign className="h-4 w-4" /> {row.isPaid ? "Marcar como no pagada" : "Marcar como pagada"}
+    </Button>
+  );
+}
+
+function RegisterSaleDialog({ row, onClose }: { row: AppointmentRequestRow; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [debitAccountId, setDebitAccountId] = useState("");
+  const [creditAccountId, setCreditAccountId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const accounts = useQuery({ queryKey: ["accounting-accounts-for-sale"], queryFn: () => listAccountingRows("accounts", { page: 1, pageSize: 200 }) });
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      createSaleFromAppointment(row.id, {
+        debitAccountId,
+        creditAccountId,
+        description: `Venta - cita con ${row.patient} - ${row.service}`
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["appointment-requests"] });
+      onClose();
+    },
+    onError: (mutationError) => setError(humanizeApiError(mutationError))
+  });
+
+  return (
+    <div className="grid gap-4 border border-emerald-900/20 bg-emerald-900/5 p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-slate-950">Registrar esta cita como venta</h3>
+        <Button size="icon" variant="ghost" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Se creará un movimiento contable por <strong>{row.price} {row.service ? `(${row.service})` : ""}</strong>. Elige en qué cuenta entra el dinero y en qué cuenta de ingresos se registra la venta.
+      </p>
+      {error ? <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Cuenta donde entra el dinero (ej. Caja o Banco)</Label>
+          <select className="h-11 w-full rounded-[14px] border bg-background px-3 text-sm" value={debitAccountId} onChange={(event) => setDebitAccountId(event.target.value)}>
+            <option value="" disabled>{accounts.isLoading ? "Cargando cuentas..." : "Selecciona una cuenta"}</option>
+            {(accounts.data?.items ?? []).map((account) => (
+              <option key={account.id} value={account.id}>{account.code} · {account.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label>Cuenta de ingresos (ej. Ventas de servicios)</Label>
+          <select className="h-11 w-full rounded-[14px] border bg-background px-3 text-sm" value={creditAccountId} onChange={(event) => setCreditAccountId(event.target.value)}>
+            <option value="" disabled>{accounts.isLoading ? "Cargando cuentas..." : "Selecciona una cuenta"}</option>
+            {(accounts.data?.items ?? []).map((account) => (
+              <option key={account.id} value={account.id}>{account.code} · {account.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button disabled={mutation.isPending || !debitAccountId || !creditAccountId} onClick={() => mutation.mutate()}>
+          Registrar venta
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function RequestsTable() {
   const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [registeringSaleId, setRegisteringSaleId] = useState<string | null>(null);
   const query = useQuery({ queryKey: ["appointment-requests", { page, pageSize: PAGE_SIZE }], queryFn: () => listAppointmentRequests({ page, pageSize: PAGE_SIZE }) });
 
   if (query.isLoading) return <LoadingState title="Consultando solicitudes en el sistema" />;
   if (query.isError) return <ErrorState title="No se pudieron cargar las solicitudes" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} />;
 
   const editingRow = query.data?.items.find((row) => row.id === editingId);
+  const registeringSaleRow = query.data?.items.find((row) => row.id === registeringSaleId);
 
   return query.data ? (
     <div className="grid gap-4">
@@ -125,6 +210,7 @@ export function RequestsTable() {
         items={query.data.items.map((row) => ({ id: row.id, date: row.scheduledStartAt || row.date, title: row.patient, subtitle: row.service, status: row.status }))}
       />
       {editingRow ? <EditAppointmentPanel row={editingRow} onClose={() => setEditingId(null)} /> : null}
+      {registeringSaleRow ? <RegisterSaleDialog row={registeringSaleRow} onClose={() => setRegisteringSaleId(null)} /> : null}
       <DataTable<AppointmentRequestRow>
         data={query.data.items}
         getRowKey={(row) => row.id}
@@ -136,12 +222,30 @@ export function RequestsTable() {
           { key: "approach", header: "Enfoque", render: (row) => row.approach },
           { key: "status", header: "Estado", render: (row) => <Badge variant={row.status === "pendiente" ? "warning" : "secondary"}>{row.status}</Badge> },
           {
+            key: "payment",
+            header: "Pago",
+            render: (row) => (
+              <div className="flex flex-col gap-1">
+                <Badge variant={row.isPaid ? "success" : "muted"}>{row.isPaid ? "Pagada" : "No pagada"}</Badge>
+                {row.saleTransactionId ? <span className="text-xs text-muted-foreground">Venta registrada</span> : null}
+              </div>
+            )
+          },
+          {
             key: "actions",
             header: "Acciones",
             render: (row) => (
-              <Button size="sm" variant="outline" onClick={() => setEditingId(row.id)}>
-                <Pencil className="h-4 w-4" /> Editar
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => setEditingId(row.id)}>
+                  <Pencil className="h-4 w-4" /> Editar
+                </Button>
+                <TogglePaymentButton row={row} />
+                {row.isPaid && !row.saleTransactionId ? (
+                  <Button size="sm" variant="outline" onClick={() => setRegisteringSaleId(row.id)}>
+                    <ReceiptText className="h-4 w-4" /> Registrar venta
+                  </Button>
+                ) : null}
+              </div>
             )
           }
         ]}

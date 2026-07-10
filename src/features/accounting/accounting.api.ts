@@ -111,6 +111,21 @@ export type CreateTransactionInput = {
   entries: TransactionEntryInput[];
 };
 
+export type CreateSaleFromAppointmentInput = {
+  debitAccountId: string;
+  creditAccountId: string;
+  costCenterId?: string;
+  date?: string;
+  description?: string;
+};
+
+export async function createSaleFromAppointment(appointmentId: string, input: CreateSaleFromAppointmentInput) {
+  return apiRequest<unknown>(ENDPOINTS.accounting.transactionSaleFromAppointment.replace(":appointmentId", appointmentId), {
+    method: "POST",
+    body: input
+  });
+}
+
 export async function createTransaction(input: CreateTransactionInput) {
   const totalDebit = input.entries.reduce((sum, entry) => sum + entry.debit, 0);
   const totalCredit = input.entries.reduce((sum, entry) => sum + entry.credit, 0);

@@ -21,6 +21,7 @@ export const ENDPOINTS = {
     updateTherapist: `${API_PREFIX}/admin/users/:userId/therapist-profile`,
     updateStatus: `${API_PREFIX}/admin/users/:userId/status`,
     updateAvatar: `${API_PREFIX}/admin/users/:userId/avatar`,
+    updateOwnAvatar: `${API_PREFIX}/me/avatar`,
     patients: `${API_PREFIX}/admin/users/patients`
   },
   appointments: {
@@ -41,6 +42,7 @@ export const ENDPOINTS = {
     createAppointment: `${API_PREFIX}/appointments`,
     updateAppointmentStatus: `${API_PREFIX}/appointments/:appointmentId/status`,
     adminUpdateAppointment: `${API_PREFIX}/appointments/admin/:appointmentId`,
+    adminUpdateAppointmentPayment: `${API_PREFIX}/appointments/admin/:appointmentId/payment`,
     bookingAvailability: `${API_PREFIX}/booking/availability`,
     therapistSchedules: `${API_PREFIX}/therapists/me/schedules`,
     therapistBlockedTimes: `${API_PREFIX}/therapists/me/blocked-times`,
@@ -101,7 +103,9 @@ export const ENDPOINTS = {
     premiumColumnDetail: `${API_PREFIX}/premium/publications/columns/:slug`,
     subscribe: `${API_PREFIX}/publications/subscribers`,
     adminSubscribers: `${API_PREFIX}/admin/content/subscribers`,
-    adminSubscriberById: `${API_PREFIX}/admin/content/subscribers/:id`
+    adminSubscriberById: `${API_PREFIX}/admin/content/subscribers/:id`,
+    adminSubscriberApprove: `${API_PREFIX}/admin/content/subscribers/:userId/approve`,
+    adminSubscriberReject: `${API_PREFIX}/admin/content/subscribers/:userId/reject`
   },
   publicUi: {
     pageBundle: `${API_PREFIX}/public/pages/:slug`,
@@ -133,7 +137,8 @@ export const ENDPOINTS = {
     costCentersDelete: `${API_PREFIX}/admin/accounting/cost-centers/:costCenterId`,
     transactionsList: `${API_PREFIX}/admin/accounting/transactions`,
     transactionsCreate: `${API_PREFIX}/admin/accounting/transactions`,
-    transactionSaleCreate: `${API_PREFIX}/admin/accounting/transactions`
+    transactionSaleCreate: `${API_PREFIX}/admin/accounting/transactions`,
+    transactionSaleFromAppointment: `${API_PREFIX}/admin/accounting/transactions/from-appointment/:appointmentId`
   },
   health: {
     check: `${API_PREFIX}/health`

@@ -6,7 +6,7 @@ export const metadata = { title: "Archivos | Admin Corazón Migrante" };
 export default function AdminArchivosPage() {
   return (
     <div className="grid gap-6">
-      <PageHeader eyebrow="Archivos" title="Gestión de archivos" description="Lista, sube, modifica y elimina archivos vinculados a GCS o almacenamiento local." />
+      <PageHeader eyebrow="Archivos" title="Imágenes y documentos" description="Aquí se guardan todas las imágenes y documentos que se suben al sistema. Puedes ver la lista, subir archivos nuevos o borrar los que ya no se usan." />
       <FilesAdmin />
     </div>
   );

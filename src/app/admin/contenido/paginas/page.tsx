@@ -8,8 +8,8 @@ export default function AdminPaginasPublicasPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Páginas públicas"
-        description="Administra las páginas públicas dinámicas y las ubicaciones donde se incrustan publicaciones."
+        title="Páginas del sitio web"
+        description="Aquí administras las páginas que ve el público (por ejemplo la biblioteca o las noticias) y decides en qué página aparece cada publicación."
       />
       <AdminPublicPreview />
       <PublicContentTable />
