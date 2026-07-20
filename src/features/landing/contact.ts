@@ -9,17 +9,21 @@ function cleanPhone(value?: string | null) {
   return `${hasPlus ? "+" : ""}${digits}`;
 }
 
+// Número de contacto oficial de Corazón Migrante (fallback garantizado).
+const DEFAULT_CONTACT_PHONE = "+59177026706";
+
 export function resolveContactPhone(
   ...candidates: Array<string | null | undefined>
 ) {
   for (const candidate of [
     ...candidates,
     env.NEXT_PUBLIC_PUBLIC_CONTACT_PHONE,
+    DEFAULT_CONTACT_PHONE,
   ]) {
     const phone = cleanPhone(candidate);
     if (phone) return phone;
   }
-  return undefined;
+  return DEFAULT_CONTACT_PHONE;
 }
 
 export function formatContactPhone(phone?: string | null) {

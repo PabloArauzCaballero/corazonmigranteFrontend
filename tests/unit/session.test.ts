@@ -35,6 +35,18 @@ describe("session and RBAC normalization", () => {
     expect(session.token).toBe("jwt-token");
   });
 
+  it("captures the token from a flat response using camelCase accessToken", () => {
+    const session = normalizeSession({
+      id: "a1",
+      email: "admin@cm.test",
+      roles: ["ADMIN"],
+      accessToken: "flat-jwt"
+    });
+
+    expect(session.role).toBe("ADMIN");
+    expect(session.token).toBe("flat-jwt");
+  });
+
   it("validates role and permission helpers", () => {
     expect(hasRole("ADMIN", ["ADMIN", "SUPER_ADMIN"])).toBe(true);
     expect(hasRole("PACIENTE", ["ADMIN", "SUPER_ADMIN"])).toBe(false);

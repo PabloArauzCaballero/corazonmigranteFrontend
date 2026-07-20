@@ -72,14 +72,17 @@ type SistemaSessionEnvelope = LegacySessionInput & {
 
 function unwrapSessionInput(input: SistemaSessionEnvelope): LegacySessionInput {
   if (isObjectRecord(input.data)) {
-    return unwrapSessionInput(input.data as SistemaSessionEnvelope);
+    const inner = unwrapSessionInput(input.data as SistemaSessionEnvelope);
+    // El token puede vivir en el envoltorio externo aunque los datos de usuario estén en `data`.
+    return { ...inner, token: inner.token ?? input.accessToken ?? input.token ?? input.access_token };
   }
 
   if (input.user) {
     return { ...input.user, token: input.accessToken ?? input.token ?? input.user.token ?? input.user.access_token };
   }
 
-  return input;
+  // Respuesta plana: aceptar también `accessToken` (camelCase) para no perder el token.
+  return { ...input, token: input.token ?? input.access_token ?? input.accessToken };
 }
 
 export function normalizeSession(input: SistemaSessionEnvelope): NormalizedSession {

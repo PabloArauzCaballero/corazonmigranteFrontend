@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useRef, useState } from "react";
+import { Search } from "lucide-react";
 import type { AdminUser, AdminUserStatus } from "@/features/users/users.types";
 import { createUser, listUsers, updateTherapistProfileByAdmin, uploadUserPhotoByAdmin, updateUserStatus, type CreateUserInput, type UpdateTherapistProfileInput } from "@/features/users/users.api";
 import { createAdminTherapistSchedule, deactivateAdminTherapistSchedule, listAdminTherapistSchedules, type TherapistScheduleInput, type TherapistScheduleRow } from "@/features/therapy/therapy.api";
@@ -9,7 +10,8 @@ import { fetchProfessions, fetchSpecialties } from "@/features/auth/public-optio
 import { useDebounce } from "@/shared/hooks/use-debounce";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Badge } from "@/shared/ui/badge";
-import { DataTable, PaginationBar } from "@/shared/ui/data-table";
+import { DataTable, DataTableSkeleton, PaginationBar } from "@/shared/ui/data-table";
+import { TableShell } from "@/shared/ui/table-shell";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { ErrorState, LoadingState } from "@/shared/ui/state";
@@ -307,12 +309,13 @@ export function UsersTable() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [roleFilter, setRoleFilter] = useState("");
   const [role, setRole] = useState<CreateUserInput["role"]>("PACIENTE");
   const debouncedSearch = useDebounce(search);
 
   const query = useQuery({
-    queryKey: ["users", { search: debouncedSearch, page, pageSize: PAGE_SIZE }],
-    queryFn: () => listUsers({ search: debouncedSearch, page, pageSize: PAGE_SIZE })
+    queryKey: ["users", { search: debouncedSearch, page, pageSize: PAGE_SIZE, role: roleFilter }],
+    queryFn: () => listUsers({ search: debouncedSearch, page, pageSize: PAGE_SIZE, role: roleFilter || undefined })
   });
   const specialties = useQuery({ queryKey: ["public-options", "specialties"], queryFn: fetchSpecialties, enabled: role === "TERAPEUTA" });
   const professions = useQuery({ queryKey: ["public-options", "professions"], queryFn: fetchProfessions, enabled: role === "TERAPEUTA" });
@@ -343,7 +346,7 @@ export function UsersTable() {
 
   return (
     <div className="grid gap-6">
-      <form className="grid gap-4 rounded-2xl border bg-card p-6 shadow-sm md:grid-cols-2" onSubmit={onCreateUser}>
+      <form className="animate-fade-in grid gap-4 rounded-2xl border bg-card p-6 shadow-sm md:grid-cols-2" onSubmit={onCreateUser}>
         <div className="md:col-span-2">
           <h2 className="text-lg font-bold">Crear usuario</h2>
           <p className="mt-1 text-sm text-muted-foreground">El servidor actual permite registrar pacientes y terapeutas. Los roles administrativos requieren endpoint dedicado.</p>
@@ -389,25 +392,43 @@ export function UsersTable() {
         <div className="md:col-span-2"><Button disabled={createMutation.isPending} type="submit" title="Crear usuario" aria-label="Crear usuario"><IconButtonLabel icon={createMutation.isPending ? "spinner" : "plus"} label={createMutation.isPending ? "Creando usuario" : "Crear usuario"} spin={createMutation.isPending} /></Button></div>
       </form>
 
-      <div className="rounded-2xl border bg-card p-5 shadow-sm">
-        <Label htmlFor="usersSearch">Buscar usuarios</Label>
-        <Input
-          id="usersSearch"
-          className="mt-2 max-w-md"
-          placeholder="Nombre, correo o rol"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setPage(1);
-          }}
-        />
-        <p className="mt-2 text-xs text-muted-foreground">La búsqueda, paginación y filtros se procesan con datos completos.</p>
-      </div>
-
-      {query.isLoading ? <LoadingState title="Consultando usuarios" /> : null}
-      {query.isError ? <ErrorState title="No se pudieron cargar los usuarios" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}
-      {query.data ? (
-        <>
+      <TableShell
+        filters={
+          <>
+            <div className="relative flex-1 min-w-48">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="usersSearch"
+                className="pl-9"
+                placeholder="Buscar por nombre o correo..."
+                value={search}
+                onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+              />
+            </div>
+            <select
+              className="h-10 rounded-xl border bg-background px-3 text-sm"
+              value={roleFilter}
+              onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+            >
+              <option value="">Todos los roles</option>
+              <option value="PACIENTE">Pacientes</option>
+              <option value="TERAPEUTA">Terapeutas</option>
+              <option value="ADMIN">Admins</option>
+              <option value="SUPER_ADMIN">Super admins</option>
+              <option value="CONTADOR">Contadores</option>
+            </select>
+            {query.data && (
+              <span className="text-xs text-muted-foreground">
+                {query.data.total} usuario{query.data.total !== 1 ? "s" : ""} encontrado{query.data.total !== 1 ? "s" : ""}
+              </span>
+            )}
+          </>
+        }
+        footer={query.data ? <PaginationBar page={query.data.page} totalPages={query.data.totalPages} loading={query.isFetching} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(query.data.totalPages, current + 1))} onGoTo={(p) => setPage(p)} /> : undefined}
+      >
+        {query.isLoading ? <DataTableSkeleton columns={4} rows={8} /> : null}
+        {query.isError ? <ErrorState title="No se pudieron cargar los usuarios" description={humanizeApiError(query.error)} actionLabel="Reintentar" onAction={() => void query.refetch()} /> : null}
+        {query.data ? (
           <DataTable<AdminUser>
             data={query.data.items}
             getRowKey={(row) => row.id}
@@ -436,9 +457,8 @@ export function UsersTable() {
                 ) }
             ]}
           />
-          <PaginationBar page={query.data.page} totalPages={query.data.totalPages} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(query.data.totalPages, current + 1))} />
-        </>
-      ) : null}
+        ) : null}
+      </TableShell>
     </div>
   );
 }

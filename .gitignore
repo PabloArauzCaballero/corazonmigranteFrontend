@@ -12,8 +12,17 @@ test-results
 *.log
 .pnp.*
 .yarn/*
+graphify-out/
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
-!.yarn/versions
+!.
+# temp typecheck artifacts
+tc-leaf.json
+.tsc-out.log
+.tsc-check.log
+.tsc-inc.tsbuildinfo
+
+# agent internals
+.claude/

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowRight,
@@ -34,6 +36,19 @@ import type { NormalizedPublicLanding } from "@/features/public-view/public-view
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
+import {
+  AnimatedChatBubbles,
+  Counter,
+  Parallax,
+  Reveal,
+  useScrollNavbar,
+} from "@/features/public-view/landing-motion";
+import {
+  DoctorPhrasesStrip,
+  DoctorsCarousel,
+  DownloadsHotmart,
+  MigrationInvite,
+} from "@/features/public-view/landing-sections";
 
 type IconName = string | number | undefined;
 
@@ -179,7 +194,9 @@ function publicLinks(content: LandingV2Content) {
     (item) => /biblioteca|recursos/i.test(item.label ?? "") || item.href === "/biblioteca",
   );
   const library = hasLibrary ? [] : [{ label: "Biblioteca", href: "/biblioteca" }];
-  return [...clean, ...library];
+  const hasDownloads = clean.some((item) => /descarg/i.test(item.label ?? "") || item.href === "#descargables");
+  const downloads = hasDownloads ? [] : [{ label: "Descargables", href: "#descargables" }];
+  return [...clean, ...downloads, ...library];
 }
 
 function footerLegalLinks(content: LandingV2Content) {
@@ -229,9 +246,20 @@ function Navbar({
     ? resolveV2Image({ id_ui: brandIcon }, landing)
     : undefined;
 
+  const sectionIds = links
+    .map((item) => (item.href || "").replace(/^#/, ""))
+    .filter(Boolean);
+  const { scrolled, active } = useScrollNavbar(sectionIds);
+
   return (
-    <header className="sticky top-0 z-50 border-b border-[#361d17]/10 bg-[#fbf8f3]/90 backdrop-blur-2xl">
-      <div className="container flex min-h-20 items-center justify-between gap-4 py-3">
+    <header
+      className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+        scrolled
+          ? "border-[#361d17]/10 bg-[#fbf8f3]/95 shadow-[0_8px_30px_rgba(43,27,23,0.08)] backdrop-blur-2xl"
+          : "border-transparent bg-[#fbf8f3]/70 backdrop-blur-xl"
+      }`}
+    >
+      <div className={`container flex items-center justify-between gap-4 transition-all duration-300 ${scrolled ? "min-h-[4.25rem] py-2" : "min-h-20 py-3"}`}>
         <Link
           href={content.navbar?.brand?.href || "#inicio"}
           className="group flex min-w-0 items-center gap-3 font-bold"
@@ -263,15 +291,21 @@ function Navbar({
           className="hidden items-center gap-7 xl:flex"
           aria-label="Navegación pública"
         >
-          {links.map((item) => (
-            <Link
-              className="relative text-sm font-semibold text-[#625e57] transition duration-300 hover:text-primary after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
-              href={item.href || "#"}
-              key={linkKey(item, "nav")}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {links.map((item) => {
+            const id = (item.href || "").replace(/^#/, "");
+            const isActive = Boolean(id) && id === active;
+            return (
+              <Link
+                className={`relative text-sm font-semibold transition duration-300 hover:text-primary after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:rounded-full after:bg-primary after:transition-all after:duration-300 ${
+                  isActive ? "text-primary after:w-full" : "text-[#625e57] after:w-0 hover:after:w-full"
+                }`}
+                href={item.href || "#"}
+                key={linkKey(item, "nav")}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -299,15 +333,21 @@ function Navbar({
         className="container flex gap-2 overflow-x-auto pb-3 xl:hidden"
         aria-label="Navegación pública móvil"
       >
-        {links.map((item) => (
-          <Link
-            className="shrink-0 rounded-full border border-[#361d17]/10 bg-white/76 px-4 py-2 text-xs font-semibold text-[#625e57]"
-            href={item.href || "#"}
-            key={linkKey(item, "mobile")}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {links.map((item) => {
+          const id = (item.href || "").replace(/^#/, "");
+          const isActive = Boolean(id) && id === active;
+          return (
+            <Link
+              className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                isActive ? "border-primary bg-primary text-white" : "border-[#361d17]/10 bg-white/76 text-[#625e57]"
+              }`}
+              href={item.href || "#"}
+              key={linkKey(item, "mobile")}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
         <Link
           className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
           href={actionHref(login, phone, "/login")}
@@ -374,27 +414,7 @@ function HeroVisual({ hero }: { hero: LandingV2Content["hero"] }) {
             </span>
           </div>
 
-          <div className="max-h-[34rem] space-y-4 overflow-y-auto bg-[#f7f1e9] px-5 py-6">
-            {bubbles.map((bubble, index) => {
-              const isUser = bubble.variant === "user";
-              return (
-                <div
-                  className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-                  key={`${bubble.text}-${index}`}
-                >
-                  <p
-                    className={`max-w-[82%] rounded-[1.3rem] px-4 py-3 text-sm leading-6 shadow-sm ${
-                      isUser
-                        ? "rounded-br-md bg-[#622f22] text-white"
-                        : "rounded-bl-md border border-[#e5d9cc] bg-white text-[#4e4a44]"
-                    }`}
-                  >
-                    {bubble.text}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+          <AnimatedChatBubbles bubbles={bubbles} />
 
           <div className="grid gap-3 bg-white px-5 py-5 sm:grid-cols-2">
             {stats.map((stat) => (
@@ -467,49 +487,55 @@ function PresentationSection({
   return (
     <section className="bg-white py-16">
       <div className="container grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
-        <div>
-          <SectionBadge badge={section.badge} />
-          {section.title ? (
-            <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
-              {section.title}
-            </h2>
-          ) : null}
-          {section.subtitle ? (
-            <p className="mt-5 text-xl leading-8 text-[#625e57]">{section.subtitle}</p>
-          ) : null}
-          <TextList items={section.description} className="mt-7 grid gap-4" />
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            {section.primary_cta?.label ? (
-              <Button asChild className="rounded-2xl">
-                <Link href={primaryHref} {...externalTarget(primaryHref)}>
-                  {section.primary_cta.label}
-                </Link>
-              </Button>
+        <Reveal variant="right">
+          <div>
+            <SectionBadge badge={section.badge} />
+            {section.title ? (
+              <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+                {section.title}
+              </h2>
             ) : null}
-            {section.secondary_cta?.label ? (
-              <Button asChild className="rounded-2xl border-[#cfc4b8] bg-white/78" variant="outline">
-                <Link href={secondaryHref} {...externalTarget(secondaryHref)}>
-                  {section.secondary_cta.label}
-                </Link>
-              </Button>
+            {section.subtitle ? (
+              <p className="mt-5 text-xl leading-8 text-[#625e57]">{section.subtitle}</p>
             ) : null}
+            <TextList items={section.description} className="mt-7 grid gap-4" />
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              {section.primary_cta?.label ? (
+                <Button asChild className="cta-shine rounded-2xl transition-transform hover:-translate-y-1">
+                  <Link href={primaryHref} {...externalTarget(primaryHref)}>
+                    {section.primary_cta.label}
+                  </Link>
+                </Button>
+              ) : null}
+              {section.secondary_cta?.label ? (
+                <Button asChild className="rounded-2xl border-[#cfc4b8] bg-white/78 transition-transform hover:-translate-y-1" variant="outline">
+                  <Link href={secondaryHref} {...externalTarget(secondaryHref)}>
+                    {section.secondary_cta.label}
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
           </div>
-        </div>
-        <div className="overflow-hidden rounded-[2.35rem] border border-[#e3d8cb] bg-[#fbf8f3] p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
-          <div className="relative min-h-[28rem] overflow-hidden rounded-[1.9rem] bg-[#e8ded3]">
-            <ImageBlock
-              image={image}
-              landing={landing}
-              alt={section.title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            {section.img_footer_text ? (
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2e1610]/88 to-transparent p-7 text-white">
-                <p className="max-w-xl text-xl font-black leading-8">{section.img_footer_text}</p>
+        </Reveal>
+        <Reveal variant="left" delay={150}>
+          <Parallax speed={0.06}>
+            <div className="group overflow-hidden rounded-[2.35rem] border border-[#e3d8cb] bg-[#fbf8f3] p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
+              <div className="relative min-h-[28rem] overflow-hidden rounded-[1.9rem] bg-[#e8ded3]">
+                <ImageBlock
+                  image={image}
+                  landing={landing}
+                  alt={section.title}
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
+                {section.img_footer_text ? (
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2e1610]/88 to-transparent p-7 text-white">
+                    <p className="max-w-xl text-xl font-black leading-8">{section.img_footer_text}</p>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
-        </div>
+            </div>
+          </Parallax>
+        </Reveal>
       </div>
     </section>
   );
@@ -525,51 +551,71 @@ function Hero({ content, phone }: { content: LandingV2Content; phone?: string })
 
   return (
     <section id="inicio" className="relative isolate overflow-hidden bg-[#fbf8f3]">
-      <div className="absolute left-[-20rem] top-[-18rem] -z-10 h-[42rem] w-[42rem] rounded-full bg-primary/14 blur-3xl" />
-      <div className="absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-[#8c4a62]/12 blur-3xl" />
+      {/* Animated aurora background */}
+      <div className="animate-aurora absolute left-[-20rem] top-[-18rem] -z-10 h-[42rem] w-[42rem] rounded-full bg-primary/14 blur-3xl" />
+      <div className="animate-blob absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-[#8c4a62]/12 blur-3xl" />
+      <div className="animate-blob absolute left-[30%] top-[40%] -z-10 h-[26rem] w-[26rem] rounded-full bg-[#c98a4b]/8 blur-3xl" style={{ animationDelay: "3s" }} />
 
       <div className="container grid min-h-[calc(100vh-5rem)] gap-12 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20">
         <div className="max-w-3xl">
-          <SectionBadge badge={hero?.badge} />
+          <Reveal variant="up">
+            <SectionBadge badge={hero?.badge} />
+          </Reveal>
 
-          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-[#2b1b17] md:text-7xl">
-            {titleLine1}
-            {titleLine2 ? (
-              <span className="block text-primary">{titleLine2}</span>
-            ) : null}
-          </h1>
+          <Reveal variant="up" delay={120}>
+            <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-[#2b1b17] md:text-7xl">
+              {titleLine1}
+              {titleLine2 ? (
+                <span className="mt-1 block text-gradient-migrant">{titleLine2}</span>
+              ) : null}
+            </h1>
+          </Reveal>
 
-          <TextList items={lead} className="mt-7 grid gap-4" />
+          <Reveal variant="up" delay={240}>
+            <TextList items={lead} className="mt-7 grid gap-4" />
+          </Reveal>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            {hero?.primary_cta?.label ? (
-              <Button
-                asChild
-                className="h-[3.35rem] rounded-2xl px-7 shadow-[0_18px_45px_rgba(99,48,35,0.22)]"
-                size="lg"
-              >
-                <Link href={primaryHref} {...externalTarget(primaryHref)}>
-                  {hero.primary_cta.label}
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </Link>
-              </Button>
-            ) : null}
-            {hero?.secondary_cta?.label ? (
-              <Button
-                asChild
-                className="h-[3.35rem] rounded-2xl border-[#cfc4b8] bg-white/78 px-7 hover:bg-white"
-                size="lg"
-                variant="outline"
-              >
-                <Link href={secondaryHref} {...externalTarget(secondaryHref)}>
-                  {hero.secondary_cta.label}
-                </Link>
-              </Button>
-            ) : null}
-          </div>
+          <Reveal variant="up" delay={360}>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              {hero?.primary_cta?.label ? (
+                <Button
+                  asChild
+                  className="cta-shine h-[3.35rem] rounded-2xl px-7 text-base shadow-[0_18px_45px_rgba(99,48,35,0.22)] transition-transform hover:-translate-y-1"
+                  size="lg"
+                >
+                  <Link href={primaryHref} {...externalTarget(primaryHref)}>
+                    {hero.primary_cta.label}
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </Link>
+                </Button>
+              ) : null}
+              {hero?.secondary_cta?.label ? (
+                <Button
+                  asChild
+                  className="h-[3.35rem] rounded-2xl border-[#cfc4b8] bg-white/78 px-7 text-base transition-transform hover:-translate-y-1 hover:bg-white"
+                  size="lg"
+                  variant="outline"
+                >
+                  <Link href={secondaryHref} {...externalTarget(secondaryHref)}>
+                    {hero.secondary_cta.label}
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          </Reveal>
         </div>
 
-        <HeroVisual hero={hero} />
+        <Reveal variant="left" delay={200}>
+          <HeroVisual hero={hero} />
+        </Reveal>
+      </div>
+
+      {/* Scroll cue */}
+      <div className="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 text-[#8a8176] lg:flex">
+        <span className="text-[10px] font-bold uppercase tracking-[0.28em]">Desliza</span>
+        <svg className="animate-scroll-cue h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </div>
     </section>
   );
@@ -716,42 +762,47 @@ function MissionSection({
   return (
     <section id={section.id || "mision"} className="scroll-mt-28 bg-[#fbf8f3] py-20">
       <div className="container grid gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-        <div>
-          <SectionBadge badge={section.badge} />
-          <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
-            {section.title}
-          </h2>
-          <TextList items={section.paragraphs} className="mt-7 grid gap-5" />
-          {section.feature_cards?.length ? (
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {section.feature_cards.map((card) => (
-                <div
-                  className="rounded-[1.5rem] border border-[#e3d8cb] bg-white/86 p-5 shadow-sm"
-                  key={`${card.title}-${card.body}`}
-                >
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
-                    {iconFor(card.icon, "h-5 w-5")}
-                  </span>
-                  <h3 className="mt-4 text-lg font-black text-[#2b1b17]">{card.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#625e57]">{card.body}</p>
-                </div>
-              ))}
+        <Reveal variant="right">
+          <div>
+            <SectionBadge badge={section.badge} />
+            <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+              {section.title}
+            </h2>
+            <TextList items={section.paragraphs} className="mt-7 grid gap-5" />
+            {section.feature_cards?.length ? (
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                {section.feature_cards.map((card, i) => (
+                  <Reveal variant="up" delay={i * 120} key={`${card.title}-${card.body}`}>
+                    <div className="group h-full rounded-[1.5rem] border border-[#e3d8cb] bg-white/86 p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_50px_rgba(43,27,23,0.10)]">
+                      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                        {iconFor(card.icon, "h-5 w-5")}
+                      </span>
+                      <h3 className="mt-4 text-lg font-black text-[#2b1b17]">{card.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-[#625e57]">{card.body}</p>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            ) : null}
+            {section.link?.label ? (
+              <Button asChild className="cta-shine mt-8 rounded-2xl transition-transform hover:-translate-y-1">
+                <Link href={section.link.href || "#psicologos"}>{section.link.label}</Link>
+              </Button>
+            ) : null}
+          </div>
+        </Reveal>
+        <Reveal variant="left" delay={150}>
+          <Parallax speed={0.08}>
+            <div className="overflow-hidden rounded-[2.35rem] border border-white/80 bg-white/72 p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
+              <ImageBlock
+                image={section.image}
+                landing={landing}
+                alt={section.title}
+                className="h-[34rem] w-full rounded-[1.9rem] object-cover"
+              />
             </div>
-          ) : null}
-          {section.link?.label ? (
-            <Button asChild className="mt-8 rounded-2xl">
-              <Link href={section.link.href || "#psicologos"}>{section.link.label}</Link>
-            </Button>
-          ) : null}
-        </div>
-        <div className="overflow-hidden rounded-[2.35rem] border border-white/80 bg-white/72 p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
-          <ImageBlock
-            image={section.image}
-            landing={landing}
-            alt={section.title}
-            className="h-[34rem] w-full rounded-[1.9rem] object-cover"
-          />
-        </div>
+          </Parallax>
+        </Reveal>
       </div>
     </section>
   );
@@ -770,35 +821,38 @@ function EmotionsSection({
   return (
     <section id={section.id || "emociones"} className="scroll-mt-28 bg-white py-20">
       <div className="container">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
-            Salud emocional
-          </p>
-          <h2 className="mt-4 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
-            {section.title}
-          </h2>
-        </div>
+        <Reveal variant="up">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
+              Salud emocional
+            </p>
+            <h2 className="mt-4 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+              {section.title}
+            </h2>
+          </div>
+        </Reveal>
         <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {items.map((item) => (
-            <Card
-              className="group overflow-hidden border-[#e3d8cb] bg-[#fbf8f3] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(43,27,23,0.13)]"
-              key={`${item.title}-${item.body}`}
-            >
-              <div className="h-52 bg-[#e8ded3]">
-                <ImageBlock
-                  image={item.image}
-                  landing={landing}
-                  alt={item.title}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                />
-              </div>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-black tracking-tight text-[#2b1b17]">
-                  {humanizeTitle(item.title)}
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-[#625e57]">{item.body}</p>
-              </CardContent>
-            </Card>
+          {items.map((item, i) => (
+            <Reveal variant="up" delay={i * 110} key={`${item.title}-${item.body}`}>
+              <Card
+                className="group h-full overflow-hidden border-[#e3d8cb] bg-[#fbf8f3] transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_70px_rgba(43,27,23,0.13)]"
+              >
+                <div className="h-52 overflow-hidden bg-[#e8ded3]">
+                  <ImageBlock
+                    image={item.image}
+                    landing={landing}
+                    alt={item.title}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                  />
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-black tracking-tight text-[#2b1b17]">
+                    {humanizeTitle(item.title)}
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-[#625e57]">{item.body}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -819,30 +873,32 @@ function SpecialistsSection({
   return (
     <section id={section.id || "psicologos"} className="scroll-mt-28 bg-[#fbf8f3] py-20">
       <div className="container">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
-            Equipo profesional
-          </p>
-          <h2 className="mt-4 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
-            {section.title}
-          </h2>
-          {section.subtitle ? (
-            <p className="mt-5 text-lg leading-8 text-[#625e57]">{section.subtitle}</p>
-          ) : null}
-        </div>
+        <Reveal variant="up">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
+              Equipo profesional
+            </p>
+            <h2 className="mt-4 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+              {section.title}
+            </h2>
+            {section.subtitle ? (
+              <p className="mt-5 text-lg leading-8 text-[#625e57]">{section.subtitle}</p>
+            ) : null}
+          </div>
+        </Reveal>
 
         <div className="mt-12 grid gap-7">
-          {items.map((item) => (
+          {items.map((item, i) => (
+            <Reveal variant={i % 2 === 0 ? "right" : "left"} key={`${item.name}-${item.role}`}>
             <article
-              className="grid overflow-hidden rounded-[2.3rem] border border-[#e3d8cb] bg-white shadow-sm lg:grid-cols-[0.34fr_0.66fr]"
-              key={`${item.name}-${item.role}`}
+              className="group grid overflow-hidden rounded-[2.3rem] border border-[#e3d8cb] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_80px_rgba(43,27,23,0.14)] lg:grid-cols-[0.34fr_0.66fr]"
             >
-              <div className="bg-[#e8ded3]">
+              <div className="overflow-hidden bg-[#e8ded3]">
                 <ImageBlock
                   image={item.image}
                   landing={landing}
                   alt={item.name}
-                  className="h-full min-h-[24rem] w-full object-cover"
+                  className="h-full min-h-[24rem] w-full object-cover transition duration-700 group-hover:scale-105"
                 />
               </div>
               <div className="p-7 md:p-9">
@@ -865,6 +921,7 @@ function SpecialistsSection({
                 <TextList items={item.story} className="mt-6 grid gap-4" />
               </div>
             </article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -886,8 +943,12 @@ function ContactSection({
   return (
     <section id={section.id || "contacto"} className="scroll-mt-28 bg-white py-20">
       <div className="container">
-        <div className="grid overflow-hidden rounded-[2.6rem] border border-[#361d17]/10 bg-[#2e1610] text-white shadow-[0_36px_95px_rgba(43,27,23,0.2)] lg:grid-cols-[0.62fr_0.38fr]">
-          <div className="p-8 md:p-12">
+        <Reveal variant="zoom">
+        <div className="relative grid overflow-hidden rounded-[2.6rem] border border-[#361d17]/10 bg-[#2e1610] text-white shadow-[0_36px_95px_rgba(43,27,23,0.2)] lg:grid-cols-[0.62fr_0.38fr]">
+          {/* animated glow inside dark card */}
+          <div className="animate-blob pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-primary/30 blur-3xl" />
+          <div className="animate-blob pointer-events-none absolute -bottom-24 right-10 h-64 w-64 rounded-full bg-[#8c4a62]/25 blur-3xl" style={{ animationDelay: "2.5s" }} />
+          <div className="relative p-8 md:p-12">
             <SectionBadge badge={section.badge} />
             <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] md:text-6xl">
               {section.title}
@@ -895,20 +956,19 @@ function ContactSection({
             <p className="mt-5 max-w-3xl text-lg leading-8 text-white/72">{section.body}</p>
             {section.bullets?.length ? (
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {section.bullets.map((bullet) => (
-                  <div
-                    className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/8 p-4 text-sm leading-6 text-white/76"
-                    key={textFromValue(bullet)}
-                  >
-                    {iconFor(bullet.icon, "mt-0.5 h-5 w-5 shrink-0 text-emerald-200")}
-                    {textFromValue(bullet)}
-                  </div>
+                {section.bullets.map((bullet, i) => (
+                  <Reveal variant="up" delay={i * 90} key={textFromValue(bullet)}>
+                    <div className="flex h-full items-start gap-3 rounded-2xl border border-white/10 bg-white/8 p-4 text-sm leading-6 text-white/76 transition duration-300 hover:border-emerald-200/40 hover:bg-white/12">
+                      {iconFor(bullet.icon, "mt-0.5 h-5 w-5 shrink-0 text-emerald-200")}
+                      {textFromValue(bullet)}
+                    </div>
+                  </Reveal>
                 ))}
               </div>
             ) : null}
           </div>
 
-          <div className="border-t border-white/10 bg-white/8 p-8 md:p-10 lg:border-l lg:border-t-0">
+          <div className="relative border-t border-white/10 bg-white/8 p-8 md:p-10 lg:border-l lg:border-t-0">
             <div className="rounded-[2rem] bg-white p-7 text-[#2b1b17] shadow-[0_22px_70px_rgba(0,0,0,0.18)]">
               <p className="text-sm font-black uppercase tracking-[0.18em] text-primary">
                 Contacto
@@ -926,7 +986,7 @@ function ContactSection({
                 </a>
               ) : null}
               {section.primary_cta?.label ? (
-                <Button asChild className="mt-5 w-full rounded-2xl">
+                <Button asChild className="cta-shine mt-5 w-full rounded-2xl transition-transform hover:-translate-y-0.5">
                   <Link href={href} {...externalTarget(href)}>
                     {formattedPhone ? "Contactar" : section.primary_cta.label}
                     <ArrowRight className="h-5 w-5" aria-hidden="true" />
@@ -942,6 +1002,7 @@ function ContactSection({
             </div>
           </div>
         </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -1028,13 +1089,15 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
 function FloatingContact({ phone }: { phone?: string }) {
   return (
     <a
-      className="fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#50251b]"
+      className="group fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#50251b]"
       href={phone ? contactHref(phone) : "#contacto"}
       target={phone ? "_blank" : undefined}
       rel={phone ? "noreferrer" : undefined}
       aria-label="Contactar a Corazón Migrante"
     >
-      <MessageCircle className="h-5 w-5" aria-hidden="true" />
+      <span className="absolute inset-0 -z-10 rounded-full bg-primary/50 opacity-70 blur-sm transition group-hover:opacity-0" />
+      <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-primary/30" style={{ animationDuration: "2.5s" }} />
+      <MessageCircle className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" aria-hidden="true" />
       <span className="hidden sm:inline">Contactar</span>
     </a>
   );
@@ -1050,16 +1113,19 @@ export function LandingV2Page({
   phone?: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#fbf8f3] text-[#2b1b17]">
+    <div className="landing-root min-h-screen bg-[#fbf8f3] text-[#2b1b17]">
       <ScrollProgress />
       <Navbar content={content} landing={landing} phone={phone} />
       <main>
-        <PresentationSection content={content} landing={landing} phone={phone} />
         <Hero content={content} phone={phone} />
+        <DoctorPhrasesStrip phone={phone} />
+        <PresentationSection content={content} landing={landing} phone={phone} />
         <HistorySection content={content} landing={landing} />
         <MissionSection content={content} landing={landing} />
         <EmotionsSection content={content} landing={landing} />
-        <SpecialistsSection content={content} landing={landing} />
+        <DoctorsCarousel />
+        <MigrationInvite />
+        <DownloadsHotmart />
         <ContactSection content={content} phone={phone} />
       </main>
       <Footer content={content} phone={phone} />

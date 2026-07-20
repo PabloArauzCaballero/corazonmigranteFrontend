@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { SessionProvider } from "@/shared/auth/use-session";
 import { GlobalLoadingBar } from "@/shared/ui/global-loading-bar";
+import { ToastProvider } from "@/shared/ui/toast";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -22,7 +23,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <GlobalLoadingBar />
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </SessionProvider>
     </QueryClientProvider>
   );

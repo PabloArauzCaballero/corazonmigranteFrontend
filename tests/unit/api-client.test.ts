@@ -67,6 +67,49 @@ describe("apiRequest", () => {
     expect(new Headers(init.headers).get("authorization")).toBe("Bearer secure-token");
   });
 
+  it("clears the stale session on a 401 authed request", async () => {
+    persistSession({
+      userId: "1",
+      fullName: "Usuario",
+      email: "usuario@cm.test",
+      role: "ADMIN",
+      permissions: ["admin:read"],
+      token: "expired-token"
+    });
+
+    // El handler intenta window.location.replace(); jsdom no implementa navegación y lo
+    // reporta por virtualConsole. Lo silenciamos para no ensuciar la salida del test.
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    const fetchMock = jest.fn(async () => jsonResponse({ message: "Unauthorized" }, 401));
+    global.fetch = fetchMock;
+
+    const { apiRequest } = await importApiClient();
+    await expect(apiRequest("/api/v1/admin/users/patients")).rejects.toThrow();
+
+    expect(window.localStorage.getItem("cm_session")).toBeNull();
+    errorSpy.mockRestore();
+  });
+
+  it("keeps the session on a 401 for a public (auth:false) request", async () => {
+    persistSession({
+      userId: "1",
+      fullName: "Usuario",
+      email: "usuario@cm.test",
+      role: "ADMIN",
+      permissions: ["admin:read"],
+      token: "still-valid"
+    });
+
+    const fetchMock = jest.fn(async () => jsonResponse({ message: "Unauthorized" }, 401));
+    global.fetch = fetchMock;
+
+    const { apiRequest } = await importApiClient();
+    await expect(apiRequest("/api/v1/auth/login", { method: "POST", body: { email: "a@b.com", password: "x" }, auth: false })).rejects.toThrow();
+
+    expect(window.localStorage.getItem("cm_session")).not.toBeNull();
+  });
+
   it("fails fast when the backend URL is not configured", async () => {
     process.env = { ...originalEnv };
     delete process.env.NEXT_PUBLIC_API_BASE_URL;

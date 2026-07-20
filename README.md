@@ -89,55 +89,51 @@ docs                 Arquitectura, seguridad, API, testing y pendientes
 - Las tablas administrativas consultan backend con búsqueda/filtros/paginación server-side.
 - Los pendientes quedan documentados en Markdown.
 
+## Componentes de infraestructura
+
+### Error Boundary
+
+`src/shared/ui/error-boundary.tsx` — envuelve secciones que pueden fallar en render:
+
+```tsx
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
+
+<ErrorBoundary>
+  <FeatureComponent />
+</ErrorBoundary>
+```
+
+En producción muestra un mensaje genérico + botón "Reintentar". En desarrollo muestra el mensaje de la excepción.
+
+### Loading states
+
+Cada ruta pública tiene un `loading.tsx` que Next.js usa como fallback Suspense automático:
+
+| Ruta | Skeleton |
+|------|---------|
+| `/noticias` | Grid de 6 tarjetas animadas |
+| `/novedades` | Artículo destacado + grid |
+| `/booking` | Paso a paso con campos |
+| `/biblioteca` | Grid de 8 fichas |
+
+### Sitemap y robots
+
+- `src/app/sitemap.ts` → Next.js genera `/sitemap.xml` al build
+- `src/app/robots.ts` → genera `/robots.txt` (bloquea `/admin/`, `/paciente/`, `/terapeuta/`)
+
+Para actualizar la URL base, edita `NEXT_PUBLIC_APP_URL` en `.env`.
+
 ## Pendientes
 
 Revisar `docs/pending/pending-items.md` antes de ajustar endpoints definitivos.
 
 
-## Segunda revisión
+## CI/CD — GitHub Actions
 
-Ver `SECOND_REVIEW_REPORT.md` para el detalle de la validación adicional contra el backend real y las correcciones aplicadas.
+El pipeline está en `.github/workflows/ci.yml` con tres jobs:
 
-
-## Landing configurable por Vistas Públicas
-
-La home `/` no usa mockups. Carga la configuración desde el backend usando la capa:
-
-```txt
-src/features/public-view/public-view.api.ts
-```
-
-Por defecto, la landing principal se carga por slug publico:
-
-```env
-NEXT_PUBLIC_PUBLIC_VIEW_SLUG=inicio
-```
-
-Eso llama a:
-
-```txt
-GET /api/v1/public/pages/inicio
-```
-
-La biblioteca usa el mismo contrato con el slug `biblioteca`:
-
-```txt
-GET /api/v1/public/pages/biblioteca
-GET /api/v1/public/pages/:slug/elements/:code
-```
-
-Si el backend no devuelve la vista configurada, la landing muestra un error claro y no renderiza contenido inventado.
-
-## Cloudflare Pages
-
-Para Cloudflare Pages usar:
-
-- Build command: `yarn build`
-- Build output directory: `out`
-- Framework preset: `Next.js (Static HTML Export)`
-
-No usar `dist`. Next.js con `output: "export"` genera `out` durante el build.
-
-La landing publica se prerenderiza al momento del deploy. Configura
-`NEXT_PUBLIC_API_BASE_URL` y las variables `NEXT_PUBLIC_PUBLIC_VIEW_*` en
-Cloudflare Pages para que el HTML exportado use el backend correcto.
+| Job | Trigger | Qué hace |
+|-----|---------|----------|
+| `quality` | Todo PR / push | Lint + typecheck |
+| `test` | Tras `quality` | Unit tests (Jest) |
+| `build` | Tras `quali

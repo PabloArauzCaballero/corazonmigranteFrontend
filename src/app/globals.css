@@ -66,3 +66,270 @@ body {
     transform: translateX(150%);
   }
 }
+
+/* ============================================================
+   ANIMACIONES DEL SISTEMA — Corazón Migrante
+   ============================================================ */
+
+/* Entrada suave — para paneles, tarjetas, dropdowns */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Dropdown de notificaciones y menús */
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Paneles de edición inline (dentro de la tabla) */
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translateY(8px);  }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Entrada de filas de tabla con retraso escalonado */
+@keyframes row-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+/* Toast de notificación (aparece desde abajo a la derecha) */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0);    }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+/* Pulso en el badge de notificación cuando llega una nueva */
+@keyframes badge-pop {
+  0%   { transform: scale(1);    }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.9);  }
+  100% { transform: scale(1);    }
+}
+
+/* Anillo de pulso alrededor del ícono de campana */
+@keyframes ring-pulse {
+  0%   { box-shadow: 0 0 0 0   hsl(var(--primary) / 0.55); }
+  70%  { box-shadow: 0 0 0 8px hsl(var(--primary) / 0);    }
+  100% { box-shadow: 0 0 0 0   hsl(var(--primary) / 0);    }
+}
+
+/* Indicador activo en la barra lateral (deslizamiento) */
+@keyframes nav-active-in {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0;  }
+}
+
+/* ============================================================
+   CLASES DE UTILIDAD
+   ============================================================ */
+
+.animate-fade-in        { animation: fade-in        220ms ease-out both; }
+.animate-slide-down     { animation: slide-down     200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-up-fade  { animation: slide-up-fade  220ms ease-out both; }
+.animate-toast-in       { animation: toast-in       280ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-toast-out      { animation: toast-out      220ms ease-in  both; }
+.animate-badge-pop      { animation: badge-pop      380ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+.animate-ring-pulse     { animation: ring-pulse     1.4s  ease-out infinite; }
+
+/* Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--border)) 50%, hsl(var(--muted)) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Filas de tabla escalonadas — añade delay con nth-child via style inline */
+.table-row-animated {
+  animation: row-in 240ms ease-out both;
+}
+
+/* Transición suave de página */
+.page-enter {
+  animation: fade-in 240ms ease-out both;
+}
+
+/* ============================================================
+   FORM ELEMENTS — select, textarea globals
+   ============================================================ */
+
+/* Native <select> — matches Input styling */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem !important;
+}
+
+/* Scrollbar hide utility */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Form field grouping */
+.form-field {
+  display: grid;
+  gap: 0.375rem;
+}
+
+/* ============================================================
+   LANDING PAGE — animaciones inmersivas
+   ============================================================ */
+
+/* Aurora / gradient background drift */
+@keyframes aurora-drift {
+  0%,100% { transform: translate3d(0,0,0) scale(1);   }
+  33%     { transform: translate3d(4%, -3%, 0) scale(1.08); }
+  66%     { transform: translate3d(-3%, 4%, 0) scale(0.95); }
+}
+
+/* Slow floating blobs */
+@keyframes blob-float {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(2rem,-2rem) scale(1.06); }
+}
+
+/* Chat bubble entrance */
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Typing indicator dots */
+@keyframes typing-dot {
+  0%,60%,100% { transform: translateY(0);    opacity: 0.4; }
+  30%         { transform: translateY(-4px); opacity: 1;   }
+}
+
+/* Gentle vertical float — badges, decorations */
+@keyframes soft-float {
+  0%,100% { transform: translateY(0);     }
+  50%     { transform: translateY(-8px);  }
+}
+
+/* Shine sweep across CTA buttons */
+@keyframes cta-shine {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  60%,100% { transform: translateX(220%) skewX(-18deg); }
+}
+
+/* Gradient text shimmer */
+@keyframes text-gradient {
+  0%,100% { background-position: 0% 50%; }
+  50%     { background-position: 100% 50%; }
+}
+
+/* Scroll cue bounce */
+@keyframes scroll-cue {
+  0%,100% { transform: translateY(0);   opacity: 0.5; }
+  50%     { transform: translateY(6px); opacity: 1;   }
+}
+
+/* Decor letter drift */
+@keyframes decor-drift {
+  0%,100% { transform: translateY(0) rotate(0deg);   }
+  50%     { transform: translateY(-14px) rotate(3deg); }
+}
+
+.animate-aurora      { animation: aurora-drift 18s ease-in-out infinite; }
+.animate-blob        { animation: blob-float 14s ease-in-out infinite; }
+.animate-bubble-in   { animation: bubble-in 420ms cubic-bezier(0.16,1,0.3,1) both; }
+.animate-typing-dot  { animation: typing-dot 1.2s ease-in-out infinite; }
+.animate-soft-float  { animation: soft-float 5s ease-in-out infinite; }
+.animate-decor-drift { animation: decor-drift 9s ease-in-out infinite; }
+
+/* Animated gradient headline */
+.text-gradient-migrant {
+  background: linear-gradient(100deg, #7e3725 0%, #b64f35 30%, #8c4a62 60%, #7e3725 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-gradient 6s ease-in-out infinite;
+}
+
+/* CTA with shine sweep */
+.cta-shine { position: relative; overflow: hidden; }
+.cta-shine::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+}
+.cta-shine:hover::after { animation: cta-shine 900ms ease-out; }
+
+/* Scroll cue */
+.animate-scroll-cue { animation: scroll-cue 1.8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora, .animate-blob, .animate-soft-float, .animate-decor-drift,
+  .animate-typing-dot, .text-gradient-migrant, .animate-scroll-cue {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   TIPOGRAFÍA — jerarquía editorial homogénea
+   ============================================================ */
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display { font-family: var(--font-display), ui-serif, Georgia, serif; }
+
+/* Los títulos de la landing usan la serif display por defecto */
+.landing-root h1,
+.landing-root h2,
+.landing-root h3 {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================================
+   CARRUSEL / MARQUEE infinito
+   ============================================================ */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes marquee-x-reverse {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.animate-marquee {
+  animation: marquee-x var(--marquee-duration, 40s) linear infinite;
+}
+.animate-marquee-reverse {
+  animation: marquee-x-reverse var(--marquee-duration, 45s) linear infinite;
+}
+.marquee-pause:hover .animate-marquee,
+.marquee-pause:hover .animate-marquee-reverse {
+  animation-play-state: paused;
+}
+
+/* Ken Burns lento para imágenes de fondo impactantes */
+@keyframes ken-burns {
+  0%   { transform: scale(1)    translate(0, 0); }
+  100% { transform: scale(1.12) translate(-1.5%, -1.5%); }
+}
+.animate-ken-burns { animation: ken-burns 18s ease-out infinite alternate; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee, .animate-marquee-reverse, .animate-ken-burns { animation: none !important; }
+}

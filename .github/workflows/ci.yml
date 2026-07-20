@@ -1,0 +1,91 @@
+name: CI — Frontend
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  quality:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Lint
+        run: yarn lint
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: quality
+
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_PUBLIC_ASSETS_BASE_URL: https://res.cloudinary.com/placeholder
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: placeholder
+      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: placeholder
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run unit tests
+        run: yarn test --ci --passWithNoTests
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: quality
+
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_PUBLIC_ASSETS_BASE_URL: https://res.cloudinary.com/placeholder
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: placeholder
+      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: placeholder
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: nextjs-build
+          path: .next/
+          retention-days: 3

@@ -1,6 +1,6 @@
 import { env } from "@/config/env";
 import { ApiError } from "@/shared/api/errors";
-import { readClientSession } from "@/shared/auth/cookies";
+import { clearClientSession, readClientSession } from "@/shared/auth/cookies";
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
@@ -174,6 +174,23 @@ function logApiCall(entry: { method: string; url: string; status?: number; ok?: 
   }
 }
 
+/**
+ * Un 401 en una petición autenticada significa que el token guardado ya no sirve
+ * (expiró o el backend lo rechaza). El ClientRoleGuard solo comprueba el rol de la
+ * sesión, no la vigencia del token, así que sin esto el usuario queda atrapado en una
+ * pantalla que dispara 401 en bucle. Limpiamos la sesión caduca y lo devolvemos al
+ * login correspondiente para que vuelva a autenticarse.
+ */
+function handleUnauthorizedSession() {
+  if (typeof window === "undefined") return;
+  clearClientSession();
+  const currentPath = window.location.pathname;
+  const loginPath = currentPath.startsWith("/admin") ? "/admin/login" : "/login";
+  if (currentPath !== loginPath) {
+    window.location.replace(loginPath);
+  }
+}
+
 async function parseResponse(response: Response): Promise<ParsedResponse> {
   const contentType = response.headers.get("content-type") ?? "";
   const payload: unknown = contentType.includes("application/json") ? await response.json().catch(() => null) : await response.text().catch(() => null);
@@ -256,6 +273,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   });
 
   if (!parsed.response.ok) {
+    if (parsed.response.status === 401 && options.auth !== false) {
+      handleUnauthorizedSession();
+    }
     throw new ApiError(extractErrorMessage(parsed.payload), parsed.response.status, parsed.payload);
   }
 

@@ -111,8 +111,10 @@ export function mapUser(item: unknown, index: number): AdminUser {
   };
 }
 
-export async function listUsers(query: SistemaListQuery = {}): Promise<PaginatedResult<AdminUser>> {
-  const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${buildQueryString(query)}`);
+export async function listUsers(query: SistemaListQuery & { role?: string } = {}): Promise<PaginatedResult<AdminUser>> {
+  const qs = buildQueryString(query);
+  const roleParam = query.role ? `${qs ? "&" : "?"}role=${encodeURIComponent(query.role)}` : "";
+  const payload = await apiRequest<unknown>(`${ENDPOINTS.users.list}${qs}${roleParam}`);
   return normalizePaginatedResponse(payload, mapUser, query);
 }
 

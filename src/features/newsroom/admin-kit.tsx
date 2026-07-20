@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode, SelectHTMLAttributes } from "react";
 import { useMemo, useState } from "react";
+import { humanizeApiError } from "@/shared/api/errors";
 import { AlertCircle, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/shared/ui/badge";
@@ -84,6 +85,31 @@ export function paginateClient<T>(items: T[], page: number, pageSize: number) {
 }
 
 export function fstr(form: FormData, key: string) { const v = form.get(key); return typeof v === "string" ? v.trim() : ""; }
+
+/**
+ * Shared notice hook — local notification state used in admin panels.
+ * Extracted here so each sub-module imports from a single source.
+ */
+export function useNotice() {
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  return {
+    message,
+    error,
+    ok: (msg: string) => { setMessage(msg); setError(""); },
+    fail: (e: unknown) => { setError(humanizeApiError(e)); setMessage(""); },
+    clear: () => { setMessage(""); setError(""); },
+  };
+}
+
+/** Converts an ISO date string to a value compatible with `<input type="datetime-local">`. */
+export function toDatetimeLocal(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 export function fnum(form: FormData, key: string, fallback?: number) { const v = Number(fstr(form, key)); return Number.isFinite(v) ? v : fallback; }
 export function isoLocal(value: string) { return value ? new Date(value).toISOString() : undefined; }
 export function csv(value: string) { return value.split(",").map((x) => x.trim()).filter(Boolean); }
