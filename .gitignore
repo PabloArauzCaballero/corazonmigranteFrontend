@@ -20,6 +20,7 @@ graphify-out/
 !.
 # temp typecheck artifacts
 tc-leaf.json
+tc-landing.json
 .tsc-out.log
 .tsc-check.log
 .tsc-inc.tsbuildinfo
