@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bell, BookOpen, CalendarDays, ChevronDown, Clock3, Crown, Files, HeartPulse,
+  Bell, BookOpen, CalendarDays, ChevronDown, Clock3, Crown, Download, Files, HeartPulse,
   Home, LayoutDashboard, LogOut, Megaphone, Newspaper, Package, ReceiptText,
   Tags, UserCog, UserRound, UsersRound,
 } from "lucide-react";
@@ -32,6 +32,7 @@ export const patientNav: SidebarItem[] = [
   { href: "/paciente/citas",   label: "Mis citas",        icon: CalendarDays },
   { href: "/paciente/booking", label: "Reservar cita",    icon: HeartPulse },
   { href: "/paciente/premium", label: "Contenido premium",icon: Crown },
+  { href: "/paciente/descargables", label: "Mis descargables", icon: Download },
   { href: "/paciente/perfil",  label: "Perfil",           icon: UserRound },
 ];
 
@@ -80,6 +81,7 @@ const adminDesktopNav: NavEntry[] = [
   { kind: "link", href: "/admin/solicitudes",            label: "Citas de pacientes",   icon: CalendarDays },
   { kind: "link", href: "/admin/booking",                label: "Agendar cita",         icon: HeartPulse },
   { kind: "link", href: "/admin/usuarios",               label: "Personas registradas", icon: UsersRound },
+  { kind: "link", href: "/admin/descargables",           label: "Descargables",         icon: Download },
   {
     kind: "group",
     label: "Publicidad",

@@ -9,6 +9,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/state";
+import { MyDownloadablesLibrary } from "@/features/downloadables/my-downloadables";
 
 function formatDate(value?: string | null) {
   if (!value) return "Sin fecha de vencimiento";
@@ -96,6 +97,7 @@ export function PatientPremiumPage() {
           ))}
         </section>
       ) : null}
+    <MyDownloadablesLibrary />
     </div>
   );
 }
