@@ -38,7 +38,6 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import {
   AnimatedChatBubbles,
-  Counter,
   Parallax,
   Reveal,
   useScrollNavbar,
@@ -852,75 +851,6 @@ function EmotionsSection({
                   <p className="mt-3 text-sm leading-7 text-[#625e57]">{item.body}</p>
                 </CardContent>
               </Card>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SpecialistsSection({
-  content,
-  landing,
-}: {
-  content: LandingV2Content;
-  landing: NormalizedPublicLanding;
-}) {
-  const section = content.sections?.psicologists ?? content.sections?.psychologists;
-  const items = section?.items?.filter((item) => item.name || item.story?.length) ?? [];
-  if (!section || items.length === 0) return null;
-  return (
-    <section id={section.id || "psicologos"} className="scroll-mt-28 bg-[#fbf8f3] py-20">
-      <div className="container">
-        <Reveal variant="up">
-          <div className="mx-auto max-w-4xl text-center">
-            <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
-              Equipo profesional
-            </p>
-            <h2 className="mt-4 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
-              {section.title}
-            </h2>
-            {section.subtitle ? (
-              <p className="mt-5 text-lg leading-8 text-[#625e57]">{section.subtitle}</p>
-            ) : null}
-          </div>
-        </Reveal>
-
-        <div className="mt-12 grid gap-7">
-          {items.map((item, i) => (
-            <Reveal variant={i % 2 === 0 ? "right" : "left"} key={`${item.name}-${item.role}`}>
-            <article
-              className="group grid overflow-hidden rounded-[2.3rem] border border-[#e3d8cb] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_80px_rgba(43,27,23,0.14)] lg:grid-cols-[0.34fr_0.66fr]"
-            >
-              <div className="overflow-hidden bg-[#e8ded3]">
-                <ImageBlock
-                  image={item.image}
-                  landing={landing}
-                  alt={item.name}
-                  className="h-full min-h-[24rem] w-full object-cover transition duration-700 group-hover:scale-105"
-                />
-              </div>
-              <div className="p-7 md:p-9">
-                <p className="text-sm font-bold text-primary">{item.role}</p>
-                <h3 className="mt-2 text-3xl font-black tracking-tight text-[#2b1b17]">
-                  {item.name}
-                </h3>
-                {item.tags?.length ? (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {item.tags.map((tag) => (
-                      <span
-                        className="rounded-full border border-[#d8ccc0] bg-[#fbf8f3] px-3 py-1 text-xs font-bold text-[#625e57]"
-                        key={tag}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-                <TextList items={item.story} className="mt-6 grid gap-4" />
-              </div>
-            </article>
             </Reveal>
           ))}
         </div>
