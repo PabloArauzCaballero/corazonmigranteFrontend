@@ -1,14 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BookOpenText,
-  CheckCircle2,
-  HeartHandshake,
-  MessageCircle,
-  Phone,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, BookOpenText, CheckCircle2, Globe, Heart, HeartHandshake, Lock, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { fileServer } from "@/config/file-server";
 import {
   contactHref,
@@ -30,6 +21,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { LandingV2Page } from "@/features/public-view/landing-v2-page";
 import { SmartImage } from "@/shared/ui/smart-image";
+import { SPECIALISTS, cloudImg, localImg } from "@/features/public-view/landing-assets";
 import {
   DoctorPhrasesStrip,
   DoctorsCarousel,
@@ -255,79 +247,99 @@ function Hero({
   const formattedPhone = formatContactPhone(phone);
   const contactUrl = contactHref(phone);
 
-  return (
-    <section className="relative isolate overflow-hidden bg-[#fbf8f3]">
-      <div className="absolute left-[-20rem] top-[-18rem] -z-10 h-[42rem] w-[42rem] rounded-full bg-primary/14 blur-3xl" />
-      <div className="absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-[#8c4a62]/12 blur-3xl" />
+  const lead =
+    hero?.subtitle ||
+    "Migrar cansa por dentro. Aquí encuentras un lugar tranquilo para hablar de la ansiedad, la culpa y la nostalgia, con alguien que de verdad entiende lo que estás viviendo.";
 
-      <div className="container grid min-h-[calc(100vh-5rem)] gap-12 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20">
+  return (
+    <section className="landing-root relative isolate overflow-hidden bg-[#fbf8f3]">
+      {/* Fondos aurora animados */}
+      <div className="animate-aurora absolute left-[-20rem] top-[-18rem] -z-10 h-[42rem] w-[42rem] rounded-full bg-primary/14 blur-3xl" />
+      <div className="animate-blob absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-[#8c4a62]/12 blur-3xl" />
+      <div className="animate-blob absolute left-[28%] top-[38%] -z-10 h-[26rem] w-[26rem] rounded-full bg-[#c98a4b]/8 blur-3xl" style={{ animationDelay: "3s" }} />
+
+      <div className="container grid gap-12 py-14 lg:grid-cols-[0.94fr_1.06fr] lg:items-center lg:py-20">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/80 px-4 py-2 text-sm font-semibold text-primary shadow-sm backdrop-blur">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />{" "}
-            {hero?.badge || hero?.eyebrow || "Acompañamiento emocional"}
+          <div className="animate-soft-float inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/80 px-4 py-2 text-sm font-semibold text-primary shadow-sm backdrop-blur">
+            <Heart className="h-4 w-4" aria-hidden="true" />
+            {hero?.badge || hero?.eyebrow || "Acompañamiento emocional para migrantes"}
           </div>
 
-          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-[#2b1b17] md:text-7xl">
+          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black leading-[1.02] tracking-[-0.05em] text-[#2b1b17] md:text-7xl">
             {title}
+            <span className="mt-2 block text-gradient-migrant">Calma. Ahora irá mejor.</span>
           </h1>
-          {hero?.subtitle ? (
-            <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-[#625e57] md:text-xl">
-              {hero.subtitle}
-            </p>
-          ) : null}
+
+          <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-[#5c574f] md:text-xl">{lead}</p>
           <TextBlock value={hero?.description} />
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button
-              asChild
-              className="h-[3.35rem] rounded-2xl px-7 shadow-[0_18px_45px_rgba(99,48,35,0.22)]"
-              size="lg"
-            >
+            <Button asChild className="cta-shine h-[3.35rem] rounded-2xl px-7 text-base shadow-[0_18px_45px_rgba(99,48,35,0.22)] transition-transform hover:-translate-y-1" size="lg">
               <Link href={actionHref(hero?.primaryCta, "/registro")}>
-                {hero?.primaryCta?.label || "Crear cuenta"}{" "}
-                <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                {hero?.primaryCta?.label || "Dar el primer paso"} <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
-            <Button
-              asChild
-              className="h-[3.35rem] rounded-2xl border-[#cfc4b8] bg-white/78 px-7 hover:bg-white"
-              size="lg"
-              variant="outline"
-            >
-              <a
-                href={contactUrl}
-                target={phone ? "_blank" : undefined}
-                rel={phone ? "noreferrer" : undefined}
-              >
-                <MessageCircle className="h-5 w-5" aria-hidden="true" />{" "}
-                Contactar
+            <Button asChild className="h-[3.35rem] rounded-2xl border-[#cfc4b8] bg-white/78 px-7 text-base transition-transform hover:-translate-y-1 hover:bg-white" size="lg" variant="outline">
+              <a href={contactUrl} target={phone ? "_blank" : undefined} rel={phone ? "noreferrer" : undefined}>
+                <MessageCircle className="h-5 w-5" aria-hidden="true" /> Escríbenos
               </a>
             </Button>
           </div>
 
-          {formattedPhone ? (
-            <p className="mt-5 flex items-center gap-2 text-sm font-semibold text-[#625e57]">
-              <Phone className="h-4 w-4 text-primary" aria-hidden="true" />{" "}
-              Atención por WhatsApp: {formattedPhone}
-            </p>
-          ) : null}
+          {/* Prueba social: equipo + confianza */}
+          <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-3">
+                {SPECIALISTS.map((s) => (
+                  <img
+                    key={s.name}
+                    src={cloudImg(s.image)}
+                    alt={s.name}
+                    loading="eager"
+                    className="h-10 w-10 rounded-full border-2 border-white object-cover shadow-sm"
+                    onError={(e) => { const t = e.currentTarget; if (!t.dataset.fb) { t.dataset.fb = "1"; t.src = localImg(s.image); } }}
+                  />
+                ))}
+              </div>
+              <p className="text-sm leading-5 text-[#625e57]"><strong className="text-[#2b1b17]">Psicólogos y psiquiatras</strong><br />que también han migrado.</p>
+            </div>
+            {formattedPhone ? (
+              <a href={contactUrl} target={phone ? "_blank" : undefined} rel={phone ? "noreferrer" : undefined} className="inline-flex items-center gap-2 text-sm font-semibold text-[#625e57] transition hover:text-primary">
+                <Phone className="h-4 w-4 text-primary" aria-hidden="true" /> {formattedPhone}
+              </a>
+            ) : null}
+          </div>
+
+          {/* Chips de confianza */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            {[
+              { icon: ShieldCheck, label: "Enfoque clínico y humano" },
+              { icon: Lock, label: "Confidencial" },
+              { icon: Globe, label: "Online y presencial" },
+            ].map((chip) => (
+              <span key={chip.label} className="inline-flex items-center gap-1.5 rounded-full border border-[#e5dccd] bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#6d675f] backdrop-blur">
+                <chip.icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> {chip.label}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="relative mx-auto w-full max-w-[38rem] lg:max-w-none">
-          <div className="absolute -left-5 top-8 z-10 hidden max-w-[15rem] rounded-[1.75rem] border border-white/70 bg-white/88 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.13)] backdrop-blur md:block">
+          {/* Tarjeta flotante superior */}
+          <div className="animate-soft-float absolute -left-5 top-8 z-10 hidden max-w-[15rem] rounded-[1.75rem] border border-white/70 bg-white/90 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.13)] backdrop-blur md:block">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f1e7e5] text-primary">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-              </span>
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f1e7e5] text-primary"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
               <div>
-                <p className="text-sm font-bold text-[#2b1b17]">
-                  Atención segura
-                </p>
-                <p className="text-xs leading-5 text-[#6d675f]">
-                  Ingreso protegido para pacientes
-                </p>
+                <p className="text-sm font-bold text-[#2b1b17]">Espacio seguro</p>
+                <p className="text-xs leading-5 text-[#6d675f]">Tu historia se queda contigo.</p>
               </div>
             </div>
+          </div>
+
+          {/* Tarjeta flotante inferior */}
+          <div className="absolute -right-4 bottom-10 z-10 hidden rounded-[1.6rem] border border-white/70 bg-white/90 px-5 py-4 shadow-[0_20px_55px_rgba(43,27,23,0.14)] backdrop-blur md:block" style={{ animation: "soft-float 5s ease-in-out infinite", animationDelay: "1.5s" }}>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8a7d70]">Cada sesión</p>
+            <p className="mt-1 text-lg font-black text-[#2b1b17]">60 min · a tu ritmo</p>
           </div>
 
           <div className="overflow-hidden rounded-[2.75rem] border border-white/80 bg-white/60 p-3 shadow-[0_38px_100px_rgba(43,27,23,0.18)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_46px_120px_rgba(43,27,23,0.22)]">
@@ -338,20 +350,34 @@ function Hero({
                 alt={hero?.image?.alt || title}
                 priority
                 className="absolute inset-0 h-full w-full"
+                imgClassName="animate-ken-burns"
                 rounded="rounded-[2.2rem]"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2e1610]/90 via-[#2e1610]/24 to-transparent" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2e1610]/92 via-[#2e1610]/28 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-7 text-white md:p-9">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/68">
-                  {landing.navbar.brand || "Corazón Migrante"}
-                </p>
-                <h2 className="mt-3 max-w-md text-3xl font-black tracking-tight md:text-4xl">
-                  {hero?.image?.footerText ||
-                    "Un espacio humano para ordenar lo que sientes."}
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">{landing.navbar.brand || "Corazón Migrante"}</p>
+                <h2 className="mt-3 max-w-md font-display text-3xl font-medium italic leading-tight md:text-4xl">
+                  {hero?.image?.footerText || "“Cuando migras, no te vas solo: te llevas tu gente, tu idioma y tu historia.”"}
                 </h2>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Banda de confianza inferior */}
+      <div className="border-t border-[#ece2d6] bg-white/60 backdrop-blur">
+        <div className="container grid gap-6 py-6 text-center sm:grid-cols-3">
+          {[
+            { k: "Ansiedad · culpa · nostalgia", v: "Lo que trabajamos" },
+            { k: "Sin juicios, sin apuros", v: "Cómo te acompañamos" },
+            { k: "Desde donde estés", v: "Atención online" },
+          ].map((item) => (
+            <div key={item.v}>
+              <p className="text-sm font-black text-[#2b1b17]">{item.k}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8a7d70]">{item.v}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

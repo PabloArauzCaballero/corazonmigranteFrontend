@@ -90,7 +90,7 @@ export function DoctorsCarousel() {
               Quienes te acompañan
             </h2>
             <p className="mt-4 text-lg leading-8 text-[#625e57]">
-              Personas que comprenden la migración no solo desde la teoría, sino desde la experiencia humana.
+              No son solo profesionales: también han migrado, extrañado y vuelto a empezar. Entienden por dentro lo que estás viviendo.
             </p>
           </div>
         </Reveal>
@@ -110,7 +110,7 @@ export function DoctorsCarousel() {
           href="/registro"
           className="cta-shine inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-bold text-white shadow-[0_16px_40px_rgba(99,48,35,0.22)] transition-transform hover:-translate-y-1"
         >
-          Agendar con un especialista <ArrowRight className="h-4 w-4" />
+          Quiero hablar con alguien <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     </section>
@@ -127,10 +127,10 @@ export function DoctorPhrasesStrip({ phone }: { phone?: string }) {
       <div className="container">
         <Reveal variant="up">
           <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-primary">
-            En voz de quienes acompañan
+            En sus propias palabras
           </p>
           <h2 className="mx-auto mt-4 max-w-3xl text-balance text-center text-3xl font-black tracking-tight text-[#2b1b17] md:text-5xl">
-            Palabras que entienden lo que sientes
+            Frases que quizá también son tuyas
           </h2>
         </Reveal>
 
@@ -158,10 +158,10 @@ export function DoctorPhrasesStrip({ phone }: { phone?: string }) {
         <Reveal variant="up">
           <div className="mt-12 flex flex-col items-center gap-4 rounded-[2rem] border border-primary/15 bg-gradient-to-br from-[#fbf3ef] to-[#f6ede3] px-8 py-10 text-center">
             <h3 className="font-display text-2xl font-bold text-[#2b1b17] md:text-3xl">
-              ¿Quieres hablar con alguien que te entienda?
+              ¿Y si hoy es un buen día para empezar?
             </h3>
             <p className="max-w-xl text-[#625e57]">
-              Escríbenos por WhatsApp y demos juntos el primer paso. Tu historia se queda contigo.
+              Escríbenos por WhatsApp cuando te sientas listo. No hace falta tener las palabras perfectas: empezamos por donde estés, sin apuros y sin juicios.
             </p>
             <a
               href={phone ? contactHref(phone) : "#contacto"}
@@ -209,7 +209,7 @@ export function MigrationInvite() {
           </Reveal>
           <Reveal variant="up" delay={240}>
             <p className="mt-6 max-w-xl text-lg leading-8 text-white/75">
-              Lee historias, guías y columnas escritas para acompañarte. Un espacio para entender lo que sientes y no sentirte solo en el camino.
+              Historias reales, guías y columnas para esos días en que cuesta explicar lo que sientes. Léelas a tu ritmo; aquí nadie te apura.
             </p>
           </Reveal>
           <Reveal variant="up" delay={340}>
@@ -217,7 +217,7 @@ export function MigrationInvite() {
               href="/biblioteca"
               className="cta-shine mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#2b1b17] shadow-[0_18px_45px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-1"
             >
-              Explorar la biblioteca <ArrowRight className="h-4 w-4" />
+              Entrar a la biblioteca <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
         </div>
@@ -239,10 +239,10 @@ export function DownloadsHotmart() {
               <Download className="h-3.5 w-3.5" /> Recursos descargables
             </span>
             <h2 className="mt-5 text-balance text-4xl font-black tracking-tight text-[#2b1b17] md:text-6xl">
-              Herramientas para llevar contigo
+              Recursos para llevarte contigo
             </h2>
             <p className="mt-4 text-lg leading-8 text-[#625e57]">
-              Guías, audios y ejercicios prácticos disponibles en Hotmart. Descárgalos y avanza a tu ritmo.
+              Guías, audios y ejercicios sencillos para practicar en casa. Descárgalos y avanza a tu propio ritmo, sin presión.
             </p>
           </div>
         </Reveal>

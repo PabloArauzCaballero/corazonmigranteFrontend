@@ -22,7 +22,9 @@
     "dev:4173": "next dev -p 4173",
     "build:cloudflare": "next build",
     "build:server": "next build",
-    "check:public-endpoints": "node scripts/check-public-endpoints.mjs"
+    "check:public-endpoints": "node scripts/check-public-endpoints.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -66,7 +68,8 @@
     "prettier": "^3.7.4",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@playwright/test": "^1.48.0"
   },
   "packageManager": "yarn@4.9.2"
 }
