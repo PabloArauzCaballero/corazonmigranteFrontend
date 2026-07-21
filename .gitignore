@@ -27,3 +27,6 @@ tc-landing.json
 
 # agent internals
 .claude/
+
+# script movido al backend (archivo local bloqueado por el montaje)
+scripts/upload-landing-cloudinary.mjs

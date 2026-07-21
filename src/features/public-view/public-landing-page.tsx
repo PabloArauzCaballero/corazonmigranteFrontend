@@ -29,6 +29,12 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { LandingV2Page } from "@/features/public-view/landing-v2-page";
+import {
+  DoctorPhrasesStrip,
+  DoctorsCarousel,
+  DownloadsHotmart,
+  MigrationInvite,
+} from "@/features/public-view/landing-sections";
 import { extractLandingV2 } from "@/features/public-view/landing-v2.mapper";
 
 const hiddenPublicLabels = /^(proceso|agendar|booking|cita|citas)$/i;
@@ -641,6 +647,7 @@ function GenericPublicLandingPage({
       <PublicNavbar landing={landing} phone={phone} />
       <main>
         <Hero landing={landing} phone={phone} />
+        <DoctorPhrasesStrip phone={phone} />
         {sections.length > 0 ? (
           sections.map((section) => (
             <Section section={section} landing={landing} key={section.id} />
@@ -666,6 +673,9 @@ function GenericPublicLandingPage({
             </div>
           </section>
         )}
+        <DoctorsCarousel />
+        <MigrationInvite />
+        <DownloadsHotmart />
       </main>
       <Footer landing={landing} phone={phone} />
       <FloatingContact phone={phone} />
