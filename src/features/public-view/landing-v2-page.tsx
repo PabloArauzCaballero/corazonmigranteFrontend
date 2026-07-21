@@ -45,7 +45,6 @@ import {
 import {
   DoctorPhrasesStrip,
   DoctorsCarousel,
-  DownloadsHotmart,
   MigrationInvite,
 } from "@/features/public-view/landing-sections";
 
@@ -201,9 +200,7 @@ function publicLinks(content: LandingV2Content) {
     (item) => /biblioteca|recursos/i.test(item.label ?? "") || item.href === "/biblioteca",
   );
   const library = hasLibrary ? [] : [{ label: "Biblioteca", href: "/biblioteca" }];
-  const hasDownloads = clean.some((item) => /descarg/i.test(item.label ?? "") || item.href === "#descargables");
-  const downloads = hasDownloads ? [] : [{ label: "Descargables", href: "#descargables" }];
-  return [...clean, ...downloads, ...library];
+  return [...clean, ...library];
 }
 
 function footerLegalLinks(content: LandingV2Content) {
@@ -1063,7 +1060,6 @@ export function LandingV2Page({
         <EmotionsSection content={content} landing={landing} />
         <DoctorsCarousel />
         <MigrationInvite />
-        <DownloadsHotmart />
         <ContactSection content={content} phone={phone} />
       </main>
       <Footer content={content} phone={phone} />

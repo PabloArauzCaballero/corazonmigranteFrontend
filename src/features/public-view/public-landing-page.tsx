@@ -29,10 +29,10 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { LandingV2Page } from "@/features/public-view/landing-v2-page";
+import { SmartImage } from "@/shared/ui/smart-image";
 import {
   DoctorPhrasesStrip,
   DoctorsCarousel,
-  DownloadsHotmart,
   MigrationInvite,
 } from "@/features/public-view/landing-sections";
 import { extractLandingV2 } from "@/features/public-view/landing-v2.mapper";
@@ -332,17 +332,15 @@ function Hero({
 
           <div className="overflow-hidden rounded-[2.75rem] border border-white/80 bg-white/60 p-3 shadow-[0_38px_100px_rgba(43,27,23,0.18)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_46px_120px_rgba(43,27,23,0.22)]">
             <div className="relative min-h-[32rem] overflow-hidden rounded-[2.2rem] bg-[#d8d0c4] md:min-h-[38rem]">
-              {heroImage ? (
-                <img
-                  alt={hero?.image?.alt || title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  src={heroImage}
-                  onError={(event) => {
-                    event.currentTarget.style.display = "none";
-                  }}
-                />
-              ) : null}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2e1610]/90 via-[#2e1610]/24 to-transparent" />
+              <SmartImage
+                src={heroImage}
+                fallbackSrc="/landing/carrusel-2.webp"
+                alt={hero?.image?.alt || title}
+                priority
+                className="absolute inset-0 h-full w-full"
+                rounded="rounded-[2.2rem]"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2e1610]/90 via-[#2e1610]/24 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-7 text-white md:p-9">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/68">
                   {landing.navbar.brand || "Corazón Migrante"}
@@ -675,7 +673,6 @@ function GenericPublicLandingPage({
         )}
         <DoctorsCarousel />
         <MigrationInvite />
-        <DownloadsHotmart />
       </main>
       <Footer landing={landing} phone={phone} />
       <FloatingContact phone={phone} />
