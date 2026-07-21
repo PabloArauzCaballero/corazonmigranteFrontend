@@ -5,11 +5,42 @@ import { ArrowRight, BookOpen, Download, MessageCircle, Quote, Sparkles } from "
 import { contactHref, formatContactPhone } from "@/features/landing/contact";
 import {
   CAROUSEL_IMAGES,
+  cloudImg,
   DOWNLOADABLES,
+  localImg,
   MIGRATION_INVITE_IMAGE,
   SPECIALISTS,
 } from "@/features/public-view/landing-assets";
 import { Reveal } from "@/features/public-view/landing-motion";
+
+/** <img> que carga desde Cloudinary y cae al respaldo local si falla. */
+function LandingImg({
+  name,
+  alt,
+  className,
+  loading = "lazy",
+}: {
+  name: string;
+  alt: string;
+  className?: string;
+  loading?: "lazy" | "eager";
+}) {
+  return (
+    <img
+      src={cloudImg(name)}
+      alt={alt}
+      loading={loading}
+      className={className}
+      onError={(e) => {
+        const t = e.currentTarget;
+        if (!t.dataset.fallback) {
+          t.dataset.fallback = "1";
+          t.src = localImg(name);
+        }
+      }}
+    />
+  );
+}
 
 /* ───────────────────────────────────────────────────────────
    Carrusel de doctores — bucle infinito con sus frases
@@ -18,10 +49,9 @@ function SpecialistCard({ s }: { s: (typeof SPECIALISTS)[number] }) {
   return (
     <figure className="group relative mx-3 w-[19rem] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/60 bg-white shadow-[0_18px_50px_rgba(43,27,23,0.12)]">
       <div className="relative h-72 overflow-hidden">
-        <img
-          src={s.image}
+        <LandingImg
+          name={s.image}
           alt={s.name}
-          loading="lazy"
           className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#2e1610]/92 via-[#2e1610]/35 to-transparent" />
@@ -108,10 +138,9 @@ export function DoctorPhrasesStrip({ phone }: { phone?: string }) {
           {SPECIALISTS.map((s, i) => (
             <Reveal key={s.name} variant="up" delay={i * 90}>
               <article className="group flex h-full items-start gap-4 rounded-[1.5rem] border border-[#ece2d6] bg-[#fbf8f3] p-6 transition duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_20px_50px_rgba(43,27,23,0.10)]">
-                <img
-                  src={s.image}
+                <LandingImg
+                  name={s.image}
                   alt={s.name}
-                  loading="lazy"
                   className="h-16 w-16 shrink-0 rounded-2xl object-cover shadow-sm"
                 />
                 <div>
@@ -157,9 +186,10 @@ export function MigrationInvite() {
   return (
     <section className="relative isolate overflow-hidden">
       <div className="absolute inset-0 -z-10">
-        <img
-          src={MIGRATION_INVITE_IMAGE}
+        <LandingImg
+          name={MIGRATION_INVITE_IMAGE}
           alt="Personas migrando a través del paisaje"
+          loading="eager"
           className="animate-ken-burns h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#241009]/94 via-[#2e1610]/75 to-[#2e1610]/35" />
@@ -222,10 +252,9 @@ export function DownloadsHotmart() {
             <Reveal key={d.title} variant="up" delay={i * 110}>
               <article className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-[#ece2d6] bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_70px_rgba(43,27,23,0.14)]">
                 <div className="relative h-44 overflow-hidden">
-                  <img
-                    src={d.cover}
+                  <LandingImg
+                    name={d.cover}
                     alt={d.title}
-                    loading="lazy"
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                   />
                   <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#7e3725] backdrop-blur">
@@ -261,9 +290,9 @@ export function ImageMarqueeStrip() {
   return (
     <div className="marquee-pause relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_5%,#000_95%,transparent)]">
       <div className="animate-marquee-reverse flex w-max gap-4" style={{ ["--marquee-duration" as string]: "55s" }}>
-        {loop.map((src, i) => (
-          <div key={`${src}-${i}`} className="h-40 w-64 shrink-0 overflow-hidden rounded-2xl border border-white/50 shadow-sm md:h-48 md:w-80">
-            <img src={src} alt="Historias de migración" loading="lazy" className="h-full w-full object-cover" />
+        {loop.map((name, i) => (
+          <div key={`${name}-${i}`} className="h-40 w-64 shrink-0 overflow-hidden rounded-2xl border border-white/50 shadow-sm md:h-48 md:w-80">
+            <LandingImg name={name} alt="Historias de migración" className="h-full w-full object-cover" />
           </div>
         ))}
       </div>

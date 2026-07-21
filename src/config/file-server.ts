@@ -1,21 +1,21 @@
 import { env } from "@/config/env";
 
 const DEFAULT_FILE_SERVER = {
-  logoUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/global_assets/media/logo-corazon-migrante.png",
-  authImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/story_page_image.avif",
-  landingHeroImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/landing_hero.jpg",
-  therapyImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/therapy.jpg",
-  familyImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/family.jpg",
-  libraryImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/library.jpg",
-  editorialHeroImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/editorial_hero.jpg",
-  editorialFallbackImageUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante/landing_page/media/editorial_fallback.jpg",
+  logoUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/global_assets/media/logo-corazon-migrante.png",
+  authImageUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/story_page_image.avif",
+  landingHeroImageUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/landing_hero.jpg",
+  therapyImageUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/therapy.jpg",
+  familyImageUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/family.jpg",
+  libraryImageUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/library.jpg",
+  editorialHeroImageUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/editorial_hero.jpg",
+  editorialFallbackImageUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/editorial_fallback.jpg",
   specialtiesUrl: "",
   professionsUrl: "",
   countriesCitiesUrl: "",
   occupationsUrl: "",
   symptomsUrl: "",
   therapyGoalsUrl: "",
-  publicAssetsBaseUrl: "https://res.cloudinary.com/demo/image/upload/corazon-migrante"
+  publicAssetsBaseUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante"
 } as const;
 
 function removeTrailingSlash(value?: string) {

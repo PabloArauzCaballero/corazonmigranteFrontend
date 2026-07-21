@@ -1,5 +1,6 @@
 import type { NormalizedPublicLanding } from "@/features/public-view/public-view.types";
 import { resolveLandingImage } from "@/features/public-view/public-view.normalizer";
+import { cloudImg } from "@/features/public-view/landing-assets";
 import type {
   LandingV2Content,
   LandingV2Image,
@@ -80,24 +81,24 @@ export function textFromValue(value: unknown): string | undefined {
   return asString(value.text ?? value.label ?? value.title ?? value.titulo);
 }
 
-// Mapa de imágenes locales incluidas en /public/landing.
-// Garantiza imágenes reales en la landing aunque el backend no las provea.
-const LOCAL_IMAGE_BY_ID: Record<number, string> = {
-  2: "/landing/testimonio-maria.webp",
-  3: "/landing/testimonio-jose.webp",
-  4: "/landing/testimonio-lucia.webp",
-  5: "/landing/testimonio-pedro.webp",
-  6: "/landing/testimonio-ana.webp",
-  7: "/landing/story.webp",
-  8: "/landing/mission.webp",
-  9: "/landing/emocion-ansiedad.webp",
-  10: "/landing/emocion-culpa.webp",
-  11: "/landing/emocion-cansancio.webp",
-  12: "/landing/emocion-nostalgia.webp",
-  15: "/landing/carrusel-1.webp",
-  18: "/landing/carrusel-4.webp",
-  19: "/landing/carrusel-5.webp",
-  20: "/landing/carrusel-6.webp",
+// Nombre de archivo por id_ui. La landing lo resuelve a Cloudinary
+// (carpeta landing_page/media) con respaldo local en /public/landing.
+export const LANDING_IMAGE_NAME_BY_ID: Record<number, string> = {
+  2: "testimonio-maria.webp",
+  3: "testimonio-jose.webp",
+  4: "testimonio-lucia.webp",
+  5: "testimonio-pedro.webp",
+  6: "testimonio-ana.webp",
+  7: "story.webp",
+  8: "mission.webp",
+  9: "emocion-ansiedad.webp",
+  10: "emocion-culpa.webp",
+  11: "emocion-cansancio.webp",
+  12: "emocion-nostalgia.webp",
+  15: "carrusel-1.webp",
+  18: "carrusel-4.webp",
+  19: "carrusel-5.webp",
+  20: "carrusel-6.webp",
 };
 
 export function resolveV2Image(
@@ -107,9 +108,9 @@ export function resolveV2Image(
 ) {
   const idUi = image?.id_ui ?? image?.idUi ?? null;
   const idNum = idUi != null ? Number(idUi) : NaN;
-  // Prioriza imágenes locales conocidas por id_ui (fuente de verdad para la landing).
-  if (!Number.isNaN(idNum) && LOCAL_IMAGE_BY_ID[idNum]) {
-    return LOCAL_IMAGE_BY_ID[idNum];
+  // Prioriza imágenes conocidas por id_ui (Cloudinary; respaldo local vía onError).
+  if (!Number.isNaN(idNum) && LANDING_IMAGE_NAME_BY_ID[idNum]) {
+    return cloudImg(LANDING_IMAGE_NAME_BY_ID[idNum]);
   }
   if (!image) return resolveLandingImage(undefined, landing.uiById, fallback);
   return resolveLandingImage(
