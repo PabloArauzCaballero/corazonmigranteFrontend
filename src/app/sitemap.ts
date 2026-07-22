@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 
+// Requerido con `output: export`: el sitemap se genera en build (estático).
+export const dynamic = "force-static";
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://corazonmigrante.com";
 
 /**
