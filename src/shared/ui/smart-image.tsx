@@ -81,8 +81,7 @@ export function SmartImage({
         alt={alt}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
-        // @ts-expect-error fetchpriority es válido en navegadores modernos
-        fetchpriority={priority ? "high" : "auto"}
+        fetchPriority={priority ? "high" : "auto"}
         className={cn(
           "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
           status === "loaded" ? "opacity-100" : "opacity-0",

@@ -1,11 +1,19 @@
 import { env } from "@/config/env";
 
+// Números de relleno que a veces llegan del backend/CMS (ej. +591 700 00000).
+// Se descartan para no mostrar un teléfono falso en la web.
+function looksLikePlaceholder(digits: string) {
+  // 4+ ceros seguidos o el mismo dígito repetido son señal de dato de prueba.
+  return /0{4,}/.test(digits) || /(\d)\1{6,}/.test(digits);
+}
+
 function cleanPhone(value?: string | null) {
   const text = value?.trim();
   if (!text) return undefined;
   const hasPlus = text.startsWith("+");
   const digits = text.replace(/\D/g, "");
   if (!digits) return undefined;
+  if (looksLikePlaceholder(digits)) return undefined;
   return `${hasPlus ? "+" : ""}${digits}`;
 }
 

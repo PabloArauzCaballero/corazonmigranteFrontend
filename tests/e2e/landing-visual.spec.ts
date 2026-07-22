@@ -7,8 +7,9 @@ mkdirSync(SHOTS, { recursive: true });
 test.describe("Landing — revisión visual", () => {
   test("carga la portada y captura el hero", async ({ page }, testInfo) => {
     await page.goto("/");
-    // El hero debe tener un título visible
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // La landing se renderiza en cliente tras cargar la config pública, así que
+    // esperamos a que el hero aparezca (el arranque en frío puede tardar).
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 20_000 });
     // Screenshot completo para revisar acomodado de imágenes
     await page.screenshot({ path: `${SHOTS}/landing-${testInfo.project.name}.png`, fullPage: true });
   });
@@ -34,7 +35,7 @@ test.describe("Landing — revisión visual", () => {
     const ctx = await browser.newContext({ reducedMotion: "reduce" });
     const page = await ctx.newPage();
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 20_000 });
     await ctx.close();
   });
 });

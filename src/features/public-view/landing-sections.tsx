@@ -52,12 +52,12 @@ function SpecialistCard({ s }: { s: (typeof SPECIALISTS)[number] }) {
         <LandingImg
           name={s.image}
           alt={s.name}
-          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+          className="h-full w-full object-cover object-[center_18%] transition duration-700 group-hover:scale-105"
         />
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#2e1610]/92 via-[#2e1610]/35 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#241009] via-[#241009]/60 to-transparent" />
         <figcaption className="absolute inset-x-0 bottom-0 p-5 text-white">
-          <p className="font-display text-xl font-semibold leading-tight">{s.name}</p>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">{s.role}</p>
+          <p className="font-display text-xl font-semibold leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)]">{s.name}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80 drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">{s.role}</p>
         </figcaption>
       </div>
       <blockquote className="relative px-5 py-5">

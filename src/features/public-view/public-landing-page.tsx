@@ -244,7 +244,6 @@ function Hero({
     fileServer.landingHeroImageUrl || fileServer.authImageUrl,
   );
   const title = hero?.title || landing.title || "Corazón Migrante";
-  const formattedPhone = formatContactPhone(phone);
   const contactUrl = contactHref(phone);
 
   const lead =
@@ -303,11 +302,6 @@ function Hero({
               </div>
               <p className="text-sm leading-5 text-[#625e57]"><strong className="text-[#2b1b17]">Psicólogos y psiquiatras</strong><br />que también han migrado.</p>
             </div>
-            {formattedPhone ? (
-              <a href={contactUrl} target={phone ? "_blank" : undefined} rel={phone ? "noreferrer" : undefined} className="inline-flex items-center gap-2 text-sm font-semibold text-[#625e57] transition hover:text-primary">
-                <Phone className="h-4 w-4 text-primary" aria-hidden="true" /> {formattedPhone}
-              </a>
-            ) : null}
           </div>
 
           {/* Chips de confianza */}
@@ -326,9 +320,9 @@ function Hero({
 
         <div className="relative mx-auto w-full max-w-[38rem] lg:max-w-none">
           {/* Tarjeta flotante superior */}
-          <div className="animate-soft-float absolute -left-5 top-8 z-10 hidden max-w-[15rem] rounded-[1.75rem] border border-white/70 bg-white/90 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.13)] backdrop-blur md:block">
+          <div className="animate-soft-float absolute -left-5 top-8 z-10 hidden w-[16.5rem] rounded-[1.75rem] border border-white/70 bg-white/90 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.13)] backdrop-blur md:block">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f1e7e5] text-primary"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#f1e7e5] text-primary"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <p className="text-sm font-bold text-[#2b1b17]">Espacio seguro</p>
                 <p className="text-xs leading-5 text-[#6d675f]">Tu historia se queda contigo.</p>
@@ -336,8 +330,8 @@ function Hero({
             </div>
           </div>
 
-          {/* Tarjeta flotante inferior */}
-          <div className="absolute -right-4 bottom-10 z-10 hidden rounded-[1.6rem] border border-white/70 bg-white/90 px-5 py-4 shadow-[0_20px_55px_rgba(43,27,23,0.14)] backdrop-blur md:block" style={{ animation: "soft-float 5s ease-in-out infinite", animationDelay: "1.5s" }}>
+          {/* Tarjeta flotante superior derecha (no debe tapar la frase inferior) */}
+          <div className="absolute -right-4 top-8 z-10 hidden rounded-[1.6rem] border border-white/70 bg-white/90 px-5 py-4 shadow-[0_20px_55px_rgba(43,27,23,0.14)] backdrop-blur md:block" style={{ animation: "soft-float 5s ease-in-out infinite", animationDelay: "1.5s" }}>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8a7d70]">Cada sesión</p>
             <p className="mt-1 text-lg font-black text-[#2b1b17]">60 min · a tu ritmo</p>
           </div>
@@ -568,8 +562,14 @@ function Section({
     );
   }
 
+  // Sin tarjetas la sección es solo un encabezado: usamos padding compacto para
+  // que no quede un vacío enorme entre secciones.
+  const hasItems = Boolean(section.items && section.items.length > 0);
   return (
-    <section id={section.id} className="container scroll-mt-28 py-20">
+    <section
+      id={section.id}
+      className={`container scroll-mt-28 ${hasItems ? "py-20" : "pb-6 pt-16"}`}
+    >
       <SectionHeading section={section} />
       <CardGrid section={section} />
     </section>
