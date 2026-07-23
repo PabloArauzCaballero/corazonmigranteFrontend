@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { env } from "@/config/env";
 import { getHeroFromPage, getPublicCmsPage, getResourcesFromPage } from "@/features/editorial/editorial.api";
 import { EditorialArticleCard } from "@/features/editorial/editorial-card";
+import { ARTICLES, ArticlesGrid } from "@/features/editorial/articles";
 import { COURSES, CoursesGrid } from "@/features/editorial/courses";
 import { MIGRANT_STORIES, StoriesGrid } from "@/features/editorial/stories";
 import { humanizeApiError } from "@/shared/api/errors";
@@ -22,7 +23,7 @@ function normalize(value: string) {
 export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
   const [search, setSearch] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
-  const [tab, setTab] = useState<"recursos" | "cursos" | "historias">("recursos");
+  const [tab, setTab] = useState<"articulos" | "recursos" | "cursos" | "historias">("articulos");
   const pageSlug = slug?.trim() || env.NEXT_PUBLIC_CMS_LIBRARY_SLUG;
   const pageQuery = useQuery({
     queryKey: ["cms-public-page", pageSlug],
@@ -107,9 +108,10 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
         {/* Selector de pestañas: Recursos / Cursos */}
         <div className="mb-10 flex flex-wrap items-center gap-6 border-b border-slate-200">
           {([
-            { key: "recursos", label: "Recursos", count: resources.length },
+            { key: "articulos", label: "Artículos", count: ARTICLES.length },
             { key: "historias", label: "Historias", count: MIGRANT_STORIES.length },
             { key: "cursos", label: "Cursos", count: COURSES.length },
+            { key: "recursos", label: "Recursos", count: resources.length },
           ] as const).map((item) => (
             <button
               key={item.key}
@@ -130,7 +132,17 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
           ))}
         </div>
 
-        {tab === "recursos" ? (
+        {tab === "articulos" ? (
+          <div className="space-y-8">
+            <div className="max-w-2xl">
+              <h2 className="font-serif text-3xl font-bold text-slate-950">Duelo migratorio: comprender para sanar</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                Una serie de artículos sobre el duelo migratorio y las siete pérdidas descritas por el Dr. Joseba Achotegui. Toca uno para leerlo completo.
+              </p>
+            </div>
+            <ArticlesGrid />
+          </div>
+        ) : tab === "recursos" ? (
           <>
             {pageQuery.isLoading ? <LoadingState title="Cargando biblioteca emocional" /> : null}
             {pageQuery.isError ? (

@@ -13,13 +13,20 @@ import { fileServer } from "@/config/file-server";
 
 const CLOUD_MEDIA_BASE = `${fileServer.publicAssetsBaseUrl}/landing_page/media`;
 
-/** URL de Cloudinary para una imagen de la landing. */
+/** True si `name` ya es una URL absoluta o una ruta local lista para usar. */
+function isResolvedPath(name: string): boolean {
+  return /^(https?:\/\/|\/)/.test(name);
+}
+
+/** URL de Cloudinary para una imagen de la landing (o la ruta tal cual si ya es absoluta). */
 export function cloudImg(name: string): string {
+  if (isResolvedPath(name)) return name;
   return `${CLOUD_MEDIA_BASE}/${name}`;
 }
 
-/** Ruta local de respaldo (bundle en /public/landing). */
+/** Ruta local de respaldo (bundle en /public/landing) o la ruta tal cual si ya es absoluta. */
 export function localImg(name: string): string {
+  if (isResolvedPath(name)) return name;
   return `/landing/${name}`;
 }
 
@@ -46,7 +53,7 @@ export const SPECIALISTS: Specialist[] = [
   {
     name: "Marlene Cossio",
     role: "Psicóloga Clínica",
-    image: "doctor-marlene.webp",
+    image: "/landing/dr-marlene.png",
     phrase: "Migrar no afecta solo a quien se va: también transforma profundamente a quien se queda.",
     tags: ["Migración", "Maternidad", "Acompañamiento"],
   },
@@ -67,7 +74,7 @@ export const SPECIALISTS: Specialist[] = [
   {
     name: "Diane Wimberly",
     role: "Psicóloga",
-    image: "doctor-diane.webp",
+    image: "/landing/dr-diane.png",
     phrase: "La barrera del idioma no es solo lingüística: es emocional.",
     tags: ["Biculturalidad", "Adaptación", "Empatía"],
   },
