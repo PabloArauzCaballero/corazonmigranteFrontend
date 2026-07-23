@@ -7,6 +7,8 @@ import { useMemo, useState } from "react";
 import { env } from "@/config/env";
 import { getHeroFromPage, getPublicCmsPage, getResourcesFromPage } from "@/features/editorial/editorial.api";
 import { EditorialArticleCard } from "@/features/editorial/editorial-card";
+import { COURSES, CoursesGrid } from "@/features/editorial/courses";
+import { MIGRANT_STORIES, StoriesGrid } from "@/features/editorial/stories";
 import { humanizeApiError } from "@/shared/api/errors";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -20,6 +22,7 @@ function normalize(value: string) {
 export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
   const [search, setSearch] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
+  const [tab, setTab] = useState<"recursos" | "cursos" | "historias">("recursos");
   const pageSlug = slug?.trim() || env.NEXT_PUBLIC_CMS_LIBRARY_SLUG;
   const pageQuery = useQuery({
     queryKey: ["cms-public-page", pageSlug],
@@ -101,31 +104,81 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
       </section>
 
       <section className="container py-12 md:py-16">
-        {pageQuery.isLoading ? <LoadingState title="Cargando biblioteca emocional" /> : null}
-        {pageQuery.isError ? (
-          <ErrorState title="No se pudo cargar la biblioteca" description={humanizeApiError(pageQuery.error)} actionLabel="Reintentar" onAction={() => void pageQuery.refetch()} />
-        ) : null}
-        {pageQuery.isSuccess && resources.length === 0 ? (
-          <Card className="overflow-hidden rounded-none border-slate-200 bg-white shadow-none">
-            <CardContent className="grid gap-8 p-0 md:grid-cols-[0.8fr_1fr]">
-              {hero?.imageUrl ? <img src={hero.imageUrl} alt="Biblioteca sin contenidos publicados" className="h-full min-h-80 w-full object-cover" /> : null}
-              <div className="flex flex-col justify-center p-8 md:p-12">
-                <EmptyState title="Estamos preparando nuevos recursos" description="Pronto encontrarás guías y lecturas para acompañar procesos migrantes con mayor claridad." />
-                <div className="mt-6">
-                  <Button asChild variant="outline" className="rounded-none">
-                    <Link href="/">Volver al inicio</Link>
-                  </Button>
-                </div>
+        {/* Selector de pestañas: Recursos / Cursos */}
+        <div className="mb-10 flex flex-wrap items-center gap-6 border-b border-slate-200">
+          {([
+            { key: "recursos", label: "Recursos", count: resources.length },
+            { key: "historias", label: "Historias", count: MIGRANT_STORIES.length },
+            { key: "cursos", label: "Cursos", count: COURSES.length },
+          ] as const).map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setTab(item.key)}
+              aria-pressed={tab === item.key}
+              className={`-mb-px flex items-center gap-2 border-b-2 pb-3 text-sm font-bold uppercase tracking-[0.14em] transition ${
+                tab === item.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-slate-400 hover:text-slate-700"
+              }`}
+            >
+              {item.label}
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">
+                {item.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {tab === "recursos" ? (
+          <>
+            {pageQuery.isLoading ? <LoadingState title="Cargando biblioteca emocional" /> : null}
+            {pageQuery.isError ? (
+              <ErrorState title="No se pudo cargar la biblioteca" description={humanizeApiError(pageQuery.error)} actionLabel="Reintentar" onAction={() => void pageQuery.refetch()} />
+            ) : null}
+            {pageQuery.isSuccess && resources.length === 0 ? (
+              <Card className="overflow-hidden rounded-none border-slate-200 bg-white shadow-none">
+                <CardContent className="grid gap-8 p-0 md:grid-cols-[0.8fr_1fr]">
+                  {hero?.imageUrl ? <img src={hero.imageUrl} alt="Biblioteca sin contenidos publicados" className="h-full min-h-80 w-full object-cover" /> : null}
+                  <div className="flex flex-col justify-center p-8 md:p-12">
+                    <EmptyState title="Estamos preparando nuevos recursos" description="Pronto encontrarás guías y lecturas para acompañar procesos migrantes con mayor claridad." />
+                    <div className="mt-6">
+                      <Button asChild variant="outline" className="rounded-none">
+                        <Link href="/">Volver al inicio</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+            {resources.length > 0 ? (
+              <div className="grid gap-6 lg:grid-cols-3">
+                {lead ? <EditorialArticleCard resource={lead} priority /> : null}
+                {rest.map((resource) => <EditorialArticleCard key={resource.id} resource={resource} />)}
               </div>
-            </CardContent>
-          </Card>
-        ) : null}
-        {resources.length > 0 ? (
-          <div className="grid gap-6 lg:grid-cols-3">
-            {lead ? <EditorialArticleCard resource={lead} priority /> : null}
-            {rest.map((resource) => <EditorialArticleCard key={resource.id} resource={resource} />)}
+            ) : null}
+          </>
+        ) : tab === "historias" ? (
+          <div className="space-y-8">
+            <div className="max-w-2xl">
+              <h2 className="font-serif text-3xl font-bold text-slate-950">Historias que quizá también son tuyas</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                Relatos reales de personas migrantes. Cada historia es distinta, pero muchas veces lo que sentimos se parece más de lo que creemos. Toca una para leerla completa.
+              </p>
+            </div>
+            <StoriesGrid />
           </div>
-        ) : null}
+        ) : (
+          <div className="space-y-8">
+            <div className="max-w-2xl">
+              <h2 className="font-serif text-3xl font-bold text-slate-950">Cursos para llevar tu proceso más lejos</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                Formaciones guiadas con acompañamiento profesional. Al elegir un curso te llevamos directo a Hotmart para completar tu inscripción de forma segura.
+              </p>
+            </div>
+            <CoursesGrid />
+          </div>
+        )}
       </section>
     </main>
   );

@@ -47,6 +47,7 @@ import {
   DoctorsCarousel,
   MigrationInvite,
 } from "@/features/public-view/landing-sections";
+import { TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
 
 type IconName = string | number | undefined;
 
@@ -1064,6 +1065,7 @@ export function LandingV2Page({
       </main>
       <Footer content={content} phone={phone} />
       <FloatingContact phone={phone} />
+      <TutorialLauncher />
     </div>
   );
 }

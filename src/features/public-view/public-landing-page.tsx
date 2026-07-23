@@ -28,6 +28,7 @@ import {
   MigrationInvite,
 } from "@/features/public-view/landing-sections";
 import { extractLandingV2 } from "@/features/public-view/landing-v2.mapper";
+import { TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
 
 const hiddenPublicLabels = /^(proceso|agendar|booking|cita|citas)$/i;
 const hiddenPublicHrefs = /(booking|paciente|terapeuta|admin|#proceso)/i;
@@ -274,7 +275,7 @@ function Hero({
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button asChild className="cta-shine h-[3.35rem] rounded-2xl px-7 text-base shadow-[0_18px_45px_rgba(99,48,35,0.22)] transition-transform hover:-translate-y-1" size="lg">
-              <Link href={actionHref(hero?.primaryCta, "/registro")}>
+              <Link href={actionHref(hero?.primaryCta, "/registro")} data-tour="empezar">
                 {hero?.primaryCta?.label || "Dar el primer paso"} <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
@@ -579,6 +580,7 @@ function Section({
 function FloatingContact({ phone }: { phone?: string }) {
   return (
     <a
+      data-tour="contacto"
       className="fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#50251b]"
       href={contactHref(phone)}
       target={phone ? "_blank" : undefined}
@@ -702,6 +704,7 @@ function GenericPublicLandingPage({
       </main>
       <Footer landing={landing} phone={phone} />
       <FloatingContact phone={phone} />
+      <TutorialLauncher />
     </div>
   );
 }
