@@ -28,7 +28,7 @@ export const ARTICLES: Article[] = [
     id: "que-es-el-duelo-migratorio",
     eyebrow: "Artículo pilar",
     title: "¿Qué es el duelo migratorio? Las siete pérdidas que nadie te explicó al emigrar",
-    image: "/articulos/duelo-que-es.png",
+    image: "https://res.cloudinary.com/sfyimi9x/image/upload/v1784814031/corazon-migrante/public/cms/1ae48a3b-b7cb-424b-baa4-635c93e4031b/f4555f35-a264-471f-8503-4b95507958c6.png",
     excerpt:
       "Migrar suele presentarse como una decisión llena de esperanza. Pero detrás de cada proceso existe una experiencia silenciosa y profunda: el duelo migratorio.",
     readingTime: "8 min de lectura",
@@ -59,7 +59,7 @@ export const ARTICLES: Article[] = [
     id: "las-siete-perdidas-del-migrante",
     eyebrow: "Serie duelo migratorio",
     title: "Las siete pérdidas del migrante: comprender lo que duele para empezar a sanar",
-    image: "/articulos/duelo-siete-perdidas.png",
+    image: "https://res.cloudinary.com/sfyimi9x/image/upload/v1784814035/corazon-migrante/public/cms/1ae48a3b-b7cb-424b-baa4-635c93e4031b/59cf545d-dc8a-4af3-819a-98e141fd7aaa.png",
     excerpt:
       "Migrar implica despedirse de aspectos que durante años dieron sentido a nuestra vida. El Dr. Joseba Achotegui describe siete grandes pérdidas que componen el duelo migratorio.",
     readingTime: "12 min de lectura",
@@ -102,7 +102,7 @@ export const ARTICLES: Article[] = [
     id: "que-emociones-son-normales",
     eyebrow: "Serie duelo migratorio",
     title: "¿Qué emociones son normales durante el duelo migratorio?",
-    image: "/articulos/duelo-emociones.png",
+    image: "https://res.cloudinary.com/sfyimi9x/image/upload/v1784814038/corazon-migrante/public/cms/1ae48a3b-b7cb-424b-baa4-635c93e4031b/b152ebe6-d708-41b9-96d4-9c32f65294b1.png",
     excerpt:
       "“¿Será normal sentirme así?” Muchas de las emociones difíciles tras migrar forman parte del proceso natural de adaptación. Conocerlas ayuda a comprenderlas.",
     readingTime: "9 min de lectura",

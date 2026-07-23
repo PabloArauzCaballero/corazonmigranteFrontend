@@ -53,7 +53,7 @@ export const SPECIALISTS: Specialist[] = [
   {
     name: "Marlene Cossio",
     role: "Psicóloga Clínica",
-    image: "/landing/dr-marlene.png",
+    image: "https://res.cloudinary.com/sfyimi9x/image/upload/v1784814026/corazon-migrante/public/cms/1ae48a3b-b7cb-424b-baa4-635c93e4031b/1bc90482-903f-4afb-9c88-22fbbbc5008e.png",
     phrase: "Migrar no afecta solo a quien se va: también transforma profundamente a quien se queda.",
     tags: ["Migración", "Maternidad", "Acompañamiento"],
   },
@@ -74,7 +74,7 @@ export const SPECIALISTS: Specialist[] = [
   {
     name: "Diane Wimberly",
     role: "Psicóloga",
-    image: "/landing/dr-diane.png",
+    image: "https://res.cloudinary.com/sfyimi9x/image/upload/v1784814028/corazon-migrante/public/cms/1ae48a3b-b7cb-424b-baa4-635c93e4031b/a2b41771-16ea-4352-8de9-fa0aa2a799df.png",
     phrase: "La barrera del idioma no es solo lingüística: es emocional.",
     tags: ["Biculturalidad", "Adaptación", "Empatía"],
   },
