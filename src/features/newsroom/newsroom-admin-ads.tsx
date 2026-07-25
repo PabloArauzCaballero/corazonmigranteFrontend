@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Megaphone } from "lucide-react";
+import { Megaphone, Pause, Play } from "lucide-react";
 import { adsApi, newsroomApi } from "@/features/newsroom/newsroom.api";
 import { listCmsPages } from "@/features/editorial/editorial.api";
 import type { AdsCampaign, AdsCompany, AdsCreative, AdsPlacement } from "@/features/newsroom/newsroom.types";
@@ -167,7 +167,7 @@ export function AdsCampaignsAdmin() {
         {campaigns.isError ? <ErrorState title="No se pudo cargar campañas" description={humanizeApiError(campaigns.error)} /> : null}
         {campaigns.data ? (
           <div className="grid gap-4">
-            <DataTable<AdsCampaign> data={campaigns.data.items} getRowKey={(row) => row.id} columns={[{ key: "name", header: "Campaña", render: (row) => <b>{row.name}</b> }, { key: "company", header: "Empresa", render: (row) => row.company?.commercialName ?? row.companyId }, { key: "status", header: "Estado", render: (row) => <StatusBadge status={row.status} /> }, { key: "target", header: "Asociación", render: (row) => { const count = row.contentTargets?.filter((t) => t.publicationId || t.categoryId || t.pageSlug).length ?? 0; return count ? `${count} pub/cat/página` : "Global"; } }, { key: "dates", header: "Vigencia", render: (row) => <span>{fmtDate(row.startsAt)}<br />{fmtDate(row.endsAt)}</span> }, { key: "actions", header: "Acciones", render: (row) => <div className="flex gap-2"><Button size="sm" disabled={statusMutation.isPending} onClick={() => statusMutation.mutate({ id: row.id, status: "ACTIVE" })}>Activar</Button><Button size="sm" variant="outline" disabled={statusMutation.isPending} onClick={() => statusMutation.mutate({ id: row.id, status: "PAUSED" })}>Pausar</Button></div> }]} />
+            <DataTable<AdsCampaign> data={campaigns.data.items} getRowKey={(row) => row.id} columns={[{ key: "name", header: "Campaña", render: (row) => <b>{row.name}</b> }, { key: "company", header: "Empresa", render: (row) => row.company?.commercialName ?? row.companyId }, { key: "status", header: "Estado", render: (row) => <StatusBadge status={row.status} /> }, { key: "target", header: "Asociación", render: (row) => { const count = row.contentTargets?.filter((t) => t.publicationId || t.categoryId || t.pageSlug).length ?? 0; return count ? `${count} pub/cat/página` : "Global"; } }, { key: "dates", header: "Vigencia", render: (row) => <span>{fmtDate(row.startsAt)}<br />{fmtDate(row.endsAt)}</span> }, { key: "actions", header: "Acciones", render: (row) => <div className="flex gap-2"><Button size="sm" disabled={statusMutation.isPending || row.status === "ACTIVE"} onClick={() => statusMutation.mutate({ id: row.id, status: "ACTIVE" })}><Play className="h-4 w-4" /> Activar</Button><Button size="sm" variant="outline" disabled={statusMutation.isPending || row.status === "PAUSED"} onClick={() => statusMutation.mutate({ id: row.id, status: "PAUSED" })}><Pause className="h-4 w-4" /> Pausar</Button></div> }]} />
             <PaginationBar page={campaigns.data.page} totalPages={campaigns.data.totalPages} onPrevious={() => setCampaignsPage((p) => Math.max(1, p - 1))} onNext={() => setCampaignsPage((p) => Math.min(campaigns.data?.totalPages ?? p, p + 1))} />
           </div>
         ) : null}

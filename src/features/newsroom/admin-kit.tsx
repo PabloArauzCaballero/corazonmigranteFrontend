@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
+import { useToast } from "@/shared/ui/toast";
 
 export function Panel({ title, description, children, icon }: { title: string; description?: string; children: ReactNode; icon?: ReactNode }) {
   return <Card className="overflow-hidden rounded-xl border-slate-200 bg-white shadow-none transition-shadow hover:shadow-sm"><CardHeader className="border-b bg-[#f7f4ef]/70"><div className="flex items-start gap-3">{icon ? <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-teal-900 text-white">{icon}</span> : null}<div><CardTitle>{title}</CardTitle>{description ? <CardDescription>{description}</CardDescription> : null}</div></div></CardHeader><CardContent className="p-6">{children}</CardContent></Card>;
@@ -93,11 +94,14 @@ export function fstr(form: FormData, key: string) { const v = form.get(key); ret
 export function useNotice() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const toast = useToast();
   return {
     message,
     error,
-    ok: (msg: string) => { setMessage(msg); setError(""); },
-    fail: (e: unknown) => { setError(humanizeApiError(e)); setMessage(""); },
+    // Además del aviso inline, disparamos un toast global (prominente + animado)
+    // para que en TODOS los paneles admin quede claro que la acción sucedió.
+    ok: (msg: string) => { setMessage(msg); setError(""); toast({ title: msg, variant: "success" }); },
+    fail: (e: unknown) => { const m = humanizeApiError(e); setError(m); setMessage(""); toast({ title: "No se pudo completar la acción", description: m, variant: "danger" }); },
     clear: () => { setMessage(""); setError(""); },
   };
 }

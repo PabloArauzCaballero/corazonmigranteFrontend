@@ -5,6 +5,7 @@ import { useState } from "react";
 import { SessionProvider } from "@/shared/auth/use-session";
 import { GlobalLoadingBar } from "@/shared/ui/global-loading-bar";
 import { ToastProvider } from "@/shared/ui/toast";
+import { ConfirmProvider } from "@/shared/ui/confirm-dialog";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -23,7 +24,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <GlobalLoadingBar />
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <ConfirmProvider>{children}</ConfirmProvider>
+        </ToastProvider>
       </SessionProvider>
     </QueryClientProvider>
   );
