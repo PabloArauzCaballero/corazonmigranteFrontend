@@ -1,3 +1,5 @@
+"use client";
+
 import { fileServer } from "@/config/file-server";
 
 export function AuthVisualLayout({ children, eyebrow = "Corazón Migrante", title = "Acompañamiento emocional seguro" }: { children: React.ReactNode; eyebrow?: string; title?: string }) {
@@ -6,7 +8,9 @@ export function AuthVisualLayout({ children, eyebrow = "Corazón Migrante", titl
       <div className="order-2 lg:order-1">{children}</div>
       <aside className="order-1 overflow-hidden border border-slate-200 bg-slate-100 lg:order-2">
         <div className="relative min-h-[22rem] lg:min-h-[38rem]">
-          {fileServer.authImageUrl ? <img src={fileServer.authImageUrl} alt="Corazón Migrante" className="absolute inset-0 h-full w-full object-cover" /> : null}
+          {fileServer.authImageUrl ? <img src={fileServer.authImageUrl} alt="Corazón Migrante" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : null}
+          {/* Fondo de respaldo por si la imagen no carga: la marca sigue viéndose bien */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2b1b17] via-[#50251b] to-[#800d0d]" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/72 via-slate-950/20 to-transparent" aria-hidden="true" />
           <div className="absolute inset-x-0 bottom-0 p-7 text-white md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/75">{eyebrow}</p>

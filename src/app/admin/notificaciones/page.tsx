@@ -86,8 +86,11 @@ export default function NotificationsPage() {
     }
   }
 
-  const unreadCount = (data?.items ?? []).filter((n) => !n.isRead).length;
-  const totalPages = data?.pagination.totalPages ?? 1;
+  // Derivadas seguras: el endpoint puede fallar o devolver otra forma sin
+  // items/pagination, y accederlos directo crashea ("reading 'length'").
+  const items: AdminNotification[] = Array.isArray(data?.items) ? data.items : [];
+  const unreadCount = items.filter((n) => !n.isRead).length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   return (
     <div className="grid gap-6">
@@ -137,7 +140,7 @@ export default function NotificationsPage() {
       {/* Content */}
       {loading ? (
         <DataTableSkeleton columns={3} rows={6} />
-      ) : !data || data.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <Card className="animate-fade-in">
           <CardContent className="flex flex-col items-center gap-4 py-16 text-muted-foreground">
             <Bell className="h-10 w-10 opacity-30" />
@@ -146,7 +149,7 @@ export default function NotificationsPage() {
         </Card>
       ) : (
         <div className="grid gap-2">
-          {data.items.map((n: AdminNotification, i) => (
+          {items.map((n: AdminNotification, i) => (
             <div
               key={n.id}
               className={`animate-fade-in flex items-start justify-between gap-4 rounded-2xl border p-5 transition-all duration-200 ${

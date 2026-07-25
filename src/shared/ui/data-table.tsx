@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { EmptyState } from "@/shared/ui/state";
 import { Button } from "@/shared/ui/button";
@@ -59,12 +59,15 @@ export function DataTable<T>({
   emptyDescription = "Ajusta la búsqueda o los filtros para encontrar información.",
 }: {
   columns: DataTableColumn<T>[];
-  data: T[];
+  data: T[] | undefined | null;
   getRowKey: (row: T) => string;
   emptyTitle?: string;
   emptyDescription?: string;
 }) {
-  if (data.length === 0) {
+  // Defensa: si la data aún no llegó (o el endpoint falló) evitamos el crash
+  // "Cannot read properties of undefined (reading 'length')".
+  const rows = Array.isArray(data) ? data : [];
+  if (rows.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
 
@@ -82,7 +85,7 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody className="divide-y">
-            {data.map((row, i) => (
+            {rows.map((row, i) => (
               <tr
                 className="table-row-animated transition-colors hover:bg-muted/40"
                 key={getRowKey(row)}

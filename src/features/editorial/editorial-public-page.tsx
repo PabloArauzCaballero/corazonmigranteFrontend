@@ -76,7 +76,7 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
           </div>
 
           <div className="relative min-h-[32rem] overflow-hidden border border-slate-200 bg-slate-100">
-            {hero?.imageUrl ? <img src={hero.imageUrl} alt={hero.imageAlt} className="h-full w-full object-cover" loading="eager" /> : null}
+            {hero?.imageUrl ? <img src={hero.imageUrl} alt={hero.imageAlt} className="h-full w-full object-cover" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : null}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" aria-hidden="true" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-8">
               <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-white/80">
