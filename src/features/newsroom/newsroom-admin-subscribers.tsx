@@ -35,36 +35,41 @@ export function SubscribersAdmin() {
 
   const toggleTier = useMutation({
     mutationFn: (subscriber: ContentSubscriber) => newsroomApi.updateSubscriberByUser(subscriber.userId ?? subscriber.id, { subscriptionTier: subscriber.subscriptionTier === "PREMIUM" ? "FREE" : "PREMIUM", status: "ACTIVE", source: "admin" }),
-    onSuccess: refresh, onError: notice.fail
+    onSuccess: () => { notice.ok("Nivel de suscripción actualizado."); refresh(); }, onError: notice.fail
   });
 
   const approveRequest = useMutation({
     mutationFn: (subscriber: ContentSubscriber) => newsroomApi.approveSubscriberRequest(subscriber.userId ?? subscriber.id),
-    onSuccess: refresh, onError: notice.fail
+    onSuccess: () => { notice.ok("Solicitud premium aprobada."); refresh(); }, onError: notice.fail
   });
 
   const rejectRequest = useMutation({
     mutationFn: (subscriber: ContentSubscriber) => newsroomApi.rejectSubscriberRequest(subscriber.userId ?? subscriber.id),
-    onSuccess: refresh, onError: notice.fail
+    onSuccess: () => { notice.ok("Solicitud premium rechazada."); refresh(); }, onError: notice.fail
   });
 
   const pendingRequests = (query.data?.items ?? []).filter((subscriber) => subscriber.status === "PENDING");
 
   return (
     <div className="grid gap-6">
-      {pendingRequests.length > 0 ? (
-        <Panel title="Solicitudes de suscripción premium" description="Estos pacientes pidieron acceso al contenido premium." icon={<Clock3 className="h-5 w-5" />}>
-          <DataTable<ContentSubscriber>
-            data={pendingRequests}
-            getRowKey={(r) => r.id}
-            columns={[
-              { key: "email", header: "Paciente", render: (r) => <div><b>{r.displayName || r.email}</b>{r.displayName ? <p className="text-xs text-muted-foreground">{r.email}</p> : null}</div> },
-              { key: "requestedAt", header: "Solicitado", render: (r) => fmtDate((r.metadata?.requestedPremiumAt as string) ?? r.updatedAt) },
-              { key: "actions", header: "Acciones", render: (r) => <div className="flex gap-2"><Button size="sm" disabled={approveRequest.isPending} onClick={() => approveRequest.mutate(r)}><CheckCircle2 className="h-4 w-4" />Aprobar</Button><Button size="sm" variant="outline" disabled={rejectRequest.isPending} onClick={() => rejectRequest.mutate(r)}><XCircle className="h-4 w-4" />Rechazar</Button></div> }
-            ]}
-          />
-        </Panel>
-      ) : null}
+      <Panel title="Solicitudes de suscripción premium" description="Solicitudes que los usuarios finales envían para acceder al contenido premium. Apruébalas o recházalas aquí." icon={<Clock3 className="h-5 w-5" />}>
+        {pendingRequests.length > 0 ? (
+          <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+            <Clock3 className="h-3.5 w-3.5" /> {pendingRequests.length} pendiente{pendingRequests.length === 1 ? "" : "s"}
+          </span>
+        ) : null}
+        <DataTable<ContentSubscriber>
+          data={pendingRequests}
+          getRowKey={(r) => r.id}
+          emptyTitle="Sin solicitudes pendientes"
+          emptyDescription="Cuando un usuario solicite acceso premium, aparecerá aquí para aprobar o rechazar."
+          columns={[
+            { key: "email", header: "Paciente", render: (r) => <div><b>{r.displayName || r.email}</b>{r.displayName ? <p className="text-xs text-muted-foreground">{r.email}</p> : null}</div> },
+            { key: "requestedAt", header: "Solicitado", render: (r) => fmtDate((r.metadata?.requestedPremiumAt as string) ?? r.updatedAt) },
+            { key: "actions", header: "Acciones", render: (r) => <div className="flex gap-2"><Button size="sm" disabled={approveRequest.isPending} onClick={() => approveRequest.mutate(r)}><CheckCircle2 className="h-4 w-4" />Aprobar</Button><Button size="sm" variant="outline" disabled={rejectRequest.isPending} onClick={() => rejectRequest.mutate(r)}><XCircle className="h-4 w-4" />Rechazar</Button></div> }
+          ]}
+        />
+      </Panel>
 
       <Panel title="Registrar paciente suscriptor" description="Los suscriptores premium se vinculan a usuarios pacientes existentes." icon={<Users className="h-5 w-5" />}>
         <form className="grid gap-4 md:grid-cols-3" onSubmit={(e) => { e.preventDefault(); mutation.mutate(new FormData(e.currentTarget)); }}>

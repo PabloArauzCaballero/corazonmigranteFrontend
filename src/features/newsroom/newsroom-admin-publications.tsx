@@ -108,9 +108,7 @@ function PublicationsForm({ editing, onDone, onCancel }: { editing?: Publication
           <TagPicker options={(tags.data ?? []).map((t) => ({ id: t.id, name: t.name }))} value={tagIds} onChange={setTagIds} loading={tags.isLoading} />
         </Field>
         <Field label="Páginas donde aparecerá" className="xl:col-span-3" hint="Sirve para controlar dónde se incrustará esta publicación.">
-          <Select multiple className="min-h-32" value={embedPageSlugs} onChange={(event: ChangeEvent<HTMLSelectElement>) => setEmbedPageSlugs(Array.from(event.currentTarget.selectedOptions).map((option) => option.value))}>
-            {(pages.data ?? []).map((page) => <option key={page.id || page.slug} value={page.slug}>{page.title} · /{page.slug}</option>)}
-          </Select>
+          <TagPicker options={(pages.data ?? []).map((page) => ({ id: page.slug, name: `${page.title} · /${page.slug}` }))} value={embedPageSlugs} onChange={setEmbedPageSlugs} loading={pages.isLoading} />
           {pages.isLoading ? <p className="text-xs text-muted-foreground">Cargando páginas públicas...</p> : null}
           {pages.isError ? <p className="text-xs text-red-700">No se pudieron cargar las páginas públicas.</p> : null}
         </Field>

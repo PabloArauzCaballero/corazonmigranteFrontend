@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode, SelectHTMLAttributes } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { humanizeApiError } from "@/shared/api/errors";
-import { AlertCircle, CheckCircle2, X } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -17,6 +17,99 @@ export function Panel({ title, description, children, icon }: { title: string; d
 export function Field({ label, children, hint, className }: { label: string; children: ReactNode; hint?: string; className?: string }) { return <div className={cn("space-y-2", className)}><Label>{label}</Label>{children}{hint ? <p className="text-xs leading-5 text-muted-foreground">{hint}</p> : null}</div>; }
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) { return <select className={cn("focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />; }
 export function NativeInput({ className, ...props }: ComponentProps<typeof Input>) { return <Input className={cn("rounded-[14px]", className)} {...props} />; }
+
+export type MultiOption = { value: string; label: string };
+
+/**
+ * Selector múltiple amigable: desplegable con búsqueda + chips (reemplaza al
+ * `<select multiple>` nativo). Renderiza inputs ocultos con `name` para que el
+ * envío por FormData (`form.getAll(name)`) siga funcionando igual.
+ */
+export function MultiSelectChips({
+  name,
+  options,
+  defaultValues = [],
+  placeholder = "Buscar y seleccionar…",
+  emptyLabel = "Sin opciones",
+}: {
+  name: string;
+  options: MultiOption[];
+  defaultValues?: string[];
+  placeholder?: string;
+  emptyLabel?: string;
+}) {
+  const [selected, setSelected] = useState<string[]>(defaultValues);
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const labelOf = useMemo(() => new Map(options.map((o) => [o.value, o.label])), [options]);
+  const available = options.filter(
+    (o) => !selected.includes(o.value) && o.label.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const add = (v: string) => { setSelected((prev) => [...prev, v]); setQuery(""); };
+  const remove = (v: string) => setSelected((prev) => prev.filter((x) => x !== v));
+
+  return (
+    <div className="relative" ref={ref}>
+      {selected.map((v) => <input key={v} type="hidden" name={name} value={v} />)}
+      <div
+        className="focus-ring flex min-h-14 w-full flex-wrap items-center gap-1.5 rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-3 py-2 text-sm shadow-sm"
+        onClick={() => setOpen(true)}
+      >
+        {selected.map((v) => (
+          <span key={v} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+            {labelOf.get(v) ?? v}
+            <button type="button" onClick={(e) => { e.stopPropagation(); remove(v); }} className="rounded-full p-0.5 hover:bg-primary/20" aria-label="Quitar">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+        <div className="flex min-w-[8rem] flex-1 items-center gap-1.5">
+          <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <input
+            className="w-full bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground"
+            placeholder={selected.length ? "Agregar más…" : placeholder}
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+          />
+          <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} aria-hidden="true" />
+        </div>
+      </div>
+      {open ? (
+        <ul className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border bg-card p-1 shadow-xl animate-fade-in">
+          {available.length === 0 ? (
+            <li className="px-3 py-2 text-xs text-muted-foreground">{query ? "Sin coincidencias" : emptyLabel}</li>
+          ) : (
+            available.map((o) => (
+              <li key={o.value}>
+                <button
+                  type="button"
+                  onClick={() => add(o.value)}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                >
+                  <Check className="h-3.5 w-3.5 shrink-0 opacity-0" aria-hidden="true" />
+                  <span className="truncate">{o.label}</span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
 export function NativeTextarea({ className, ...props }: ComponentProps<typeof Textarea>) { return <Textarea className={cn("rounded-[14px]", className)} {...props} />; }
 export function Submit({ pending, label = "Guardar" }: { pending: boolean; label?: string }) { return <Button type="submit" disabled={pending} className="w-full rounded-xl bg-teal-900 hover:bg-teal-950 sm:w-auto">{pending ? "Procesando..." : label}</Button>; }
 export function StatusBadge({ status }: { status?: string | boolean | null }) { const v = typeof status === "boolean" ? (status ? "ACTIVE" : "INACTIVE") : String(status ?? "ACTIVE").toUpperCase(); if (["PUBLISHED", "ACTIVE", "APPROVED"].includes(v)) return <Badge variant="success">{v}</Badge>; if (["DRAFT", "SCHEDULED", "IN_REVIEW", "PENDING"].includes(v)) return <Badge variant="warning">{v}</Badge>; if (["ARCHIVED", "PAUSED", "INACTIVE", "ENDED"].includes(v)) return <Badge variant="muted">{v}</Badge>; if (["BLOCKED", "REJECTED", "CANCELLED"].includes(v)) return <Badge variant="danger">{v}</Badge>; return <Badge variant="secondary">{v}</Badge>; }

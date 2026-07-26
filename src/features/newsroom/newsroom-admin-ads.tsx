@@ -6,7 +6,7 @@ import { Megaphone, Pause, Play } from "lucide-react";
 import { adsApi, newsroomApi } from "@/features/newsroom/newsroom.api";
 import { listCmsPages } from "@/features/editorial/editorial.api";
 import type { AdsCampaign, AdsCompany, AdsCreative, AdsPlacement } from "@/features/newsroom/newsroom.types";
-import { csv, Field, fmtDate, fnum, fstr, isoLocal, NativeInput, Notice, Panel, paginateClient, Select, StatusBadge, Submit, typeLabel, useNotice } from "@/features/newsroom/admin-kit";
+import { csv, Field, fmtDate, fnum, fstr, isoLocal, MultiSelectChips, NativeInput, Notice, Panel, paginateClient, Select, StatusBadge, Submit, typeLabel, useNotice } from "@/features/newsroom/admin-kit";
 import { ApiError, humanizeApiError } from "@/shared/api/errors";
 import { uploadFile } from "@/shared/api/files";
 import { Button } from "@/shared/ui/button";
@@ -157,9 +157,9 @@ export function AdsCampaignsAdmin() {
           <Field label="Inicio"><NativeInput name="startsAt" type="datetime-local" required /></Field>
           <Field label="Fin"><NativeInput name="endsAt" type="datetime-local" required /></Field>
           <Field label="Presupuesto"><NativeInput name="budgetAmount" type="number" min="0" step="0.01" defaultValue={0} /></Field>
-          <Field label="Ubicaciones" hint="Ctrl/Shift para seleccionar varias."><Select name="placementIds" multiple className="min-h-28">{(placements.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name} · {p.code}</option>)}</Select></Field>
-          <Field label="Publicaciones asociadas *" className="xl:col-span-2" hint="Obligatorio. Ctrl/Shift para varias."><Select name="publicationIds" multiple required className="min-h-40">{(publications.data?.items ?? []).map((pub) => <option key={pub.id} value={pub.id}>{pub.title} · {typeLabel(pub.publicationType)}</option>)}</Select>{publications.isError ? <p className="text-xs text-red-700">{humanizeApiError(publications.error)}</p> : null}</Field>
-          <Field label="Páginas públicas asociadas" className="xl:col-span-2" hint="Opcional."><Select name="pageSlugs" multiple className="min-h-40">{(pages.data ?? []).map((page) => <option key={page.id ?? page.slug} value={page.slug}>{page.title} · /{page.slug}</option>)}</Select>{pages.isError ? <p className="text-xs text-red-700">{humanizeApiError(pages.error)}</p> : null}</Field>
+          <Field label="Ubicaciones" hint="Elige una o varias."><MultiSelectChips name="placementIds" placeholder="Buscar ubicación…" options={(placements.data ?? []).map((p) => ({ value: p.id, label: `${p.name} · ${p.code}` }))} /></Field>
+          <Field label="Publicaciones asociadas *" className="xl:col-span-2" hint="Obligatorio. Elige una o varias."><MultiSelectChips name="publicationIds" placeholder="Buscar publicación…" options={(publications.data?.items ?? []).map((pub) => ({ value: pub.id, label: `${pub.title} · ${typeLabel(pub.publicationType)}` }))} />{publications.isError ? <p className="text-xs text-red-700">{humanizeApiError(publications.error)}</p> : null}</Field>
+          <Field label="Páginas públicas asociadas" className="xl:col-span-2" hint="Opcional."><MultiSelectChips name="pageSlugs" placeholder="Buscar página…" options={(pages.data ?? []).map((page) => ({ value: page.slug, label: `${page.title} · /${page.slug}` }))} />{pages.isError ? <p className="text-xs text-red-700">{humanizeApiError(pages.error)}</p> : null}</Field>
           <div className="xl:col-span-4"><Submit pending={campaignMutation.isPending} label="Crear campaña" /></div>
         </form>
         <Notice message={notice.message} error={notice.error} />
@@ -215,7 +215,7 @@ export function AdsCreativesAdmin() {
           <Field label="Texto alternativo"><NativeInput name="altText" /></Field>
           <Field label="Publicación relacionada" className="xl:col-span-2" hint="Opcional."><Select name="publicationId" defaultValue=""><option value="">Global</option>{(publications.data?.items ?? []).map((pub) => <option key={pub.id} value={pub.id}>{pub.title}</option>)}</Select></Field>
           <Field label="Página pública relacionada" className="xl:col-span-2" hint="Opcional."><Select name="pageSlug" defaultValue=""><option value="">Global</option>{(pages.data ?? []).map((page) => <option key={page.id ?? page.slug} value={page.slug}>{page.title} · /{page.slug}</option>)}</Select></Field>
-          <Field label="Ubicaciones" className="xl:col-span-2" hint="Opcional. Ctrl/Shift para varias."><Select name="creativePlacementIds" multiple className="min-h-28">{(placements.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name} · {p.code}</option>)}</Select></Field>
+          <Field label="Ubicaciones" className="xl:col-span-2" hint="Opcional. Elige una o varias."><MultiSelectChips name="creativePlacementIds" placeholder="Buscar ubicación…" options={(placements.data ?? []).map((p) => ({ value: p.id, label: `${p.name} · ${p.code}` }))} /></Field>
           <Field label="Imagen" className="xl:col-span-2" hint="Usa archivo o URL pública."><NativeInput type="file" name="assetFile" accept="image/png,image/jpeg,image/webp" /></Field>
           <Field label="URL imagen" className="xl:col-span-2"><NativeInput name="assetUrl" type="url" /></Field>
           <div className="xl:col-span-4"><Submit pending={creativeMutation.isPending} label="Agregar creativo" /></div>
