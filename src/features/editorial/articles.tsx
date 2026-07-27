@@ -2,6 +2,7 @@
 
 import { ArrowRight, BookOpen, Lightbulb, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Artículos editoriales de la Biblioteca (serie "Duelo migratorio").
@@ -162,8 +163,9 @@ function ArticleModal({ article, onClose }: { article: Article; onClose: () => v
     };
   }, [onClose]);
 
-  return (
-    <div className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto p-4 md:p-8" role="dialog" aria-modal="true" aria-label={article.title}>
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto p-4 md:p-8" role="dialog" aria-modal="true" aria-label={article.title}>
       <div className="absolute inset-0 bg-[#140806]/70" onClick={onClose} aria-hidden="true" />
       <article className="relative z-10 my-auto w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-[0_40px_120px_rgba(0,0,0,0.5)]">
         <div className="relative h-64 w-full overflow-hidden bg-slate-100 sm:h-80">
@@ -188,7 +190,8 @@ function ArticleModal({ article, onClose }: { article: Article; onClose: () => v
           ))}
         </div>
       </article>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
