@@ -20,11 +20,16 @@ const GAP = 14;
 
 function readRect(selector?: string): Rect | null {
   if (!selector) return null;
-  const el = document.querySelector(selector);
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  if (r.width === 0 && r.height === 0) return null;
-  return { top: r.top, left: r.left, width: r.width, height: r.height };
+  // Elige el primer elemento VISIBLE que coincida (en el sidebar de escritorio o
+  // en el nav móvil, según el viewport), evitando los que están display:none.
+  const els = document.querySelectorAll(selector);
+  for (const el of Array.from(els)) {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 || r.height > 0) {
+      return { top: r.top, left: r.left, width: r.width, height: r.height };
+    }
+  }
+  return null;
 }
 
 function cardPosition(rect: Rect | null, placement: TourStep["placement"]) {

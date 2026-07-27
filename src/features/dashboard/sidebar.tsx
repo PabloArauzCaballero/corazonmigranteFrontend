@@ -14,6 +14,7 @@ import { fileServer } from "@/config/file-server";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { NotificationBell } from "@/features/notifications/notification-bell";
+import { ADMIN_TOUR, PATIENT_TOUR, TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
 
 export type SidebarItem = {
   href: string;
@@ -142,6 +143,7 @@ function NavGroup({ entry, pathname }: { entry: Extract<NavEntry, { kind: "group
     <div>
       <button
         type="button"
+        data-tour={`nav-group-${entry.label.toLowerCase()}`}
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "group flex w-full min-w-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-150",
@@ -189,6 +191,12 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
 
   const showLogo = Boolean(fileServer.logoUrl) && !logoFailed;
   const isAdmin = navItems === adminNav;
+  // Tutorial interactivo por portal (admin y paciente).
+  const portalTour = isAdmin
+    ? { steps: ADMIN_TOUR, key: "cm.tour.admin.v1" }
+    : navItems === patientNav
+      ? { steps: PATIENT_TOUR, key: "cm.tour.paciente.v1" }
+      : null;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -278,6 +286,10 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
           <div className="page-enter">{children}</div>
         </main>
       </div>
+
+      {portalTour ? (
+        <TutorialLauncher steps={portalTour.steps} storageKey={portalTour.key} position="right" />
+      ) : null}
     </div>
   );
 }
