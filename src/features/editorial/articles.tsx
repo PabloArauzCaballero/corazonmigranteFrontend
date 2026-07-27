@@ -169,7 +169,7 @@ function ArticleModal({ article, onClose }: { article: Article; onClose: () => v
       <div className="absolute inset-0 bg-[#140806]/70" onClick={onClose} aria-hidden="true" />
       <article className="relative z-10 my-auto w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-[0_40px_120px_rgba(0,0,0,0.5)]">
         <div className="relative h-64 w-full overflow-hidden bg-slate-100 sm:h-80">
-          <img src={article.image} alt={article.title} className="h-full w-full object-cover" />
+          <img src={article.image} alt={article.title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
           <div className="absolute inset-0 bg-gradient-to-t from-[#140806] via-[#140806]/35 to-transparent" />
           <button
             type="button"
@@ -200,7 +200,7 @@ export function ArticlesGrid({ articles = ARTICLES }: { articles?: Article[] }) 
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => (
           <button
             key={article.id}
@@ -214,6 +214,7 @@ export function ArticlesGrid({ articles = ARTICLES }: { articles?: Article[] }) 
                 alt={article.title}
                 loading="lazy"
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
               <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/92 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-primary backdrop-blur">
                 <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />

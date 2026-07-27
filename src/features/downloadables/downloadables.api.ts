@@ -2,6 +2,28 @@ import { apiRequest } from "@/shared/api/client";
 
 const BASE = "/api/v1";
 
+// El backend envuelve las respuestas en { data, meta }. Estas ayudas
+// desenvuelven ese sobre para que las listas, métricas e historial carguen.
+function unwrap<T>(payload: unknown): T {
+  if (payload && typeof payload === "object" && "data" in payload) {
+    return (payload as { data: T }).data;
+  }
+  return payload as T;
+}
+
+function unwrapList<T>(payload: unknown): Paginated<T> {
+  const record = (payload ?? {}) as Record<string, unknown>;
+  const rawItems = record.data ?? record.items ?? [];
+  const items = Array.isArray(rawItems) ? (rawItems as T[]) : [];
+  const pagination = (record.pagination as Paginated<T>["pagination"]) ?? {
+    page: 1,
+    pageSize: items.length,
+    total: items.length,
+    totalPages: 1,
+  };
+  return { items, pagination };
+}
+
 export type DownloadableVisibility =
   | "PUBLIC"
   | "PREMIUM"
@@ -93,29 +115,28 @@ export type CreateDownloadableInput = {
   requiresPurchase?: boolean;
 };
 
-export function adminListDownloadables(page = 1, search?: string) {
+export async function adminListDownloadables(page = 1, search?: string) {
   const qs = new URLSearchParams({ page: String(page), pageSize: "20" });
   if (search) qs.set("search", search);
-  return apiRequest<Paginated<AdminDownloadable>>(`${BASE}/admin/downloadables?${qs}`, { auth: true });
+  return unwrapList<AdminDownloadable>(await apiRequest<unknown>(`${BASE}/admin/downloadables?${qs}`, { auth: true }));
 }
 
-export function adminGetMetrics() {
-  return apiRequest<{ total: number; published: number; premium: number; hotmart: number; downloads: number; denied: number }>(
-    `${BASE}/admin/downloadables/metrics`,
-    { auth: true },
+export async function adminGetMetrics() {
+  return unwrap<{ total: number; published: number; premium: number; hotmart: number; downloads: number; denied: number }>(
+    await apiRequest<unknown>(`${BASE}/admin/downloadables/metrics`, { auth: true }),
   );
 }
 
-export function adminCreateDownloadable(input: CreateDownloadableInput) {
-  return apiRequest<AdminDownloadable>(`${BASE}/admin/downloadables`, { method: "POST", body: input, auth: true });
+export async function adminCreateDownloadable(input: CreateDownloadableInput) {
+  return unwrap<AdminDownloadable>(await apiRequest<unknown>(`${BASE}/admin/downloadables`, { method: "POST", body: input, auth: true }));
 }
 
-export function adminUpdateDownloadable(id: string, input: Partial<CreateDownloadableInput> & { status?: DownloadableStatus }) {
-  return apiRequest<AdminDownloadable>(`${BASE}/admin/downloadables/${id}`, { method: "PATCH", body: input, auth: true });
+export async function adminUpdateDownloadable(id: string, input: Partial<CreateDownloadableInput> & { status?: DownloadableStatus }) {
+  return unwrap<AdminDownloadable>(await apiRequest<unknown>(`${BASE}/admin/downloadables/${id}`, { method: "PATCH", body: input, auth: true }));
 }
 
-export function adminSetHotmart(id: string, input: { hotmartProductId?: string; hotmartOfferId?: string; hotmartCheckoutUrl?: string; externalReference?: string }) {
-  return apiRequest<AdminDownloadable>(`${BASE}/admin/downloadables/${id}/hotmart`, { method: "PUT", body: input, auth: true });
+export async function adminSetHotmart(id: string, input: { hotmartProductId?: string; hotmartOfferId?: string; hotmartCheckoutUrl?: string; externalReference?: string }) {
+  return unwrap<AdminDownloadable>(await apiRequest<unknown>(`${BASE}/admin/downloadables/${id}/hotmart`, { method: "PUT", body: input, auth: true }));
 }
 
 export function adminCreateVersion(id: string, changeReason?: string) {
@@ -134,11 +155,9 @@ export function adminPublishVersion(id: string, versionId: string) {
   return apiRequest(`${BASE}/admin/downloadables/${id}/versions/${versionId}/publish`, { method: "POST", auth: true });
 }
 
-export function adminListVersions(id: string) {
-  return apiRequest<Array<{ id: string; versionNumber: number; status: DownloadableStatus; isPublished: boolean }>>(
-    `${BASE}/admin/downloadables/${id}/versions`,
-    { auth: true },
-  );
+export async function adminListVersions(id: string) {
+  const payload = unwrap<unknown>(await apiRequest<unknown>(`${BASE}/admin/downloadables/${id}/versions`, { auth: true }));
+  return (Array.isArray(payload) ? payload : []) as Array<{ id: string; versionNumber: number; status: DownloadableStatus; isPublished: boolean }>;
 }
 
 export function adminArchiveDownloadable(id: string) {
@@ -146,17 +165,17 @@ export function adminArchiveDownloadable(id: string) {
 }
 
 // ── Usuario final ──────────────────────────────────────────────────
-export function myLibrary(page = 1) {
-  return apiRequest<Paginated<LibraryCard>>(`${BASE}/downloadables/me/library?page=${page}`, { auth: true });
+export async function myLibrary(page = 1) {
+  return unwrapList<LibraryCard>(await apiRequest<unknown>(`${BASE}/downloadables/me/library?page=${page}`, { auth: true }));
 }
 
-export function requestDownload(id: string) {
-  return apiRequest<{ url: string; action: DownloadableAction }>(`${BASE}/downloadables/${id}/download`, {
-    method: "POST",
-    auth: true,
-  });
+export async function requestDownload(id: string) {
+  return unwrap<{ url: string; action: DownloadableAction }>(
+    await apiRequest<unknown>(`${BASE}/downloadables/${id}/download`, { method: "POST", auth: true }),
+  );
 }
 
-export function publicationDownloadables(publicationId: string) {
-  return apiRequest<LibraryCard[]>(`${BASE}/publications/${publicationId}/downloadables`, { auth: true });
+export async function publicationDownloadables(publicationId: string) {
+  const payload = unwrap<unknown>(await apiRequest<unknown>(`${BASE}/publications/${publicationId}/downloadables`, { auth: true }));
+  return (Array.isArray(payload) ? payload : []) as LibraryCard[];
 }

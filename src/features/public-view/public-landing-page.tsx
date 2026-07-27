@@ -76,9 +76,11 @@ function cleanNavLinks(landing: NormalizedPublicLanding) {
     (item) =>
       /biblioteca|recursos/i.test(item.label) || item.href === "/biblioteca",
   );
+  const hasCourses = links.some((item) => /cursos/i.test(item.label));
   return [
     ...links.slice(0, 3),
     ...(hasLibrary ? [] : [{ label: "Biblioteca", href: "/biblioteca" }]),
+    ...(hasCourses ? [] : [{ label: "Cursos", href: "/biblioteca?tab=cursos" }]),
   ];
 }
 
@@ -167,7 +169,7 @@ function PublicNavbar({
         </Link>
 
         <nav
-          className="hidden items-center gap-7 lg:flex"
+          className="hidden items-center gap-7 md:flex"
           aria-label="Navegación pública"
         >
           {links.map((item) => (

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { BookOpen, HeartHandshake, Search, ShieldCheck, Sparkles } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { env } from "@/config/env";
 import { getHeroFromPage, getPublicCmsPage, getResourcesFromPage } from "@/features/editorial/editorial.api";
 import { EditorialArticleCard } from "@/features/editorial/editorial-card";
@@ -24,6 +24,13 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
   const [search, setSearch] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
   const [tab, setTab] = useState<"articulos" | "recursos" | "cursos" | "historias">("articulos");
+  // Permite abrir una pestaña por URL (?tab=cursos), p. ej. desde el navbar.
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t && ["articulos", "recursos", "cursos", "historias"].includes(t)) {
+      setTab(t as "articulos" | "recursos" | "cursos" | "historias");
+    }
+  }, []);
   const pageSlug = slug?.trim() || env.NEXT_PUBLIC_CMS_LIBRARY_SLUG;
   const pageQuery = useQuery({
     queryKey: ["cms-public-page", pageSlug],
