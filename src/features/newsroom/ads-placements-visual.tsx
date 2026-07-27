@@ -6,19 +6,8 @@ import { adsApi } from "@/features/newsroom/newsroom.api";
 import type { AdsPlacement } from "@/features/newsroom/newsroom.types";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
-import { PageHeader } from "@/shared/ui/page-header";
 import { LoadingState, ErrorState } from "@/shared/ui/state";
 import { humanizeApiError } from "@/shared/api/errors";
-
-// Visual map: code -> position in the diagram
-const PLACEMENT_MAP: Record<string, { label: string; position: string; color: string; page: "home" | "article" | "category" | "all" }> = {
-  home_hero:         { label: "Banner principal",     position: "Inicio — arriba del todo",         color: "bg-violet-100 text-violet-800 border-violet-300",  page: "home" },
-  home_sidebar:      { label: "Lateral inicio",       position: "Inicio — columna derecha",          color: "bg-blue-100 text-blue-800 border-blue-300",        page: "home" },
-  article_top:       { label: "Sobre el artículo",    position: "Publicación — encabezado",          color: "bg-amber-100 text-amber-800 border-amber-300",     page: "article" },
-  article_sidebar:   { label: "Lateral artículo",     position: "Publicación — columna derecha",     color: "bg-orange-100 text-orange-800 border-orange-300",  page: "article" },
-  article_inline:    { label: "Dentro del artículo",  position: "Publicación — entre párrafos",      color: "bg-rose-100 text-rose-800 border-rose-300",        page: "article" },
-  category_top:      { label: "Top de categoría",     position: "Categoría — encabezado",            color: "bg-emerald-100 text-emerald-800 border-emerald-300", page: "category" },
-};
 
 function SiteWireframe({ placements }: { placements: AdsPlacement[] }) {
   const activeCodes = new Set(placements.filter((p) => p.isActive).map((p) => p.code));
@@ -82,12 +71,12 @@ function SiteWireframe({ placements }: { placements: AdsPlacement[] }) {
               <div className="h-2 w-16 rounded bg-muted-foreground/20" />
               <div className="h-2 w-24 rounded bg-primary/30" />
             </div>
-            <Slot code="article_top" label="Sobre el artículo" className="h-12" />
+            <Slot code="article_top" label="Sobre el artículo" className="h-16" />
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-2 space-y-2">
                 <div className="h-5 rounded bg-muted/50 w-3/4" />
                 <div className="h-3 rounded bg-muted/40" />
-                <Slot code="article_inline" label="Dentro del artículo" className="h-10 col-span-2" />
+                <Slot code="article_inline" label="Dentro del artículo" className="h-16" />
                 <div className="h-3 rounded bg-muted/40" />
                 <div className="h-3 rounded bg-muted/40 w-4/5" />
               </div>
