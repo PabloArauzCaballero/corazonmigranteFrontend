@@ -14,7 +14,8 @@ import { fileServer } from "@/config/file-server";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { NotificationBell } from "@/features/notifications/notification-bell";
-import { ADMIN_TOUR, PATIENT_TOUR, TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
+import { TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
+import { getRouteTour } from "@/features/tutorial/portal-tours";
 
 export type SidebarItem = {
   href: string;
@@ -191,12 +192,9 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
 
   const showLogo = Boolean(fileServer.logoUrl) && !logoFailed;
   const isAdmin = navItems === adminNav;
-  // Tutorial interactivo por portal (admin y paciente).
-  const portalTour = isAdmin
-    ? { steps: ADMIN_TOUR, key: "cm.tour.admin.v1" }
-    : navItems === patientNav
-      ? { steps: PATIENT_TOUR, key: "cm.tour.paciente.v1" }
-      : null;
+  // Tutorial interactivo POR PANTALLA (admin y paciente): cada ruta tiene su tour.
+  const isPatient = navItems === patientNav;
+  const portalTour = isAdmin || isPatient ? getRouteTour(pathname) : null;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -288,7 +286,7 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
       </div>
 
       {portalTour ? (
-        <TutorialLauncher steps={portalTour.steps} storageKey={portalTour.key} position="right" />
+        <TutorialLauncher key={pathname} steps={portalTour.steps} storageKey={portalTour.key} position="right" />
       ) : null}
     </div>
   );
