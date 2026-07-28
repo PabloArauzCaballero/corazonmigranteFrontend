@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 
 export type TourStep = {
@@ -120,19 +120,32 @@ export function GuidedTour({
     <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Tutorial de la plataforma">
       {/* Capa oscura con "agujero" alrededor del elemento (o pantalla completa). */}
       {rect ? (
-        <div
-          className="pointer-events-none absolute rounded-xl transition-all duration-300"
-          style={{
-            top: rect.top - PAD,
-            left: rect.left - PAD,
-            width: rect.width + PAD * 2,
-            height: rect.height + PAD * 2,
-            boxShadow: "0 0 0 9999px rgba(20, 8, 6, 0.72)",
-            outline: "3px solid rgba(255,255,255,0.9)",
-          }}
-        />
+        <>
+          <div
+            className="pointer-events-none absolute rounded-xl transition-all duration-500 ease-out"
+            style={{
+              top: rect.top - PAD,
+              left: rect.left - PAD,
+              width: rect.width + PAD * 2,
+              height: rect.height + PAD * 2,
+              boxShadow:
+                "0 0 0 9999px rgba(20, 8, 6, 0.74), 0 0 0 2px rgba(255,255,255,0.95), 0 0 0 6px rgba(128,13,13,0.55), 0 0 60px 12px rgba(128,13,13,0.30)",
+            }}
+          />
+          {/* Anillo pulsante que llama la atención al elemento */}
+          <span
+            className="animate-ping pointer-events-none absolute rounded-xl border-2 border-primary/60"
+            style={{
+              top: rect.top - PAD,
+              left: rect.left - PAD,
+              width: rect.width + PAD * 2,
+              height: rect.height + PAD * 2,
+              animationDuration: "2.4s",
+            }}
+          />
+        </>
       ) : (
-        <div className="absolute inset-0" style={{ backgroundColor: "rgba(20, 8, 6, 0.72)" }} />
+        <div className="absolute inset-0" style={{ backgroundColor: "rgba(20, 8, 6, 0.74)" }} />
       )}
 
       {/* Click en el fondo cierra */}
@@ -146,11 +159,16 @@ export function GuidedTour({
 
       {/* Tarjeta del paso */}
       <div
-        className="absolute w-[340px] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-white/15 bg-white p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)]"
+        key={index}
+        className="animate-fade-in absolute w-[340px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-white/50 bg-white/95 p-5 shadow-[0_30px_80px_rgba(20,8,6,0.5)] backdrop-blur-xl ring-1 ring-black/5"
         style={{ top: pos.top, left: pos.left }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+        {/* Acento superior degradado */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-[#c98a4b] to-[#8c4a62]" />
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
             Paso {index + 1} de {steps.length}
           </span>
           <button
@@ -163,7 +181,7 @@ export function GuidedTour({
           </button>
         </div>
 
-        <h3 className="mt-2 text-lg font-black text-[#2b1b17]">{step.title}</h3>
+        <h3 className="mt-3 text-lg font-black text-[#2b1b17]">{step.title}</h3>
         <p className="mt-2 text-sm leading-6 text-[#5f5b54]">{step.body}</p>
 
         {/* Progreso */}

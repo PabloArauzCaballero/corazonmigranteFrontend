@@ -16,6 +16,7 @@ import { Button } from "@/shared/ui/button";
 import { NotificationBell } from "@/features/notifications/notification-bell";
 import { TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
 import { getRouteTour } from "@/features/tutorial/portal-tours";
+import { ReactiveBackground } from "@/features/dashboard/reactive-background";
 
 export type SidebarItem = {
   href: string;
@@ -197,7 +198,8 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
   const portalTour = isAdmin || isPatient ? getRouteTour(pathname) : null;
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="relative min-h-screen">
+      <ReactiveBackground />
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 overflow-x-hidden border-r bg-card/95 p-4 backdrop-blur lg:flex lg:flex-col">
         {/* Logo */}
