@@ -7,7 +7,6 @@ import {
   CAROUSEL_IMAGES,
   cloudImg,
   DOWNLOADABLES,
-  localImg,
   MIGRATION_INVITE_IMAGE,
   SPECIALISTS,
 } from "@/features/public-view/landing-assets";
@@ -31,13 +30,7 @@ function LandingImg({
       alt={alt}
       loading={loading}
       className={className}
-      onError={(e) => {
-        const t = e.currentTarget;
-        if (!t.dataset.fallback) {
-          t.dataset.fallback = "1";
-          t.src = localImg(name);
-        }
-      }}
+      onError={(e) => { e.currentTarget.style.display = "none"; }}
     />
   );
 }

@@ -144,17 +144,7 @@ function ImageBlock({
       src={src}
       alt={image?.alt || alt || "Imagen de Corazón Migrante"}
       className={className ?? "h-full w-full object-cover"}
-      onError={(event) => {
-        const target = event.currentTarget;
-        // Respaldo: si falla la URL de Cloudinary, intenta la copia local por nombre.
-        const cloudMatch = /\/landing_page\/media\/([^/?#]+)$/.exec(src);
-        if (cloudMatch && !target.dataset.fallback) {
-          target.dataset.fallback = "1";
-          target.src = `/landing/${cloudMatch[1]}`;
-          return;
-        }
-        target.style.display = "none";
-      }}
+      onError={(event) => { event.currentTarget.style.display = "none"; }}
     />
   );
 }

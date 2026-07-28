@@ -30,7 +30,8 @@ export type SmartImageProps = {
   onErrored?: () => void;
 };
 
-const GENERIC_FALLBACK = "/landing/carrusel-1.webp";
+const GENERIC_FALLBACK =
+  "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/carrusel-1.webp";
 
 function isValidSrc(src?: string | null): src is string {
   if (!src) return false;

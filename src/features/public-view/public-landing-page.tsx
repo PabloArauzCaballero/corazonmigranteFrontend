@@ -21,7 +21,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { LandingV2Page } from "@/features/public-view/landing-v2-page";
 import { SmartImage } from "@/shared/ui/smart-image";
-import { SPECIALISTS, cloudImg, localImg } from "@/features/public-view/landing-assets";
+import { SPECIALISTS, cloudImg } from "@/features/public-view/landing-assets";
 import {
   DoctorPhrasesStrip,
   DoctorsCarousel,
@@ -299,7 +299,7 @@ function Hero({
                     alt={s.name}
                     loading="eager"
                     className="h-10 w-10 rounded-full border-2 border-white object-cover shadow-sm"
-                    onError={(e) => { const t = e.currentTarget; if (!t.dataset.fb) { t.dataset.fb = "1"; t.src = localImg(s.image); } }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
                 ))}
               </div>
@@ -343,7 +343,7 @@ function Hero({
             <div className="relative min-h-[32rem] overflow-hidden rounded-[2.2rem] bg-[#d8d0c4] md:min-h-[38rem]">
               <SmartImage
                 src={heroImage}
-                fallbackSrc="/landing/carrusel-2.webp"
+                fallbackSrc={cloudImg("carrusel-2.webp")}
                 alt={hero?.image?.alt || title}
                 priority
                 className="absolute inset-0 h-full w-full"

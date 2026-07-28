@@ -1,36 +1,27 @@
 /**
  * Recursos de la landing.
  *
- * Las imágenes viven en Cloudinary (subidas desde el backend con
- * `node scripts/upload-landing-assets.mjs`) bajo la carpeta
+ * Todas las imágenes viven en Cloudinary bajo la carpeta
  * `<CLOUDINARY_FOLDER>/landing_page/media/`. La URL se construye a partir de
- * NEXT_PUBLIC_FILE_SERVER_PUBLIC_ASSETS_BASE_URL.
- *
- * Cada imagen tiene además una copia local en /public/landing que se usa como
- * respaldo automático (onError) para que la portada nunca se vea caída.
+ * NEXT_PUBLIC_FILE_SERVER_PUBLIC_ASSETS_BASE_URL. No se usan copias locales:
+ * si una imagen falla, se oculta con onError (production-ready, sin assets en /public).
  */
 import { fileServer } from "@/config/file-server";
 
 const CLOUD_MEDIA_BASE = `${fileServer.publicAssetsBaseUrl}/landing_page/media`;
 
-/** True si `name` ya es una URL absoluta o una ruta local lista para usar. */
+/** True si `name` ya es una URL absoluta lista para usar. */
 function isResolvedPath(name: string): boolean {
   return /^(https?:\/\/|\/)/.test(name);
 }
 
-/** URL de Cloudinary para una imagen de la landing (o la ruta tal cual si ya es absoluta). */
+/** URL de Cloudinary para una imagen de la landing (o la URL tal cual si ya es absoluta). */
 export function cloudImg(name: string): string {
   if (isResolvedPath(name)) return name;
   return `${CLOUD_MEDIA_BASE}/${name}`;
 }
 
-/** Ruta local de respaldo (bundle en /public/landing) o la ruta tal cual si ya es absoluta. */
-export function localImg(name: string): string {
-  if (isResolvedPath(name)) return name;
-  return `/landing/${name}`;
-}
-
-// Nombres de archivo (se resuelven a Cloudinary con respaldo local).
+// Nombres de archivo (se resuelven a Cloudinary).
 export const CAROUSEL_IMAGES: string[] = [
   "carrusel-1.webp",
   "carrusel-2.webp",
