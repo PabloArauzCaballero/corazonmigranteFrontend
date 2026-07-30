@@ -15,6 +15,8 @@ const DEFAULT_FILE_SERVER = {
   occupationsUrl: "",
   symptomsUrl: "",
   therapyGoalsUrl: "",
+  doctorGuillermoUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/doctor-guillermo.webp",
+  doctorDanielUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante/landing_page/media/doctor-daniel.webp",
   publicAssetsBaseUrl: "https://res.cloudinary.com/sfyimi9x/image/upload/corazon-migrante"
 } as const;
 
@@ -37,7 +39,9 @@ export const fileServer = {
   countriesCitiesUrl: env.NEXT_PUBLIC_FILE_SERVER_COUNTRIES_CITIES_URL ?? DEFAULT_FILE_SERVER.countriesCitiesUrl,
   occupationsUrl: env.NEXT_PUBLIC_FILE_SERVER_OCCUPATIONS_URL ?? DEFAULT_FILE_SERVER.occupationsUrl,
   symptomsUrl: env.NEXT_PUBLIC_FILE_SERVER_SYMPTOMS_URL ?? DEFAULT_FILE_SERVER.symptomsUrl,
-  therapyGoalsUrl: env.NEXT_PUBLIC_FILE_SERVER_THERAPY_GOALS_URL ?? DEFAULT_FILE_SERVER.therapyGoalsUrl
+  therapyGoalsUrl: env.NEXT_PUBLIC_FILE_SERVER_THERAPY_GOALS_URL ?? DEFAULT_FILE_SERVER.therapyGoalsUrl,
+  doctorGuillermoUrl: env.NEXT_PUBLIC_FILE_SERVER_DOCTOR_GUILLERMO_URL ?? DEFAULT_FILE_SERVER.doctorGuillermoUrl,
+  doctorDanielUrl: env.NEXT_PUBLIC_FILE_SERVER_DOCTOR_DANIEL_URL ?? DEFAULT_FILE_SERVER.doctorDanielUrl
 } as const;
 
 export function buildPublicAssetUrl(objectKey?: string) {

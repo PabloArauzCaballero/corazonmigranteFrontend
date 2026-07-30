@@ -39,6 +39,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_FILE_SERVER_OCCUPATIONS_URL: optionalUrl,
   NEXT_PUBLIC_FILE_SERVER_SYMPTOMS_URL: optionalUrl,
   NEXT_PUBLIC_FILE_SERVER_THERAPY_GOALS_URL: optionalUrl,
+  // Fotos de especialistas de la landing (Cloudinary). Si quedan vacías se usa el
+  // fallback de file-server.ts.
+  NEXT_PUBLIC_FILE_SERVER_DOCTOR_GUILLERMO_URL: optionalUrl,
+  NEXT_PUBLIC_FILE_SERVER_DOCTOR_DANIEL_URL: optionalUrl,
 });
 
 export const env = envSchema.parse({
@@ -84,4 +88,8 @@ export const env = envSchema.parse({
     process.env.NEXT_PUBLIC_FILE_SERVER_SYMPTOMS_URL,
   NEXT_PUBLIC_FILE_SERVER_THERAPY_GOALS_URL:
     process.env.NEXT_PUBLIC_FILE_SERVER_THERAPY_GOALS_URL,
+  NEXT_PUBLIC_FILE_SERVER_DOCTOR_GUILLERMO_URL:
+    process.env.NEXT_PUBLIC_FILE_SERVER_DOCTOR_GUILLERMO_URL,
+  NEXT_PUBLIC_FILE_SERVER_DOCTOR_DANIEL_URL:
+    process.env.NEXT_PUBLIC_FILE_SERVER_DOCTOR_DANIEL_URL,
 });

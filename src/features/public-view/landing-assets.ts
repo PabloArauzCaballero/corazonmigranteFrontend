@@ -51,14 +51,14 @@ export const SPECIALISTS: Specialist[] = [
   {
     name: "Guillermo Rivera",
     role: "Médico Psiquiatra",
-    image: "doctor-guillermo.webp",
+    image: fileServer.doctorGuillermoUrl,
     phrase: "El dolor de migrar no siempre aparece en un diagnóstico: vive en los silencios.",
     tags: ["Psiquiatría", "Salud mental", "Escucha clínica"],
   },
   {
     name: "Daniel Limpias",
     role: "Psicólogo",
-    image: "doctor-daniel.webp",
+    image: fileServer.doctorDanielUrl,
     phrase: "Se puede estar bien en otro lugar y, aun así, sentir que algo no encaja del todo.",
     tags: ["Desarraigo", "Identidad", "Migración"],
   },
