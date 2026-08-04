@@ -114,7 +114,7 @@ function CatalogForm({
         <Label>Estado</Label>
         <select
           name="status"
-          className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           defaultValue={getString(raw, ["status", "estado"], "ACTIVE").toUpperCase() === "INACTIVE" ? "INACTIVE" : "ACTIVE"}
         >
           <option value="ACTIVE">Activo</option>
@@ -143,7 +143,7 @@ function CatalogForm({
             <select
               name="approachId"
               required
-              className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               defaultValue={getString(raw, ["approachId", "approach_id"], "")}
             >
               <option value="">Seleccionar enfoque</option>

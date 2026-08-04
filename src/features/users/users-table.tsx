@@ -134,7 +134,7 @@ function EditTherapistAction({ user }: { user: AdminUser }) {
           <div className="grid gap-2"><Label>Teléfono</Label><Input name="phone" defaultValue={profile?.phone ?? ""} /></div>
           <div className="grid gap-2">
             <Label>Título profesional</Label>
-            <select name="title" defaultValue={profile?.title ?? ""} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={professions.isLoading}>
+            <select name="title" defaultValue={profile?.title ?? ""} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={professions.isLoading}>
               <option value="">{professions.isLoading ? "Cargando..." : "Seleccionar título"}</option>
               {titleOptions.map((title) => <option key={title} value={title}>{title}</option>)}
             </select>
@@ -142,7 +142,7 @@ function EditTherapistAction({ user }: { user: AdminUser }) {
           </div>
           <div className="grid gap-2 md:col-span-2">
             <Label>Especialidad principal</Label>
-            <select name="mainSpecialty" defaultValue={profile?.mainSpecialty ?? ""} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={specialties.isLoading}>
+            <select name="mainSpecialty" defaultValue={profile?.mainSpecialty ?? ""} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={specialties.isLoading}>
               <option value="">{specialties.isLoading ? "Cargando..." : "Seleccionar especialidad"}</option>
               {specialtyOptions.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
             </select>
@@ -206,7 +206,7 @@ function AdminTherapistSchedulesAction({ user }: { user: AdminUser }) {
           <form ref={scheduleFormRef} className="grid gap-4 md:grid-cols-3" onSubmit={onCreateSchedule}>
             <div className="grid gap-2">
               <Label>Día</Label>
-              <select name="weekday" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
+              <select name="weekday" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
                 {WEEKDAYS.map((day, index) => <option key={day} value={index}>{day}</option>)}
               </select>
             </div>
@@ -353,7 +353,7 @@ export function UsersTable() {
         </div>
         <div className="grid gap-2">
           <Label>Rol</Label>
-          <select className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" value={role} onChange={(event) => setRole(event.target.value as CreateUserInput["role"])}>
+          <select className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" value={role} onChange={(event) => setRole(event.target.value as CreateUserInput["role"])}>
             <option value="PACIENTE">Paciente</option>
             <option value="TERAPEUTA">Terapeuta</option>
             <option value="ADMIN">Admin</option>
@@ -370,7 +370,7 @@ export function UsersTable() {
           <>
             <div className="grid gap-2">
               <Label>Titulo profesional</Label>
-              <select name="title" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={professions.isLoading}>
+              <select name="title" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={professions.isLoading}>
                 <option value="">{professions.isLoading ? "Cargando..." : "Seleccionar titulo"}</option>
                 {professions.data?.map((title) => <option key={title} value={title}>{title}</option>)}
               </select>
@@ -378,7 +378,7 @@ export function UsersTable() {
             </div>
             <div className="grid gap-2">
               <Label>Especialidad principal</Label>
-              <select name="mainSpecialty" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={specialties.isLoading}>
+              <select name="mainSpecialty" required className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={specialties.isLoading}>
                 <option value="">{specialties.isLoading ? "Cargando..." : "Seleccionar especialidad"}</option>
                 {specialties.data?.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
               </select>

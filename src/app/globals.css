@@ -1,27 +1,10 @@
+/* `@import` debe preceder a cualquier otra regla para ser válido; los tokens son
+   custom properties en :root, así que el orden respecto a preflight es indiferente. */
+@import "./tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --background: 38 44% 97%;
-  --foreground: 12 20% 13%;
-  --card: 0 0% 100%;
-  --card-foreground: 12 20% 13%;
-  --primary: 0 82% 28%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 34 42% 91%;
-  --secondary-foreground: 12 20% 16%;
-  --muted: 36 28% 92%;
-  --muted-foreground: 31 7% 39%;
-  --accent: 342 31% 92%;
-  --accent-foreground: 342 36% 25%;
-  --destructive: 0 62% 44%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 34 20% 84%;
-  --input: 34 20% 84%;
-  --ring: 0 82% 28%;
-  --radius: 1rem;
-}
 
 * {
   border-color: hsl(var(--border));
@@ -29,31 +12,189 @@
 
 html {
   scroll-behavior: smooth;
+  /* Red de seguridad contra el desbordamiento horizontal accidental (decoraciones
+     absolutas, cadenas largas, tablas). Se usa `clip` y no `hidden` a propósito:
+     `overflow: hidden` en el elemento raíz convierte a la página en contenedor de
+     scroll y rompe `position: sticky` en las cabeceras. `clip` recorta sin crear
+     contexto de desplazamiento, así que las cabeceras fijas siguen funcionando.
+     Esto NO sustituye a arreglar la causa: es la última barrera. */
+  overflow-x: clip;
+}
+
+/* El scroll suave es una animación más: para quien pidió reducir movimiento en el
+   sistema, un salto de ancla largo puede provocar mareo. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
+  min-height: 100dvh;
+  /* Los identificadores reales del producto (correos, slugs, URLs de archivo) no
+     tienen espacios, así que el navegador no encuentra dónde partirlos y ensancha su
+     contenedor hasta desbordar la página. `break-word` solo actúa cuando la palabra
+     no cabe de ninguna forma, de modo que el texto normal no se ve afectado. */
+  overflow-wrap: break-word;
+  /* El fondo compuesto también sale de tokens: en oscuro los mismos
+     tres estratos se recalculan solos en vez de quedar crema fijo. */
   background:
-    radial-gradient(circle at 12% -10%, rgba(99, 48, 35, 0.12), transparent 30rem),
-    radial-gradient(circle at 88% 5%, rgba(130, 67, 88, 0.10), transparent 28rem),
-    linear-gradient(180deg, #fbf8f3 0%, #f6f0e8 100%);
+    radial-gradient(circle at 12% -10%, hsl(var(--brand-clay) / 0.14), transparent 30rem),
+    radial-gradient(circle at 88% 5%, hsl(var(--brand-plum) / 0.12), transparent 28rem),
+    linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--surface-sunken)) 100%);
+  background-attachment: fixed;
   color: hsl(var(--foreground));
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: rgba(99, 48, 35, 0.22);
+  background: hsl(var(--brand-clay) / 0.22);
+  color: hsl(var(--foreground));
 }
 
 .focus-ring {
   @apply transition-[box-shadow,border-color,background-color,color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
+/* Foco visible por defecto en cualquier elemento interactivo que no use .focus-ring.
+   Sin esto, buena parte de los enlaces con estilos propios (navbar, footer, tarjetas
+   de la landing) no mostraban ninguna señal al navegar con el teclado. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Enlace de salto: invisible hasta que recibe el foco con Tab. Es el primer control
+   de la página para que quien navega con teclado o lector de pantalla pueda saltarse
+   la cabecera y el menú en cada carga. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100%;
+  z-index: var(--z-skip-link);
+  border-radius: 0.75rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-overlay);
+  transition: top 160ms ease-out;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+}
+
 .cm-glass {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.66);
+  background: hsl(var(--card) / 0.72);
+  border: 1px solid hsl(var(--card) / 0.66);
   backdrop-filter: blur(22px);
 }
+
+.dark .cm-glass {
+  /* Sobre fondo oscuro, un cristal al 72 % de blanco se vuelve un
+     bloque lechoso ilegible: se invierte a panel translúcido. */
+  background: hsl(var(--surface-raised) / 0.78);
+  border: 1px solid hsl(var(--line) / 0.8);
+}
+
+/* ============================================================
+   SISTEMA RESPONSIVO — utilidades compartidas
+   Escala de breakpoints declarada en src/shared/ui/breakpoints.ts
+   ============================================================ */
+
+/* --- Áreas seguras (notch, indicador de inicio, esquinas redondeadas) ---------
+   En un iPhone con notch, el borde inferior de un cajón o de un modal a pantalla
+   completa queda bajo el indicador de inicio: el botón está pintado pero no se puede
+   pulsar. Estas utilidades reservan ese espacio y valen 0 en cualquier dispositivo
+   sin recortes, así que son seguras de aplicar siempre. */
+.pb-safe  { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe  { padding-top: env(safe-area-inset-top, 0px); }
+.px-safe  {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+/* Variante que SUMA el área segura a un padding existente, para no pisarlo. */
+.pb-safe-4 { padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+
+/* --- Alto de ventana estable en móvil ----------------------------------------
+   `100vh` en móvil equivale a la ventana CON las barras del navegador retraídas, de
+   modo que el pie de un panel a pantalla completa cae fuera del área visible mientras
+   la barra sigue desplegada. `100dvh` sigue al área realmente visible. */
+.min-h-dvh { min-height: 100dvh; }
+.h-dvh     { height: 100dvh; }
+.max-h-dvh { max-height: 100dvh; }
+
+/* --- Área táctil ampliada ----------------------------------------------------
+   En grupos densos de botones-icono (las celdas de acciones de las tablas) el
+   objetivo de 36–40 px es pequeño para el dedo y provoca pulsaciones cruzadas entre
+   acciones vecinas. Se amplía la zona sensible SIN cambiar ninguna medida visible, y
+   solo con puntero grueso: con ratón las dimensiones actuales son correctas. */
+@media (pointer: coarse) {
+  .touch-target {
+    position: relative;
+  }
+  .touch-target::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    min-width: 44px;
+    min-height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* --- Desplazamiento horizontal contenido -------------------------------------
+   Para las zonas donde el scroll lateral SÍ es la respuesta correcta (una tabla ancha
+   en tablet). `contain` evita que al llegar al extremo el gesto arrastre la página
+   entera o dispare el "volver atrás" del navegador. */
+.scroll-x-contained {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Señal de que queda contenido a la derecha: sin ella, una tabla desplazable parece
+   simplemente una tabla cortada. Se pinta con `background-attachment: local/scroll`,
+   que el propio navegador desvanece al llegar a cada extremo — sin JavaScript ni
+   listeners de scroll. */
+.scroll-x-hint {
+  background-image:
+    linear-gradient(to right, hsl(var(--card)) 30%, hsl(var(--card) / 0)),
+    linear-gradient(to right, hsl(var(--card) / 0), hsl(var(--card)) 70%),
+    linear-gradient(to right, hsl(var(--foreground) / 0.16), hsl(var(--foreground) / 0)),
+    linear-gradient(to left, hsl(var(--foreground) / 0.16), hsl(var(--foreground) / 0));
+  background-position: 0 0, 100% 0, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-size: 2.5rem 100%, 2.5rem 100%, 0.9rem 100%, 0.9rem 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* --- Tipografía fluida -------------------------------------------------------
+   Escala continua entre móvil y escritorio: evita el salto brusco de un título al
+   cruzar un breakpoint y quita la necesidad de repetir `text-3xl md:text-4xl` en cada
+   pantalla. Los extremos coinciden con la escala Tailwind que ya usaba el proyecto
+   (text-3xl = 1.875rem, text-4xl = 2.25rem), así que el escritorio no cambia. */
+.text-fluid-title {
+  font-size: clamp(1.6rem, 1.25rem + 1.75vw, 2.25rem);
+  line-height: 1.15;
+}
+.text-fluid-section {
+  font-size: clamp(1.35rem, 1.1rem + 1.25vw, 1.875rem);
+  line-height: 1.2;
+}
+
+/* Longitud de línea legible para textos largos (55–75 caracteres). */
+.measure { max-width: 68ch; }
 
 @keyframes global-loading-bar {
   0% {
@@ -254,7 +395,13 @@ select {
 
 /* Animated gradient headline */
 .text-gradient-migrant {
-  background: linear-gradient(100deg, #7e3725 0%, #b64f35 30%, #8c4a62 60%, #7e3725 100%);
+  background: linear-gradient(
+    100deg,
+    hsl(var(--brand-clay)) 0%,
+    hsl(var(--brand-terracotta)) 30%,
+    hsl(var(--brand-plum)) 60%,
+    hsl(var(--brand-clay)) 100%
+  );
   background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -267,6 +414,8 @@ select {
 .cta-shine::after {
   content: "";
   position: absolute;
+  /* Sin esto el destello se traga los clics en la zona que cubre del botón. */
+  pointer-events: none;
   top: 0; left: 0;
   width: 40%; height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
@@ -332,4 +481,17 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee, .animate-marquee-reverse, .animate-ken-burns { animation: none !important; }
+
+  /* Animaciones EN BUCLE del sistema (no solo de la landing): un anillo pulsando o
+     un shimmer infinito son justo lo que "reducir movimiento" pretende evitar.
+     Las transiciones de entrada puntuales sí se conservan: son breves y ayudan a
+     entender de dónde sale cada panel. */
+  .animate-ring-pulse,
+  .skeleton {
+    animation: none !important;
+  }
+
+  .skeleton {
+    background: hsl(var(--muted));
+  }
 }

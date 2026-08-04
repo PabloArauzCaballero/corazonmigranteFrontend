@@ -7,7 +7,7 @@ export function EditorialArticleCard({ resource, priority = false }: { resource:
   return (
     <article
       className={cn(
-        "group grid overflow-hidden border border-slate-200 bg-white transition duration-300 hover:border-slate-300 hover:bg-slate-50/40",
+        "group grid overflow-hidden border border-slate-200 bg-card transition duration-300 hover:border-slate-300 hover:bg-slate-50/40",
         priority ? "lg:col-span-2 lg:grid-cols-[1.05fr_0.95fr]" : ""
       )}
     >
@@ -22,8 +22,8 @@ export function EditorialArticleCard({ resource, priority = false }: { resource:
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" aria-hidden="true" />
         <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-          <span className="border border-white/40 bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-800 backdrop-blur">{resource.category}</span>
-          {resource.isPremium ? <span className="inline-flex items-center gap-1 bg-teal-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white"><LockKeyhole className="h-3 w-3" />Premium</span> : null}
+          <span className="border border-surface-inverse-foreground/40 bg-card/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-800 backdrop-blur">{resource.category}</span>
+          {resource.isPremium ? <span className="inline-flex items-center gap-1 bg-teal-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-surface-inverse-foreground"><LockKeyhole className="h-3 w-3" />Premium</span> : null}
         </div>
       </div>
       <div className={cn("flex flex-col justify-between gap-8 p-6 md:p-8", priority ? "lg:min-h-[27rem]" : "")}> 

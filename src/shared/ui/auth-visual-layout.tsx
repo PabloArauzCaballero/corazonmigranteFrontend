@@ -10,12 +10,12 @@ export function AuthVisualLayout({ children, eyebrow = "Corazón Migrante", titl
         <div className="relative min-h-[22rem] lg:min-h-[38rem]">
           {fileServer.authImageUrl ? <img src={fileServer.authImageUrl} alt="Corazón Migrante" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : null}
           {/* Fondo de respaldo por si la imagen no carga: la marca sigue viéndose bien */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#2b1b17] via-[#50251b] to-[#800d0d]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-br from-surface-inverse via-brand-clay to-primary" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/72 via-slate-950/20 to-transparent" aria-hidden="true" />
-          <div className="absolute inset-x-0 bottom-0 p-7 text-white md:p-10">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/75">{eyebrow}</p>
+          <div className="absolute inset-x-0 bottom-0 p-7 text-surface-inverse-foreground md:p-10">
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-surface-inverse-foreground/75">{eyebrow}</p>
             <h1 className="mt-3 max-w-md font-serif text-4xl font-bold leading-tight md:text-5xl">{title}</h1>
-            <p className="mt-4 max-w-md text-sm leading-6 text-white/80">Imagen institucional configurada desde el servidor de archivos, con respaldo visual seguro.</p>
+            <p className="mt-4 max-w-md text-sm leading-6 text-surface-inverse-foreground/80">Imagen institucional configurada desde el servidor de archivos, con respaldo visual seguro.</p>
           </div>
         </div>
       </aside>

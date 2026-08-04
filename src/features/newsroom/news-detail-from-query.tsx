@@ -11,7 +11,7 @@ export function NewsDetailFromQuery() {
 
   if (!slug) {
     return (
-      <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
+      <main className="min-h-screen bg-surface-sunken text-slate-950">
         <section className="container py-10">
           <ErrorState
             title="No se pudo abrir la publicacion"

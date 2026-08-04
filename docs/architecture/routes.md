@@ -14,12 +14,14 @@
 - `/paciente/booking`: reserva de cita para el paciente autenticado.
 - `/paciente/citas`: citas del paciente.
 - `/paciente/perfil`: perfil del paciente.
+- `/paciente/ayuda`: Centro de tutoriales del portal del paciente.
 
 ## Terapeuta
 - `/terapeuta`: dashboard terapeuta.
 - `/terapeuta/agenda`: agenda asignada.
 - `/terapeuta/booking`: preparación de cita para paciente concreto. Requiere contrato backend pendiente.
 - `/terapeuta/perfil`: perfil profesional.
+- `/terapeuta/ayuda`: Centro de tutoriales del portal del terapeuta.
 
 ## Admin
 - `/admin`: dashboard operativo.
@@ -34,6 +36,11 @@
 - `/admin/contabilidad/grupos-cuenta`: grupos de cuenta.
 - `/admin/contabilidad/centros-costo`: centros de costo.
 - `/admin/contabilidad/transacciones`: transacciones.
+- `/admin/ayuda`: Centro de tutoriales del panel administrativo.
+
+> La lista canónica de rutas que un tutorial puede visitar vive en
+> `src/features/tutorial/model/app-routes.ts` y se verifica contra el router en
+> `tests/unit/tutorial-app-routes.test.ts`.
 
 ## DECISION_CM
 Se elimina la duplicidad conceptual `/portal-admin` y `/auth/admin/login`. La ruta canónica administrativa es `/admin/login`.

@@ -9,6 +9,7 @@ const requiredFiles = [
   "src/features/public-view/public-landing-page.tsx",
   "src/features/public-view/public-landing-loader.tsx",
   "src/app/(public)/biblioteca/page.tsx",
+  "src/app/(public)/cursos/page.tsx",
   "src/app/(public)/booking/page.tsx",
   "src/app/paciente/booking/page.tsx",
   "src/app/admin/booking/page.tsx",
@@ -30,6 +31,25 @@ const requiredFiles = [
   "docs/api/api-contracts.md",
   "docs/security/auth-rbac.md",
   "docs/testing/test-plan.md",
+  // Observabilidad: el codigo y su documentacion se despliegan juntos. Si alguien
+  // borra un documento, la politica de privacidad deja de estar publicada junto a la
+  // implementacion que la aplica.
+  "src/observability/index.ts",
+  "src/observability/core/tracing.service.ts",
+  "src/observability/core/sanitize.ts",
+  "src/observability/browser/telemetry.browser.ts",
+  "src/instrumentation-client.ts",
+  "functions/otel/v1/traces.ts",
+  "infra/otel-collector/otel-collector.frontend.yml",
+  "docs/observability/frontend/00-current-state-audit.md",
+  "docs/observability/frontend/01-architecture-design.md",
+  "docs/observability/frontend/02-naming-conventions.md",
+  "docs/observability/frontend/03-business-spans-catalog.md",
+  "docs/observability/frontend/04-web-vitals-strategy.md",
+  "docs/observability/frontend/05-data-privacy-policy.md",
+  "docs/observability/frontend/06-runbook.md",
+  "docs/observability/frontend/README.md",
+  "docs/observability/frontend/bundle-after.md",
 ];
 
 const missing = requiredFiles.filter((file) => !existsSync(join(root, file)));
@@ -79,16 +99,33 @@ if (!filesApi.includes("adminCloudinarySignature") || !filesApi.includes("adminC
 
 
 const sidebar = readFileSync(join(root, "src/features/dashboard/sidebar.tsx"), "utf8");
-for (const label of ["Publicidad", "Archivos", "Contenido Público", "Páginas públicas", "Publicaciones", "Categorias", "Tags", "Autores"]) {
-  if (!sidebar.includes(label)) {
-    throw new Error(`Sidebar admin incompleto: falta ${label}.`);
+// Se comprueban las RUTAS, no los textos visibles: la intención de esta guarda es
+// "el panel admin sigue exponiendo estos módulos", y el nombre que se muestra es
+// cosmético. Antes se comparaban literales ("Contenido Público", "Tags"…) que se
+// renombraron al pulir el menú, y la guarda quedó rota sin que faltara ningún módulo.
+const requiredAdminRoutes = [
+  "/admin/publicidad/campanas",
+  "/admin/archivos",
+  "/admin/contenido/publico",
+  "/admin/contenido/paginas",
+  "/admin/contenido/publicaciones",
+  "/admin/contenido/categorias",
+  "/admin/contenido/tags",
+  "/admin/contenido/autores",
+];
+for (const route of requiredAdminRoutes) {
+  if (!sidebar.includes(route)) {
+    throw new Error(`Sidebar admin incompleto: falta la ruta ${route}.`);
   }
 }
 if (sidebar.includes("CMS") || sidebar.includes("Biblioteca CMS")) {
   throw new Error("No se debe exponer CMS como módulo visual en el sidebar.");
 }
 
-const advertisingAdmin = readFileSync(join(root, "src/features/newsroom/newsroom-admin.tsx"), "utf8");
+// `newsroom-admin.tsx` es hoy solo un barrel de re-exports: el código real del módulo
+// de publicidad vive en `newsroom-admin-ads.tsx` desde que se dividió el archivo. La
+// guarda seguía leyendo el barrel y por tanto no comprobaba nada de lo que dice.
+const advertisingAdmin = readFileSync(join(root, "src/features/newsroom/newsroom-admin-ads.tsx"), "utf8");
 if (!advertisingAdmin.includes("Publicación relacionada")) {
   throw new Error("El formulario de anuncio debe permitir asociar una publicación específica.");
 }
@@ -101,10 +138,13 @@ if (advertisingAdmin.includes('entityId: fstr(form, "commercialName")')) {
 if (!advertisingAdmin.includes("entityId: company.id")) {
   throw new Error("El logo de empresa debe subirse después de crear la empresa y vincularse por UUID.");
 }
-if (!advertisingAdmin.includes("fileId: uploadedFileId")) {
+// Se comprueba que el CAMPO viaja al backend, no el nombre de la variable local: los
+// literales anteriores ("fileId: uploadedFileId", "pageSlug: pageSlug || undefined")
+// dejaron de existir al renombrar variables, aunque el dato se sigue enviando.
+if (!/createAd\(\{[\s\S]*?\bfileId\s*:/.test(advertisingAdmin)) {
   throw new Error("El creativo publicitario debe enviar fileId al backend luego de subir el banner.");
 }
-if (!advertisingAdmin.includes("pageSlug: pageSlug || undefined")) {
+if (!/createAd\(\{[\s\S]*?\bpageSlug\s*:/.test(advertisingAdmin)) {
   throw new Error("El creativo publicitario debe enviar pageSlug al backend cuando se asocia a una página pública.");
 }
 

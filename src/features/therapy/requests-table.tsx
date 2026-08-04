@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, CircleDollarSign, Pencil, ReceiptText, Search, X } from "lucide-react";
 import { listAppointmentRequests, updateAdminAppointment, updateAppointmentPayment, type AppointmentRequestRow } from "@/features/therapy/therapy.api";
@@ -15,7 +15,7 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { DataTable, DataTableSkeleton, PaginationBar } from "@/shared/ui/data-table";
 import { TableShell } from "@/shared/ui/table-shell";
-import { ErrorState, LoadingState } from "@/shared/ui/state";
+import { ErrorState } from "@/shared/ui/state";
 
 const PAGE_SIZE = 20;
 
@@ -174,14 +174,14 @@ function RegisterSaleDialog({ row, onClose }: { row: AppointmentRequestRow; onCl
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Cuenta donde entra el dinero (Caja o Banco)</Label>
-          <select className="h-11 w-full rounded-xl border bg-white px-3 text-sm" value={debitAccountId} onChange={(e) => setDebitAccountId(e.target.value)}>
+          <select className="h-11 w-full rounded-xl border bg-card px-3 text-sm" value={debitAccountId} onChange={(e) => setDebitAccountId(e.target.value)}>
             <option value="" disabled>{accounts.isLoading ? "Cargando..." : "Selecciona cuenta"}</option>
             {(accounts.data?.items ?? []).map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}
           </select>
         </div>
         <div className="space-y-2">
           <Label>Cuenta de ingresos (Ventas de servicios)</Label>
-          <select className="h-11 w-full rounded-xl border bg-white px-3 text-sm" value={creditAccountId} onChange={(e) => setCreditAccountId(e.target.value)}>
+          <select className="h-11 w-full rounded-xl border bg-card px-3 text-sm" value={creditAccountId} onChange={(e) => setCreditAccountId(e.target.value)}>
             <option value="" disabled>{accounts.isLoading ? "Cargando..." : "Selecciona cuenta"}</option>
             {(accounts.data?.items ?? []).map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}
           </select>
@@ -199,14 +199,23 @@ export function RequestsTable() {
   const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState(() => searchParams.get("status") ?? "REQUESTED");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [registeringSaleId, setRegisteringSaleId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const s = searchParams.get("status");
-    if (s) setStatusFilter(s);
-  }, [searchParams]);
+  // El estado del filtro se deriva de la URL (?status=...) y solo se sobreescribe
+  // cuando la persona lo cambia a mano. Ajustar el estado durante el render (en vez
+  // de dentro de un useEffect) evita el render en cascada que provoca un parpadeo
+  // con los datos del filtro anterior. Patrón recomendado por React:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const urlStatus = searchParams.get("status");
+  const [manualStatus, setManualStatus] = useState<string | null>(null);
+  const [lastUrlStatus, setLastUrlStatus] = useState(urlStatus);
+  if (urlStatus !== lastUrlStatus) {
+    setLastUrlStatus(urlStatus);
+    setManualStatus(null);
+  }
+  const statusFilter = manualStatus ?? urlStatus ?? "REQUESTED";
+  const setStatusFilter = setManualStatus;
 
   const query = useQuery({
     queryKey: ["appointment-requests", { page, pageSize: PAGE_SIZE, search, status: statusFilter }],

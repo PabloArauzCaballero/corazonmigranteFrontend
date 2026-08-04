@@ -1,4 +1,5 @@
 import { apiRequest } from "@/shared/api/client";
+import { ATTR, BUSINESS_SPANS, runInSpan } from "@/observability";
 
 const BASE = "/api/v1";
 
@@ -169,9 +170,31 @@ export async function myLibrary(page = 1) {
   return unwrapList<LibraryCard>(await apiRequest<unknown>(`${BASE}/downloadables/me/library?page=${page}`, { auth: true }));
 }
 
+/**
+ * El span registra que hubo una descarga y cómo terminó. **No** registra el
+ * identificador del recurso, ni su título, ni la URL firmada que devuelve el backend:
+ * esa URL da acceso al archivo y no puede aparecer en una traza.
+ */
 export async function requestDownload(id: string) {
-  return unwrap<{ url: string; action: DownloadableAction }>(
-    await apiRequest<unknown>(`${BASE}/downloadables/${id}/download`, { method: "POST", auth: true }),
+  return runInSpan(
+    BUSINESS_SPANS.documentDownload,
+    {
+      [ATTR.feature]: "downloadables",
+      [ATTR.operation]: "download",
+      [ATTR.uiComponent]: "MyDownloadablesLibrary",
+    },
+    async (span) => {
+      try {
+        const result = unwrap<{ url: string; action: DownloadableAction }>(
+          await apiRequest<unknown>(`${BASE}/downloadables/${id}/download`, { method: "POST", auth: true }),
+        );
+        span.setAttribute(ATTR.uiResult, "success");
+        return result;
+      } catch (error) {
+        span.setAttribute(ATTR.uiResult, "error");
+        throw error;
+      }
+    },
   );
 }
 

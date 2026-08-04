@@ -20,11 +20,19 @@ const buttonVariants = cva(
         ghost:       "hover:bg-muted",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:-translate-y-px",
       },
+      /*
+       * `touch-target` en los dos tamaños compactos: son los que se agrupan en las
+       * celdas de acciones de las tablas, donde 36–40 px con 8 px de separación
+       * provocan pulsaciones cruzadas entre acciones vecinas (y alguna de ellas es
+       * destructiva). La utilidad amplía la zona sensible a 44 px SOLO con puntero
+       * grueso y sin alterar ninguna medida visible, así que ni el aspecto ni el
+       * layout cambian en escritorio. `md` y `lg` ya superan el objetivo.
+       */
       size: {
-        sm:   "h-9 px-3 text-xs",
+        sm:   "touch-target h-9 px-3 text-xs",
         md:   "h-11 px-4 py-2",
         lg:   "h-12 px-6 text-base",
-        icon: "h-10 w-10",
+        icon: "touch-target h-10 w-10",
       },
     },
     defaultVariants: {

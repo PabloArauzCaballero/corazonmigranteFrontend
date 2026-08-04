@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-media-query";
 
 // ── Reveal ─────────────────────────────────────────────────────────
 // Scroll-triggered entrance using IntersectionObserver.
@@ -35,15 +36,17 @@ export function Reveal({
   as = "div",
 }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
-  const [shown, setShown] = useState(false);
+  const reduce = usePrefersReducedMotion();
+  const [entered, setEntered] = useState(false);
+  // Con "reducir movimiento" activo el contenido se muestra directamente: nunca debe
+  // quedar oculto esperando a un IntersectionObserver que no vamos a montar.
+  const shown = reduce || entered;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || reduce) return;
 
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { setShown(true); return; }
-
+    const setShown = setEntered;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -59,7 +62,7 @@ export function Reveal({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [repeat]);
+  }, [repeat, reduce]);
 
   const Tag = as as "div";
   return (
@@ -93,6 +96,7 @@ export function Counter({
   className?: string;
 }) {
   const ref = useRef<HTMLSpanElement | null>(null);
+  const reduce = usePrefersReducedMotion();
   const [value, setValue] = useState(0);
   const started = useRef(false);
 
@@ -103,7 +107,6 @@ export function Counter({
       for (const entry of entries) {
         if (entry.isIntersecting && !started.current) {
           started.current = true;
-          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
           if (reduce) { setValue(to); return; }
           const start = performance.now();
           const tick = (now: number) => {
@@ -118,7 +121,7 @@ export function Counter({
     }, { threshold: 0.5 });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [to, duration]);
+  }, [to, duration, reduce]);
 
   return <span ref={ref} className={className}>{prefix}{value}{suffix}</span>;
 }
@@ -129,8 +132,13 @@ export function Counter({
 type Bubble = { variant?: string; text?: string };
 
 export function AnimatedChatBubbles({ bubbles }: { bubbles: Bubble[] }) {
-  const [visible, setVisible] = useState(1);
-  const [typing, setTyping] = useState(false);
+  const reduce = usePrefersReducedMotion();
+  const [revealed, setRevealed] = useState(1);
+  const [typingState, setTypingState] = useState(false);
+  // Con "reducir movimiento" se muestra la conversación completa y sin indicador de
+  // escritura, en vez de forzarlo desde un efecto.
+  const visible = reduce ? bubbles.length : revealed;
+  const typing = reduce ? false : typingState;
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const startedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -146,35 +154,30 @@ export function AnimatedChatBubbles({ bubbles }: { bubbles: Bubble[] }) {
   }, []);
 
   useEffect(() => {
-    if (bubbles.length <= 1) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { setVisible(bubbles.length); return; }
+    if (bubbles.length <= 1 || reduce) return;
 
     let timer: ReturnType<typeof setTimeout>;
     const advance = () => {
-      setTyping(true);
+      setTypingState(true);
       timer = setTimeout(() => {
-        setTyping(false);
-        setVisible((v) => {
-          const next = v >= bubbles.length ? 1 : v + 1;
-          return next;
-        });
+        setTypingState(false);
+        setRevealed((v) => (v >= bubbles.length ? 1 : v + 1));
         timer = setTimeout(advance, 2200);
       }, 900);
     };
     timer = setTimeout(advance, 1800);
     return () => clearTimeout(timer);
-  }, [bubbles.length]);
+  }, [bubbles.length, reduce]);
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [visible, typing]);
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: reduce ? "auto" : "smooth" });
+  }, [visible, typing, reduce]);
 
   const shown = bubbles.slice(0, visible);
 
   return (
-    <div ref={containerRef} className="max-h-[34rem] space-y-4 overflow-y-auto scroll-smooth bg-[#f7f1e9] px-5 py-6">
+    <div ref={containerRef} className="max-h-[34rem] space-y-4 overflow-y-auto scroll-smooth bg-background px-5 py-6">
       {shown.map((bubble, index) => {
         const isUser = bubble.variant === "user";
         return (
@@ -185,8 +188,8 @@ export function AnimatedChatBubbles({ bubbles }: { bubbles: Bubble[] }) {
             <p
               className={`max-w-[82%] rounded-[1.3rem] px-4 py-3 text-sm leading-6 shadow-sm ${
                 isUser
-                  ? "rounded-br-md bg-[#622f22] text-white"
-                  : "rounded-bl-md border border-[#e5d9cc] bg-white text-[#4e4a44]"
+                  ? "rounded-br-md bg-brand-clay text-surface-inverse-foreground"
+                  : "rounded-bl-md border border-line bg-card text-ink-soft"
               }`}
             >
               {bubble.text}
@@ -196,10 +199,10 @@ export function AnimatedChatBubbles({ bubbles }: { bubbles: Bubble[] }) {
       })}
       {typing && (
         <div className="flex justify-start animate-bubble-in">
-          <div className="flex items-center gap-1.5 rounded-[1.3rem] rounded-bl-md border border-[#e5d9cc] bg-white px-4 py-3.5 shadow-sm">
-            <span className="h-2 w-2 animate-typing-dot rounded-full bg-[#b09a86]" style={{ animationDelay: "0ms" }} />
-            <span className="h-2 w-2 animate-typing-dot rounded-full bg-[#b09a86]" style={{ animationDelay: "180ms" }} />
-            <span className="h-2 w-2 animate-typing-dot rounded-full bg-[#b09a86]" style={{ animationDelay: "360ms" }} />
+          <div className="flex items-center gap-1.5 rounded-[1.3rem] rounded-bl-md border border-line bg-card px-4 py-3.5 shadow-sm">
+            <span className="h-2 w-2 animate-typing-dot rounded-full bg-brand-sand" style={{ animationDelay: "0ms" }} />
+            <span className="h-2 w-2 animate-typing-dot rounded-full bg-brand-sand" style={{ animationDelay: "180ms" }} />
+            <span className="h-2 w-2 animate-typing-dot rounded-full bg-brand-sand" style={{ animationDelay: "360ms" }} />
           </div>
         </div>
       )}
@@ -213,6 +216,10 @@ export function AnimatedChatBubbles({ bubbles }: { bubbles: Bubble[] }) {
 export function useScrollNavbar(sectionIds: string[]) {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string>("");
+  // `sectionIds` suele llegar como literal nuevo en cada render; se estabiliza por
+  // contenido para que el observer no se desmonte y remonte en cada scroll.
+  const sectionKey = sectionIds.join(",");
+  const observedIds = useMemo(() => sectionKey.split(",").filter(Boolean), [sectionKey]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -227,7 +234,7 @@ export function useScrollNavbar(sectionIds: string[]) {
       },
       { rootMargin: "-45% 0px -50% 0px" }
     );
-    for (const id of sectionIds) {
+    for (const id of observedIds) {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     }
@@ -236,7 +243,7 @@ export function useScrollNavbar(sectionIds: string[]) {
       window.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
-  }, [sectionIds.join(",")]);
+  }, [observedIds]);
 
   return { scrolled, active };
 }
@@ -252,12 +259,11 @@ export function Parallax({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const reduce = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
+    if (!el || reduce) return;
 
     let raf = 0;
     const onScroll = () => {
@@ -271,7 +277,7 @@ export function Parallax({
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
-  }, [speed]);
+  }, [speed, reduce]);
 
   return <div ref={ref} className={className}>{children}</div>;
 }

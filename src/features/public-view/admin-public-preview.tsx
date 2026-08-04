@@ -52,7 +52,7 @@ export function AdminPublicPreview() {
             </a>
           </Button>
         </div>
-        <div className={cn("overflow-hidden rounded-xl border bg-white", device === "mobile" ? "mx-auto w-full max-w-[420px]" : "w-full")}>
+        <div className={cn("overflow-hidden rounded-xl border bg-card", device === "mobile" ? "mx-auto w-full max-w-[420px]" : "w-full")}>
           <iframe
             key={`${view.path}-${device}`}
             src={view.path}

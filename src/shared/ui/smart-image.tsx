@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -54,22 +54,24 @@ export function SmartImage({
   onLoaded,
   onErrored,
 }: SmartImageProps) {
-  const initial = isValidSrc(src) ? src : fallbackSrc;
-  const [current, setCurrent] = useState(initial);
+  const resolved = isValidSrc(src) ? src : fallbackSrc;
+  const [current, setCurrent] = useState(resolved);
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
-  const triedFallback = useRef(current === fallbackSrc);
 
-  // Si cambia la prop `src`, reinicia el estado.
-  useEffect(() => {
-    const next = isValidSrc(src) ? src : fallbackSrc;
-    setCurrent(next);
+  // Si cambia la prop `src`, se reinicia el estado durante el render. Hacerlo en un
+  // useEffect provocaba un render intermedio en el que el <img> seguía apuntando a
+  // la imagen anterior ya marcada como "loaded": se veía la foto vieja durante un
+  // frame antes de cargar la nueva.
+  const [lastResolved, setLastResolved] = useState(resolved);
+  if (resolved !== lastResolved) {
+    setLastResolved(resolved);
+    setCurrent(resolved);
     setStatus("loading");
-    triedFallback.current = next === fallbackSrc;
-  }, [src, fallbackSrc]);
+  }
 
   return (
     <div
-      className={cn("relative overflow-hidden bg-[#e8ded3]", rounded, className)}
+      className={cn("relative overflow-hidden bg-line", rounded, className)}
       style={aspectRatio ? { aspectRatio } : undefined}
     >
       {/* Placeholder shimmer mientras carga */}
@@ -93,8 +95,9 @@ export function SmartImage({
           onLoaded?.();
         }}
         onError={() => {
-          if (!triedFallback.current && fallbackSrc && current !== fallbackSrc) {
-            triedFallback.current = true;
+          // `current !== fallbackSrc` ya garantiza que el fallback se intenta una sola
+          // vez por cada `src`: en cuanto se cambia a él, esta rama deja de entrar.
+          if (fallbackSrc && current !== fallbackSrc) {
             setCurrent(fallbackSrc);
             setStatus("loading");
             return;
@@ -107,7 +110,7 @@ export function SmartImage({
       {/* Estado de error definitivo: degradado suave con la marca */}
       {status === "error" && (
         <div
-          className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#e8ded3] to-[#d8ccbe] text-[#8a7d70]"
+          className="absolute inset-0 grid place-items-center bg-gradient-to-br from-line to-line-strong text-ink-subtle"
           aria-hidden="true"
         >
           <span className="text-xs font-semibold uppercase tracking-widest">Corazón Migrante</span>

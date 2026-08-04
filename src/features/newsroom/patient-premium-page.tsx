@@ -30,7 +30,7 @@ export function PatientPremiumPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="overflow-hidden border border-slate-200 bg-white">
+      <section className="overflow-hidden border border-slate-200 bg-card">
         <div className="grid gap-0 lg:grid-cols-[1fr_0.72fr]">
           <div className="space-y-5 p-7 md:p-10">
             <Badge variant="secondary" className="w-fit"><Crown className="mr-1 h-3.5 w-3.5" />Premium</Badge>
@@ -39,11 +39,11 @@ export function PatientPremiumPage() {
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">Lecturas de profundizacion para pacientes con suscripcion activa dentro del portal privado.</p>
             </div>
           </div>
-          <div className="border-t border-slate-200 bg-[#f7f4ef] p-7 lg:border-l lg:border-t-0 md:p-10">
+          <div className="border-t border-slate-200 bg-surface-sunken p-7 lg:border-l lg:border-t-0 md:p-10">
             {subscription.isLoading ? <LoadingState title="Consultando suscripcion" /> : null}
             {subscription.isError ? <ErrorState title="No se pudo leer tu suscripcion" description={humanizeApiError(subscription.error)} /> : null}
             {subscription.data ? (
-              <Card className="rounded-none border-slate-200 bg-white shadow-none">
+              <Card className="rounded-none border-slate-200 bg-card shadow-none">
                 <CardHeader>
                   <CardDescription>Estado de acceso</CardDescription>
                   <CardTitle className="flex items-center gap-2 text-2xl">
@@ -60,7 +60,7 @@ export function PatientPremiumPage() {
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
                       <p className="font-semibold">Este contenido es premium.</p>
                       <p>{paymentConfig.data?.message ?? "Suscríbete para acceder a lecturas premium."}</p>
-                      {paymentConfig.data?.qrImageUrl ? <img src={paymentConfig.data.qrImageUrl} alt="QR de pago premium" className="mt-3 max-h-44 rounded-xl border bg-white p-2" /> : null}
+                      {paymentConfig.data?.qrImageUrl ? <img src={paymentConfig.data.qrImageUrl} alt="QR de pago premium" className="mt-3 max-h-44 rounded-xl border bg-card p-2" /> : null}
                       <Button className="mt-4 rounded-none" disabled={requestMutation.isPending} onClick={() => requestMutation.mutate()}>
                         {requestMutation.isPending ? "Registrando solicitud..." : "Solicitar suscripción premium"}
                       </Button>
@@ -81,7 +81,7 @@ export function PatientPremiumPage() {
       {content.data && content.data.length > 0 ? (
         <section className="grid gap-4 lg:grid-cols-2">
           {content.data.map((item) => (
-            <article key={item.id} className="border border-slate-200 bg-white p-6">
+            <article key={item.id} className="border border-slate-200 bg-card p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={item.accessType === "PREMIUM" ? "warning" : "muted"}>{item.accessType === "PREMIUM" ? "Premium" : "Publico"}</Badge>
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{item.publicationType}</span>

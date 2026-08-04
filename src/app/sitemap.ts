@@ -3,7 +3,9 @@ import type { MetadataRoute } from "next";
 // Requerido con `output: export`: el sitemap se genera en build (estático).
 export const dynamic = "force-static";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://corazonmigrante.com";
+// Se normaliza la barra final: con NEXT_PUBLIC_APP_URL="https://dominio.com/" se
+// generaban URLs con doble barra ("https://dominio.com//noticias").
+const BASE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://corazonmigrante.com").replace(/\/+$/, "");
 
 /**
  * Dynamic sitemap generated at build time.
@@ -40,6 +42,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${BASE_URL}/biblioteca`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/cursos`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,

@@ -136,7 +136,7 @@ export function EditorialAdminPage() {
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden border border-slate-200 bg-white">
+      <section className="overflow-hidden border border-slate-200 bg-card">
         <div className="grid gap-0 lg:grid-cols-[1fr_0.72fr]">
           <div className="space-y-7 p-7 md:p-10">
             <div className="inline-flex items-center gap-2 border border-teal-900/20 bg-teal-900/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-teal-900">
@@ -153,11 +153,11 @@ export function EditorialAdminPage() {
               <Button variant="outline" className="rounded-xl" onClick={() => void pageQuery.refetch()}><RefreshCw className="h-4 w-4" /> Refrescar</Button>
             </div>
           </div>
-          <div className="border-t border-slate-200 bg-[#f7f4ef] p-7 lg:border-l lg:border-t-0 md:p-10">
+          <div className="border-t border-slate-200 bg-surface-sunken p-7 lg:border-l lg:border-t-0 md:p-10">
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-              <Card className="rounded-xl border-slate-200 bg-white shadow-none"><CardHeader><CardDescription>Slug editorial</CardDescription><CardTitle>{pageSlug}</CardTitle></CardHeader></Card>
-              <Card className="rounded-xl border-slate-200 bg-white shadow-none"><CardHeader><CardDescription>Estado de publicacion</CardDescription><CardTitle>{pageQuery.data ? <CmsPageStatusBadge status={pageQuery.data.status} /> : "No cargado"}</CardTitle></CardHeader></Card>
-              <Card className="rounded-xl border-slate-200 bg-white shadow-none"><CardHeader><CardDescription>Recursos visibles</CardDescription><CardTitle>{resources.length}</CardTitle></CardHeader></Card>
+              <Card className="rounded-xl border-slate-200 bg-card shadow-none"><CardHeader><CardDescription>Slug editorial</CardDescription><CardTitle>{pageSlug}</CardTitle></CardHeader></Card>
+              <Card className="rounded-xl border-slate-200 bg-card shadow-none"><CardHeader><CardDescription>Estado de publicacion</CardDescription><CardTitle>{pageQuery.data ? <CmsPageStatusBadge status={pageQuery.data.status} /> : "No cargado"}</CardTitle></CardHeader></Card>
+              <Card className="rounded-xl border-slate-200 bg-card shadow-none"><CardHeader><CardDescription>Recursos visibles</CardDescription><CardTitle>{resources.length}</CardTitle></CardHeader></Card>
             </div>
           </div>
         </div>
@@ -166,14 +166,14 @@ export function EditorialAdminPage() {
       {message ? <div className="rounded-[14px] border border-teal-900/20 bg-teal-900/5 px-4 py-3 text-sm font-medium text-teal-900">{message}</div> : null}
 
       <section className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
-        <Card className="rounded-xl border-slate-200 bg-white shadow-none">
+        <Card className="rounded-xl border-slate-200 bg-card shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FilePlus2 className="h-5 w-5" /> Página editorial</CardTitle>
             <CardDescription>Crea la pagina `biblioteca` si todavia no existe. El contenido se carga por slug publico.</CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); createPageMutation.mutate(); }}>
-              <div className="space-y-2"><Label>Página editorial existente</Label><select value={pageSlug} onChange={(event) => { const selected = pagesQuery.data?.find((page: CmsPage) => page.slug === event.target.value); setPageSlug(event.target.value); setPageId(selected?.id ?? ""); setPageTitle(selected?.title ?? pageTitle); }} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"><option value={pageSlug}>{pagesQuery.isLoading ? "Cargando páginas editoriales..." : `Actual: ${pageSlug}`}</option>{(pagesQuery.data ?? []).map((page) => <option key={page.id || page.slug} value={page.slug}>{page.title} — /{page.slug}</option>)}</select>{pagesQuery.isError ? <p className="text-xs text-red-700">No se pudieron cargar todas las páginas editoriales: {humanizeApiError(pagesQuery.error)}</p> : null}</div>
+              <div className="space-y-2"><Label>Página editorial existente</Label><select value={pageSlug} onChange={(event) => { const selected = pagesQuery.data?.find((page: CmsPage) => page.slug === event.target.value); setPageSlug(event.target.value); setPageId(selected?.id ?? ""); setPageTitle(selected?.title ?? pageTitle); }} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"><option value={pageSlug}>{pagesQuery.isLoading ? "Cargando páginas editoriales..." : `Actual: ${pageSlug}`}</option>{(pagesQuery.data ?? []).map((page) => <option key={page.id || page.slug} value={page.slug}>{page.title} — /{page.slug}</option>)}</select>{pagesQuery.isError ? <p className="text-xs text-red-700">No se pudieron cargar todas las páginas editoriales: {humanizeApiError(pagesQuery.error)}</p> : null}</div>
               <div className="space-y-2"><Label>Slug publico</Label><Input value={pageSlug} onChange={(event) => { setPageSlug(slugify(event.target.value)); setPageId(""); }} className="rounded-xl" /></div>
               <div className="space-y-2"><Label>Titulo</Label><Input value={pageTitle} onChange={(event) => setPageTitle(event.target.value)} className="rounded-xl" /></div>
               <div className="space-y-2"><Label>Page ID detectado o manual</Label><Input value={resolvedPageId} onChange={(event) => setPageId(event.target.value)} placeholder="Se completa al cargar/crear pagina" className="rounded-xl" /></div>
@@ -183,7 +183,7 @@ export function EditorialAdminPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl border-slate-200 bg-white shadow-none">
+        <Card className="rounded-xl border-slate-200 bg-card shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FileImage className="h-5 w-5" /> Agregar recurso</CardTitle>
             <CardDescription>El recurso puede ser público o premium, con imagen por URL o archivo.</CardDescription>
@@ -191,10 +191,10 @@ export function EditorialAdminPage() {
           <CardContent>
             <form className="grid gap-4 lg:grid-cols-2" onSubmit={(event) => { event.preventDefault(); addElementMutation.mutate(); }}>
               <div className="space-y-2"><Label>Titulo del recurso</Label><Input value={resourceTitle} onChange={(event) => setResourceTitle(event.target.value)} required className="rounded-xl" /></div>
-              <div className="space-y-2"><Label>Categoria</Label><select value={resourceCategory} onChange={(event) => setResourceCategory(event.target.value)} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50">{categoryOptions.map((category) => <option key={category} value={category}>{category}</option>)}</select></div>
+              <div className="space-y-2"><Label>Categoria</Label><select value={resourceCategory} onChange={(event) => setResourceCategory(event.target.value)} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50">{categoryOptions.map((category) => <option key={category} value={category}>{category}</option>)}</select></div>
               <div className="space-y-2 lg:col-span-2"><Label>Resumen publico</Label><Textarea value={resourceSummary} onChange={(event) => setResourceSummary(event.target.value)} required className="min-h-24 rounded-xl" /></div>
               <div className="space-y-2 lg:col-span-2"><Label>Cuerpo publico. Separa parrafos con una linea vacia.</Label><Textarea value={resourceBody} onChange={(event) => setResourceBody(event.target.value)} className="min-h-44 rounded-xl" /></div>
-              <div className="flex items-center gap-3 rounded-[14px] border border-slate-200 bg-[#f7f4ef] p-4 lg:col-span-2">
+              <div className="flex items-center gap-3 rounded-[14px] border border-slate-200 bg-surface-sunken p-4 lg:col-span-2">
                 <input id="resourceIsPremium" type="checkbox" checked={resourceIsPremium} onChange={(event) => setResourceIsPremium(event.target.checked)} className="h-4 w-4" />
                 <Label htmlFor="resourceIsPremium" className="flex items-center gap-2"><LockKeyhole className="h-4 w-4" /> Marcar como contenido premium</Label>
               </div>

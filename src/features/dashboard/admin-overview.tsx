@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CalendarCheck, CalendarClock, Check, Clock, Users } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Check, Clock, Users } from "lucide-react";
 import Link from "next/link";
 import { listAppointmentRequests, mapAppointmentRequest, updateAdminAppointment } from "@/features/therapy/therapy.api";
 import { listUsers } from "@/features/users/users.api";
@@ -48,7 +48,7 @@ function PendingAppointmentRow({ item }: { item: ReturnType<typeof mapAppointmen
     },
   });
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-white px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-card px-4 py-3">
       <div className="min-w-0">
         <p className="truncate font-semibold text-sm">{item.patient}</p>
         <p className="truncate text-xs text-muted-foreground">{item.service} · {item.date}{item.time !== "—" ? ` ${item.time}` : ""}</p>
@@ -125,7 +125,7 @@ export function AdminOverview() {
                 {pending.data.total} cita{pending.data.total !== 1 ? "s" : ""} esperando confirmación
               </h3>
             </div>
-            <Button asChild size="sm" variant="outline" className="border-amber-300 bg-white text-amber-800 hover:bg-amber-100">
+            <Button asChild size="sm" variant="outline" className="border-amber-300 bg-card text-amber-800 hover:bg-amber-100">
               <Link href="/admin/solicitudes?status=REQUESTED">Ver todas</Link>
             </Button>
           </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
+import { REACT_ERROR_BOUNDARIES, reportReactError } from "@/observability";
 
 export default function SectionError({
   error,
@@ -15,6 +16,7 @@ export default function SectionError({
 }) {
   useEffect(() => {
     console.error("[SectionError]", error);
+    reportReactError(error, REACT_ERROR_BOUNDARIES.patient);
   }, [error]);
 
   return (

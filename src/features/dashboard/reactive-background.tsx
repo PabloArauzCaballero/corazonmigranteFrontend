@@ -15,6 +15,10 @@ export function ReactiveBackground() {
     const el = ref.current;
     if (!el) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    // El halo sigue al cursor: en un dispositivo táctil no hay cursor que seguir, así
+    // que el listener y su rAF serían trabajo permanente sin efecto visible alguno —
+    // justo en el dispositivo con menos batería.
+    if (!window.matchMedia?.("(pointer: fine)").matches) return;
     let raf = 0;
     const onMove = (e: MouseEvent) => {
       cancelAnimationFrame(raf);
@@ -50,7 +54,7 @@ export function ReactiveBackground() {
       }
     >
       {/* Base suave */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#fbf8f3] via-[#f7f2ec] to-[#f3ece3]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-surface-sunken" />
 
       {/* Halo que sigue el cursor */}
       <div
@@ -75,11 +79,11 @@ export function ReactiveBackground() {
         style={{ transform: "translate(var(--px), var(--py))" }}
       />
       <div
-        className="animate-blob absolute -bottom-52 -right-36 h-[42rem] w-[42rem] rounded-full bg-[#8c4a62]/[0.07] blur-3xl"
+        className="animate-blob absolute -bottom-52 -right-36 h-[42rem] w-[42rem] rounded-full bg-brand-plum/[0.07] blur-3xl"
         style={{ transform: "translate(calc(var(--px) * -1), calc(var(--py) * -1))" }}
       />
       <div
-        className="animate-blob absolute left-[45%] top-[40%] h-[24rem] w-[24rem] rounded-full bg-[#c98a4b]/[0.06] blur-3xl"
+        className="animate-blob absolute left-[45%] top-[40%] h-[24rem] w-[24rem] rounded-full bg-brand-gold/[0.06] blur-3xl"
         style={{ transform: "translate(var(--px), calc(var(--py) * -1))", animationDelay: "3s" }}
       />
     </div>

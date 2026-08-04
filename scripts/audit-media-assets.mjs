@@ -16,7 +16,7 @@
  * o archivos locales faltantes), para poder usarse en CI.
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, extname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -24,7 +24,6 @@ const ROOT = join(__dirname, "..");
 const SRC = join(ROOT, "src");
 const PUBLIC = join(ROOT, "public");
 
-const IMG_EXT = /\.(webp|jpe?g|png|avif|gif|svg)$/i;
 const net = process.argv.includes("--net");
 
 function walk(dir, acc = []) {
@@ -70,7 +69,6 @@ for (const file of walk(SRC)) {
       if (!existsSync(localPath)) problems.missingLocal.push(`${rel} -> ${ref}`);
     } else {
       try {
-        // eslint-disable-next-line no-new
         new URL(ref);
         if (net) remoteToCheck.add(ref);
       } catch {

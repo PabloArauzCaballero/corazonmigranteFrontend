@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { clearClientSession, persistClientSession, readClientSession } from "@/shared/auth/cookies";
 import type { NormalizedSession } from "@/shared/auth/session";
+import { ATTR, BUSINESS_SPANS, rotateTelemetrySessionId, startSpan } from "@/observability";
 
 type SessionContextValue = {
   session: NormalizedSession | null;
@@ -34,7 +35,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    startSpan(BUSINESS_SPANS.authLogout, {
+      [ATTR.feature]: "auth",
+      [ATTR.operation]: "logout"
+    }).end();
+
     clearClientSession();
+    // El identificador de sesión de telemetría se descarta junto con la sesión real:
+    // así las trazas de quien entre después en el mismo navegador no se agrupan con
+    // las de quien acaba de salir.
+    rotateTelemetrySessionId();
+
     setSessionState(null);
     setIsReady(true);
   }, []);

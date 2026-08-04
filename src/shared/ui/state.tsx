@@ -58,12 +58,12 @@ export function ErrorState({
 
 export function ForbiddenState() {
   return (
-    <Card className="animate-fade-in border-amber-200 bg-amber-50">
+    <Card className="animate-fade-in border-warning-border bg-warning-surface">
       <CardContent className="flex min-h-48 flex-col items-center justify-center gap-3 text-center">
-        <ShieldAlert className="h-8 w-8 text-amber-700" aria-hidden="true" />
+        <ShieldAlert className="h-8 w-8 text-warning" aria-hidden="true" />
         <div>
-          <p className="font-semibold text-amber-950">Acceso restringido</p>
-          <p className="mt-1 max-w-md text-sm leading-6 text-amber-900/80">
+          <p className="font-semibold text-ink">Acceso restringido</p>
+          <p className="mt-1 max-w-md text-sm leading-6 text-ink-muted">
             Tu cuenta no tiene permisos para ver esta sección. Si crees que esto es un error, contacta a administración.
           </p>
         </div>
