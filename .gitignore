@@ -30,3 +30,6 @@ tc-landing.json
 
 # script movido al backend (archivo local bloqueado por el montaje)
 scripts/upload-landing-cloudinary.mjs
+
+# Salida de ejecuciones de Playwright (outputDir de playwright.config.ts)
+tests/e2e/.output/
