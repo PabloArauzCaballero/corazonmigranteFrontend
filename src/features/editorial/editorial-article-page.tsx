@@ -47,18 +47,18 @@ export function EditorialArticlePage({ slug }: { slug: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
+    <main className="min-h-screen bg-surface-sunken text-slate-950">
       <section className="container py-8 md:py-12">
         <Button asChild variant="ghost" className="mb-8 rounded-none">
           <Link href="/biblioteca"><ArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver a biblioteca</Link>
         </Button>
-        <article className="mx-auto max-w-6xl border border-slate-200 bg-white">
+        <article className="mx-auto max-w-6xl border border-slate-200 bg-card">
           <header className="grid gap-0 md:grid-cols-[1fr_0.84fr]">
             <div className="flex flex-col justify-between gap-10 border-b border-slate-200 p-7 md:border-b-0 md:border-r md:p-10">
               <div className="space-y-7">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.24em] text-teal-800">
                   <span>{resource.category}</span>
-                  {resource.isPremium ? <span className="inline-flex items-center gap-1 bg-teal-900 px-2 py-1 text-white"><LockKeyhole className="h-3 w-3" />Premium</span> : null}
+                  {resource.isPremium ? <span className="inline-flex items-center gap-1 bg-teal-900 px-2 py-1 text-surface-inverse-foreground"><LockKeyhole className="h-3 w-3" />Premium</span> : null}
                   <span className="h-px w-10 bg-teal-800/50" aria-hidden="true" />
                   <span>{resource.eyebrow}</span>
                 </div>
@@ -102,7 +102,7 @@ export function EditorialArticlePage({ slug }: { slug: string }) {
             </div>
           ) : null}
 
-          <Card className="m-7 rounded-none border-slate-200 bg-[#f7f4ef] shadow-none md:m-10">
+          <Card className="m-7 rounded-none border-slate-200 bg-surface-sunken shadow-none md:m-10">
             <CardContent className="grid gap-5 p-6 md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-teal-800">{hero?.eyebrow ?? "Acompañamiento"}</p>

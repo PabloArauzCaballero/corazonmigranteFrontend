@@ -109,3 +109,49 @@ Configuración recomendada para Corazón Migrante:
 ```env
 NEXT_PUBLIC_PUBLIC_VIEW_SLUG=inicio
 ```
+
+## Contrato de progreso de tutoriales (propuesto)
+
+Estado: **PENDIENTE_CM_TUTORIALES_BACKEND**. El frontend ya tiene el adaptador escrito y
+probado (`src/features/tutorial/storage/tutorial-storage.ts`); se activa con
+`NEXT_PUBLIC_TUTORIALS_REMOTE_PROGRESS=true` en cuanto el backend exponga estas rutas.
+Mientras tanto el progreso vive en `localStorage` del navegador.
+
+```txt
+GET    /api/v1/me/tutorials/progress                  → TutorialProgressRecord[]
+PUT    /api/v1/me/tutorials/progress/:tutorialId      → 200 (idempotente)
+DELETE /api/v1/me/tutorials/progress/:tutorialId      → 204 (idempotente)
+DELETE /api/v1/me/tutorials/progress                  → 204 (reinicia todo)
+```
+
+Forma del registro (idéntica en petición y respuesta):
+
+```jsonc
+{
+  "tutorialId": "paciente-reservar-cita",  // string, obligatorio
+  "version": "1.0.0",                      // versión del tutorial con la que se avanzó
+  "status": "en_progreso",                 // sin_empezar | en_progreso | completado | omitido
+  "currentStepId": "servicio",             // opcional
+  "startedAt": "2026-08-03T10:00:00.000Z", // opcional, ISO-8601
+  "completedAt": "2026-08-03T10:06:00.000Z",
+  "lastInteractionAt": "2026-08-03T10:06:00.000Z", // obligatorio
+  "repetitions": 1,                        // entero >= 0
+  "dismissed": false                       // «no volver a mostrar» el automático
+}
+```
+
+Reglas exigidas al backend:
+
+- **Autorización:** el usuario se deduce del JWT. Ninguna ruta acepta un identificador de
+  usuario en la URL ni en el cuerpo; un usuario nunca puede leer ni modificar el progreso
+  de otro.
+- **Validación de entrada:** `status` restringido al enumerado, fechas ISO-8601,
+  `repetitions` entero no negativo, `tutorialId`/`version` no vacíos. Campos desconocidos
+  rechazados.
+- **Idempotencia:** `PUT` reemplaza el registro completo del `tutorialId`; repetir la
+  llamada con el mismo cuerpo no cambia el resultado. `DELETE` sobre algo inexistente
+  responde 204.
+- **Sin datos sensibles:** el registro solo contiene identificadores del catálogo y marcas
+  de tiempo; no se guarda contenido introducido por la persona durante el tutorial.
+- El frontend descarta con aviso cualquier respuesta que no cumpla el esquema y sigue
+  funcionando con la copia local.

@@ -40,7 +40,15 @@ console.log(`\nCorazón Migrante frontend: http://localhost:${port}`);
 console.log(`Backend esperado: ${env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000"}`);
 console.log("Si el backend está en otro puerto, ajusta NEXT_PUBLIC_API_BASE_URL en .env.local.\n");
 
-const child = spawn(process.execPath, [nextCli, "dev", "-p", String(port)], {
+// `--turbopack` solo en DESARROLLO. El build de producción sigue en webpack a
+// propósito: en Next 15.4 el build con Turbopack está marcado como experimental
+// y, sobre todo, «always builds production source maps for the browser», lo que
+// publicaría el código fuente del panel. Ver docs/adr/ADR-0012.
+// Se puede desactivar con NEXT_DISABLE_TURBOPACK=1 para comparar o diagnosticar.
+const useTurbopack = process.env.NEXT_DISABLE_TURBOPACK !== "1";
+const devArgs = ["dev", "-p", String(port), ...(useTurbopack ? ["--turbopack"] : [])];
+
+const child = spawn(process.execPath, [nextCli, ...devArgs], {
   stdio: "inherit",
   env,
   cwd: rootDir

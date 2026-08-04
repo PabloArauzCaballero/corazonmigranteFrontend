@@ -23,5 +23,19 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
     { name: "tablet", use: { ...devices["iPad (gen 7)"] } },
     { name: "mobile", use: { ...devices["iPhone 13"] } },
+    /*
+     * Proyecto dedicado a la matriz de anchos (`responsive.spec.ts`).
+     *
+     * NO usa un perfil de dispositivo: con `isMobile: true`, Chrome aplica su propia
+     * escala de meta-viewport y `setViewportSize(320)` acaba produciendo un viewport
+     * de maquetación de ~257 px. Toda la matriz mediría entonces anchos que no son los
+     * declarados. Con `hasTouch` se conserva la ruta de código táctil (los estilos de
+     * `pointer: coarse`) sin esa reescala.
+     */
+    {
+      name: "responsive",
+      testMatch: /responsive\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], isMobile: false, hasTouch: true, viewport: { width: 390, height: 844 } },
+    },
   ],
 });

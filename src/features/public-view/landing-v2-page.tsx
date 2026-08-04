@@ -47,7 +47,7 @@ import {
   DoctorsCarousel,
   MigrationInvite,
 } from "@/features/public-view/landing-sections";
-import { TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
+import { TutorialLauncher } from "@/features/tutorial/ui/tutorial-launcher";
 
 type IconName = string | number | undefined;
 
@@ -117,7 +117,7 @@ function TextList({
     <div className={className ?? "grid gap-4"}>
       {clean.map((item) => (
         <RichText
-          className="text-base leading-8 text-[#625e57]"
+          className="text-base leading-8 text-ink-muted"
           key={item}
           text={item}
         />
@@ -190,8 +190,10 @@ function publicLinks(content: LandingV2Content) {
   const hasLibrary = clean.some(
     (item) => /biblioteca|recursos/i.test(item.label ?? "") || item.href === "/biblioteca",
   );
+  const hasCourses = clean.some((item) => /cursos/i.test(item.label ?? "") || item.href === "/cursos");
   const library = hasLibrary ? [] : [{ label: "Biblioteca", href: "/biblioteca" }];
-  return [...clean, ...library];
+  const courses = hasCourses ? [] : [{ label: "Cursos", href: "/cursos" }];
+  return [...clean, ...library, ...courses];
 }
 
 function footerLegalLinks(content: LandingV2Content) {
@@ -250,17 +252,17 @@ function Navbar({
     <header
       className={`sticky top-0 z-50 border-b transition-all duration-300 ${
         scrolled
-          ? "border-[#361d17]/10 bg-[#fbf8f3]/95 shadow-[0_8px_30px_rgba(43,27,23,0.08)] backdrop-blur-2xl"
-          : "border-transparent bg-[#fbf8f3]/70 backdrop-blur-xl"
+          ? "border-ink/10 bg-background/95 shadow-[0_8px_30px_rgba(43,27,23,0.08)] backdrop-blur-2xl"
+          : "border-transparent bg-background/70 backdrop-blur-xl"
       }`}
     >
-      <div className={`container flex items-center justify-between gap-4 transition-all duration-300 ${scrolled ? "min-h-[4.25rem] py-2" : "min-h-20 py-3"}`}>
+      <div className={`container flex items-center justify-between gap-4 transition-all duration-300 ${scrolled ? "min-h-[3.5rem] py-2 sm:min-h-[4.25rem]" : "min-h-16 py-2.5 sm:min-h-20 sm:py-3"}`}>
         <Link
           href={content.navbar?.brand?.href || "#inicio"}
           className="group flex min-w-0 items-center gap-3 font-bold"
           aria-label="Ir al inicio"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#361d17]/10 bg-white text-primary shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
+          <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-2xl border border-ink/10 bg-card text-primary shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md sm:h-12 sm:w-12">
             {brandLogo ? (
               <img
                 src={brandLogo}
@@ -274,9 +276,9 @@ function Navbar({
               iconFor(content.navbar?.brand?.icon || content.footer?.brand?.icon || "favorite", "h-6 w-6")
             )}
           </span>
-          <span className="truncate leading-tight text-[#2b1b17]">
+          <span className="truncate leading-tight text-ink">
             {brand}
-            <span className="block truncate text-xs font-medium text-[#6d675f]">
+            <span className="hidden truncate text-xs font-medium text-ink-muted min-[380px]:block">
               Acompañamiento emocional
             </span>
           </span>
@@ -292,7 +294,7 @@ function Navbar({
             return (
               <Link
                 className={`relative text-sm font-semibold transition duration-300 hover:text-primary after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:rounded-full after:bg-primary after:transition-all after:duration-300 ${
-                  isActive ? "text-primary after:w-full" : "text-[#625e57] after:w-0 hover:after:w-full"
+                  isActive ? "text-primary after:w-full" : "text-ink-muted after:w-0 hover:after:w-full"
                 }`}
                 href={item.href || "#"}
                 key={linkKey(item, "nav")}
@@ -306,7 +308,7 @@ function Navbar({
         <div className="hidden items-center gap-2 lg:flex">
           {formattedPhone ? (
             <a
-              className="hidden items-center gap-2 rounded-2xl border border-[#d9cec2] bg-white/75 px-4 py-2 text-sm font-semibold text-[#625e57] transition hover:bg-white 2xl:inline-flex"
+              className="hidden items-center gap-2 rounded-2xl border border-line-strong bg-card/75 px-4 py-2 text-sm font-semibold text-ink-muted transition hover:bg-card 2xl:inline-flex"
               href={contactHref(phone)}
               target="_blank"
               rel="noreferrer"
@@ -325,7 +327,7 @@ function Navbar({
       </div>
 
       <nav
-        className="container flex gap-2 overflow-x-auto pb-3 xl:hidden"
+        className="scroll-x-contained container flex gap-2 pb-3 xl:hidden"
         aria-label="Navegación pública móvil"
       >
         {links.map((item) => {
@@ -334,7 +336,7 @@ function Navbar({
           return (
             <Link
               className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                isActive ? "border-primary bg-primary text-white" : "border-[#361d17]/10 bg-white/76 text-[#625e57]"
+                isActive ? "border-primary bg-primary text-surface-inverse-foreground" : "border-ink/10 bg-card/76 text-ink-muted"
               }`}
               href={item.href || "#"}
               key={linkKey(item, "mobile")}
@@ -344,14 +346,14 @@ function Navbar({
           );
         })}
         <Link
-          className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+          className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-surface-inverse-foreground"
           href={actionHref(login, phone, "/login")}
         >
           {login?.label || "Acceder"}
         </Link>
         {signUp?.label ? (
           <Link
-            className="shrink-0 rounded-full border border-primary/20 bg-white px-4 py-2 text-xs font-semibold text-primary"
+            className="shrink-0 rounded-full border border-primary/20 bg-card px-4 py-2 text-xs font-semibold text-primary"
             href={actionHref(signUp, phone, "/registro")}
           >
             {signUp.label}
@@ -359,7 +361,7 @@ function Navbar({
         ) : null}
         {formattedPhone ? (
           <a
-            className="shrink-0 rounded-full border border-[#361d17]/10 bg-white/76 px-4 py-2 text-xs font-semibold text-[#625e57]"
+            className="shrink-0 rounded-full border border-ink/10 bg-card/76 px-4 py-2 text-xs font-semibold text-ink-muted"
             href={contactHref(phone)}
             target="_blank"
             rel="noreferrer"
@@ -380,27 +382,27 @@ function HeroVisual({ hero }: { hero: LandingV2Content["hero"] }) {
 
   return (
     <div className="relative mx-auto w-full max-w-[39rem] lg:max-w-none">
-      <div className="absolute -left-5 top-8 z-10 hidden rounded-[1.7rem] border border-white/80 bg-white/88 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.14)] backdrop-blur md:block">
+      <div className="absolute -left-5 top-8 z-10 hidden rounded-[1.7rem] border border-card/80 bg-card/88 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.14)] backdrop-blur md:block">
         <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f1e7e5] text-primary">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-surface-accent text-primary">
             <LockKeyhole className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-bold text-[#2b1b17]">Espacio seguro</p>
-            <p className="text-xs text-[#6d675f]">Escucha profesional</p>
+            <p className="text-sm font-bold text-ink">Espacio seguro</p>
+            <p className="text-xs text-ink-muted">Escucha profesional</p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-[2.6rem] border border-white/80 bg-white/68 p-3 shadow-[0_38px_95px_rgba(43,27,23,0.18)] backdrop-blur">
-        <div className="overflow-hidden rounded-[2.15rem] border border-[#361d17]/10 bg-[#2e1610]">
-          <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 text-white">
+      <div className="rounded-[2.6rem] border border-card/80 bg-card/68 p-3 shadow-[0_38px_95px_rgba(43,27,23,0.18)] backdrop-blur">
+        <div className="overflow-hidden rounded-[2.15rem] border border-ink/10 bg-surface-inverse">
+          <div className="flex items-center justify-between border-b border-surface-inverse-foreground/10 px-6 py-5 text-surface-inverse-foreground">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-surface-inverse-foreground/10 text-surface-inverse-foreground">
                 {iconFor(visual?.header?.icon || "chat", "h-5 w-5")}
               </span>
               <div>
-                <p className="text-sm font-semibold text-white/60">Acompañamiento</p>
+                <p className="text-sm font-semibold text-surface-inverse-foreground/60">Acompañamiento</p>
                 <p className="font-black">{visual?.header?.title || "Tu bienestar, paso a paso"}</p>
               </div>
             </div>
@@ -411,22 +413,22 @@ function HeroVisual({ hero }: { hero: LandingV2Content["hero"] }) {
 
           <AnimatedChatBubbles bubbles={bubbles} />
 
-          <div className="grid gap-3 bg-white px-5 py-5 sm:grid-cols-2">
+          <div className="grid gap-3 bg-card px-5 py-5 sm:grid-cols-2">
             {stats.map((stat) => (
               <div
-                className="rounded-2xl border border-[#361d17]/10 bg-[#fbf8f3] p-4"
+                className="rounded-2xl border border-ink/10 bg-background p-4"
                 key={`${stat.label}-${stat.value}`}
               >
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7a746c]">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
                   {stat.label}
                 </p>
-                <p className="mt-1 text-lg font-black text-[#2b1b17]">{stat.value}</p>
+                <p className="mt-1 text-lg font-black text-ink">{stat.value}</p>
               </div>
             ))}
           </div>
 
           {textFromValue(visual?.note) ? (
-            <div className="flex items-center gap-2 border-t border-[#361d17]/10 bg-white px-5 py-4 text-sm font-semibold text-[#625e57]">
+            <div className="flex items-center gap-2 border-t border-ink/10 bg-card px-5 py-4 text-sm font-semibold text-ink-muted">
               {iconFor(visual?.note?.icon, "h-4 w-4 text-primary")}
               {textFromValue(visual?.note)}
             </div>
@@ -438,14 +440,14 @@ function HeroVisual({ hero }: { hero: LandingV2Content["hero"] }) {
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           {trustCards.map((card) => (
             <div
-              className="rounded-[1.35rem] border border-[#361d17]/10 bg-white/84 p-4 shadow-sm"
+              className="rounded-[1.35rem] border border-ink/10 bg-card/84 p-4 shadow-sm"
               key={`${card.title}-${card.body}`}
             >
               <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/10 text-primary">
                 {iconFor(card.icon, "h-5 w-5")}
               </span>
-              <p className="mt-3 font-black text-[#2b1b17]">{card.title}</p>
-              <p className="mt-1 text-xs leading-5 text-[#625e57]">{card.body}</p>
+              <p className="mt-3 font-black text-ink">{card.title}</p>
+              <p className="mt-1 text-xs leading-5 text-ink-muted">{card.body}</p>
             </div>
           ))}
         </div>
@@ -480,18 +482,18 @@ function PresentationSection({
   const secondaryHref = actionHref(section.secondary_cta, phone, "#emociones");
 
   return (
-    <section className="bg-white py-16">
+    <section className="bg-card py-16">
       <div className="container grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
         <Reveal variant="right">
           <div>
             <SectionBadge badge={section.badge} />
             {section.title ? (
-              <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+              <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-ink md:text-6xl">
                 {section.title}
               </h2>
             ) : null}
             {section.subtitle ? (
-              <p className="mt-5 text-xl leading-8 text-[#625e57]">{section.subtitle}</p>
+              <p className="mt-5 text-xl leading-8 text-ink-muted">{section.subtitle}</p>
             ) : null}
             <TextList items={section.description} className="mt-7 grid gap-4" />
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -503,7 +505,7 @@ function PresentationSection({
                 </Button>
               ) : null}
               {section.secondary_cta?.label ? (
-                <Button asChild className="rounded-2xl border-[#cfc4b8] bg-white/78 transition-transform hover:-translate-y-1" variant="outline">
+                <Button asChild className="rounded-2xl border-line-strong bg-card/78 transition-transform hover:-translate-y-1" variant="outline">
                   <Link href={secondaryHref} {...externalTarget(secondaryHref)}>
                     {section.secondary_cta.label}
                   </Link>
@@ -514,8 +516,8 @@ function PresentationSection({
         </Reveal>
         <Reveal variant="left" delay={150}>
           <Parallax speed={0.06}>
-            <div className="group overflow-hidden rounded-[2.35rem] border border-[#e3d8cb] bg-[#fbf8f3] p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
-              <div className="relative min-h-[28rem] overflow-hidden rounded-[1.9rem] bg-[#e8ded3]">
+            <div className="group overflow-hidden rounded-[2.35rem] border border-line bg-background p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
+              <div className="relative min-h-[16rem] overflow-hidden rounded-[1.9rem] bg-line sm:min-h-[22rem] md:min-h-[28rem]">
                 <ImageBlock
                   image={image}
                   landing={landing}
@@ -523,7 +525,7 @@ function PresentationSection({
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
                 />
                 {section.img_footer_text ? (
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2e1610]/88 to-transparent p-7 text-white">
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-surface-inverse/88 to-transparent p-7 text-surface-inverse-foreground">
                     <p className="max-w-xl text-xl font-black leading-8">{section.img_footer_text}</p>
                   </div>
                 ) : null}
@@ -545,20 +547,23 @@ function Hero({ content, phone }: { content: LandingV2Content; phone?: string })
   const secondaryHref = actionHref(hero?.secondary_cta, phone, "#psicologos");
 
   return (
-    <section id="inicio" className="relative isolate overflow-hidden bg-[#fbf8f3]">
+    <section id="inicio" className="relative isolate overflow-hidden bg-background">
       {/* Animated aurora background */}
       <div className="animate-aurora absolute left-[-20rem] top-[-18rem] -z-10 h-[42rem] w-[42rem] rounded-full bg-primary/14 blur-3xl" />
-      <div className="animate-blob absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-[#8c4a62]/12 blur-3xl" />
-      <div className="animate-blob absolute left-[30%] top-[40%] -z-10 h-[26rem] w-[26rem] rounded-full bg-[#c98a4b]/8 blur-3xl" style={{ animationDelay: "3s" }} />
+      <div className="animate-blob absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-brand-plum/12 blur-3xl" />
+      <div className="animate-blob absolute left-[30%] top-[40%] -z-10 h-[26rem] w-[26rem] rounded-full bg-brand-gold/8 blur-3xl" style={{ animationDelay: "3s" }} />
 
-      <div className="container grid min-h-[calc(100vh-5rem)] gap-12 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20">
+      {/* `dvh` en lugar de `vh`: en móvil `100vh` mide la ventana con las barras del
+          navegador retraídas, de modo que el héroe quedaba sistemáticamente más alto
+          que la pantalla y empujaba el resto de la página fuera de vista al cargar. */}
+      <div className="container grid min-h-[calc(100dvh-4rem)] gap-10 py-10 sm:gap-12 sm:py-14 lg:min-h-[calc(100dvh-5rem)] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20">
         <div className="max-w-3xl">
           <Reveal variant="up">
             <SectionBadge badge={hero?.badge} />
           </Reveal>
 
           <Reveal variant="up" delay={120}>
-            <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-[#2b1b17] md:text-7xl">
+            <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black tracking-[-0.055em] text-ink md:text-7xl">
               {titleLine1}
               {titleLine2 ? (
                 <span className="mt-1 block text-gradient-migrant">{titleLine2}</span>
@@ -587,7 +592,7 @@ function Hero({ content, phone }: { content: LandingV2Content; phone?: string })
               {hero?.secondary_cta?.label ? (
                 <Button
                   asChild
-                  className="h-[3.35rem] rounded-2xl border-[#cfc4b8] bg-white/78 px-7 text-base transition-transform hover:-translate-y-1 hover:bg-white"
+                  className="h-[3.35rem] rounded-2xl border-line-strong bg-card/78 px-7 text-base transition-transform hover:-translate-y-1 hover:bg-card"
                   size="lg"
                   variant="outline"
                 >
@@ -606,7 +611,7 @@ function Hero({ content, phone }: { content: LandingV2Content; phone?: string })
       </div>
 
       {/* Scroll cue */}
-      <div className="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 text-[#8a8176] lg:flex">
+      <div className="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 text-ink-subtle lg:flex">
         <span className="text-[10px] font-bold uppercase tracking-[0.28em]">Desliza</span>
         <svg className="animate-scroll-cue h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="m6 9 6 6 6-6" />
@@ -634,23 +639,23 @@ function HistorySection({
   const conclusions = Object.entries(paragraphs?.conclusion_phrase ?? {});
 
   return (
-    <section id={section.id || "mapa"} className="scroll-mt-28 bg-white py-20">
+    <section id={section.id || "mapa"} className="scroll-mt-28 bg-card py-20">
       <div className="container">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           <div className="lg:sticky lg:top-28">
             <SectionBadge badge={section.badge} />
-            <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+            <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-ink md:text-6xl">
               {section.title}
             </h2>
             {section.subtitle ? (
-              <p className="mt-5 text-xl leading-8 text-[#625e57]">{section.subtitle}</p>
+              <p className="mt-5 text-xl leading-8 text-ink-muted">{section.subtitle}</p>
             ) : null}
-            <div className="mt-8 overflow-hidden rounded-[2.2rem] border border-[#e3d8cb] bg-[#eee4da] shadow-[0_28px_80px_rgba(43,27,23,0.12)]">
+            <div className="mt-8 overflow-hidden rounded-[2.2rem] border border-line bg-line shadow-[0_28px_80px_rgba(43,27,23,0.12)]">
               <ImageBlock
                 image={section.image ?? rootImage}
                 landing={landing}
                 alt={section.title}
-                className="h-[26rem] w-full object-cover"
+                className="h-56 w-full object-cover sm:h-72 md:h-[26rem]"
               />
             </div>
             {(section.link?.label || rootLink?.label) ? (
@@ -664,13 +669,13 @@ function HistorySection({
 
           <div className="space-y-8">
             {main.length > 0 ? (
-              <div className="rounded-[2rem] border border-[#e3d8cb] bg-[#fbf8f3] p-7 md:p-9">
+              <div className="rounded-[2rem] border border-line bg-background p-7 md:p-9">
                 <TextList items={main} />
               </div>
             ) : null}
 
             {additional.length > 0 ? (
-              <div className="rounded-[2rem] border border-[#e3d8cb] bg-white p-7 shadow-sm md:p-9">
+              <div className="rounded-[2rem] border border-line bg-card p-7 shadow-sm md:p-9">
                 <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
                   Relato migrante
                 </p>
@@ -686,7 +691,7 @@ function HistorySection({
               <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
                 Testimonios
               </p>
-              <h3 className="mt-3 text-3xl font-black tracking-[-0.03em] text-[#2b1b17] md:text-5xl">
+              <h3 className="mt-3 text-3xl font-black tracking-[-0.03em] text-ink md:text-5xl">
                 Historias que explican lo que muchas veces no se dice
               </h3>
             </div>
@@ -696,20 +701,20 @@ function HistorySection({
                 const text = item.paragraph ?? item.paragraphs ?? [];
                 return (
                   <article
-                    className="grid overflow-hidden rounded-[2.2rem] border border-[#e3d8cb] bg-[#fbf8f3] shadow-sm lg:grid-cols-[0.36fr_0.64fr]"
+                    className="grid overflow-hidden rounded-[2.2rem] border border-line bg-background shadow-sm lg:grid-cols-[0.36fr_0.64fr]"
                     key={title}
                   >
-                    <div className="min-h-[18rem] bg-[#e8ded3]">
+                    <div className="min-h-[12rem] bg-line sm:min-h-[15rem] md:min-h-[18rem]">
                       <ImageBlock
                         image={image}
                         landing={landing}
                         alt={title}
-                        className="h-full min-h-[18rem] w-full object-cover"
+                        className="h-full min-h-[12rem] w-full object-cover sm:min-h-[15rem] md:min-h-[18rem]"
                       />
                     </div>
                     <div className="p-7 md:p-9">
                       <p className="text-sm font-bold text-primary">Historia {index + 1}</p>
-                      <h4 className="mt-2 text-2xl font-black tracking-tight text-[#2b1b17]">
+                      <h4 className="mt-2 text-2xl font-black tracking-tight text-ink">
                         {title}
                       </h4>
                       <TextList items={text} className="mt-5 grid gap-4" />
@@ -725,13 +730,13 @@ function HistorySection({
           <div className="mt-16 grid gap-5 md:grid-cols-2">
             {conclusions.map(([title, items]) => (
               <div
-                className="rounded-[2rem] border border-[#d8ccc0] bg-[#2e1610] p-7 text-white shadow-[0_25px_70px_rgba(43,27,23,0.14)]"
+                className="rounded-[2rem] border border-line-strong bg-surface-inverse p-7 text-surface-inverse-foreground shadow-[0_25px_70px_rgba(43,27,23,0.14)]"
                 key={title}
               >
                 <h4 className="text-2xl font-black tracking-tight">{title}</h4>
                 <div className="mt-5 grid gap-4">
                   {items.map((item) => (
-                    <p className="text-sm leading-7 text-white/75" key={item}>
+                    <p className="text-sm leading-7 text-surface-inverse-foreground/75" key={item}>
                       {richParts(item)}
                     </p>
                   ))}
@@ -755,12 +760,12 @@ function MissionSection({
   const section = content.sections?.mission;
   if (!section) return null;
   return (
-    <section id={section.id || "mision"} className="scroll-mt-28 bg-[#fbf8f3] py-20">
+    <section id={section.id || "mision"} className="scroll-mt-28 bg-background py-20">
       <div className="container grid gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
         <Reveal variant="right">
           <div>
             <SectionBadge badge={section.badge} />
-            <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+            <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] text-ink md:text-6xl">
               {section.title}
             </h2>
             <TextList items={section.paragraphs} className="mt-7 grid gap-5" />
@@ -768,12 +773,12 @@ function MissionSection({
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {section.feature_cards.map((card, i) => (
                   <Reveal variant="up" delay={i * 120} key={`${card.title}-${card.body}`}>
-                    <div className="group h-full rounded-[1.5rem] border border-[#e3d8cb] bg-white/86 p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_50px_rgba(43,27,23,0.10)]">
+                    <div className="group h-full rounded-[1.5rem] border border-line bg-card/86 p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_50px_rgba(43,27,23,0.10)]">
                       <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
                         {iconFor(card.icon, "h-5 w-5")}
                       </span>
-                      <h3 className="mt-4 text-lg font-black text-[#2b1b17]">{card.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-[#625e57]">{card.body}</p>
+                      <h3 className="mt-4 text-lg font-black text-ink">{card.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-ink-muted">{card.body}</p>
                     </div>
                   </Reveal>
                 ))}
@@ -788,12 +793,12 @@ function MissionSection({
         </Reveal>
         <Reveal variant="left" delay={150}>
           <Parallax speed={0.08}>
-            <div className="overflow-hidden rounded-[2.35rem] border border-white/80 bg-white/72 p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
+            <div className="overflow-hidden rounded-[2.35rem] border border-card/80 bg-card/72 p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
               <ImageBlock
                 image={section.image}
                 landing={landing}
                 alt={section.title}
-                className="h-[34rem] w-full rounded-[1.9rem] object-cover"
+                className="h-64 w-full rounded-[1.9rem] object-cover sm:h-96 md:h-[34rem]"
               />
             </div>
           </Parallax>
@@ -814,14 +819,14 @@ function EmotionsSection({
   const items = section?.items?.filter((item) => item.title || item.body) ?? [];
   if (!section || items.length === 0) return null;
   return (
-    <section id={section.id || "emociones"} className="scroll-mt-28 bg-white py-20">
+    <section id={section.id || "emociones"} className="scroll-mt-28 bg-card py-20">
       <div className="container">
         <Reveal variant="up">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">
               Salud emocional
             </p>
-            <h2 className="mt-4 text-balance text-4xl font-black tracking-[-0.04em] text-[#2b1b17] md:text-6xl">
+            <h2 className="mt-4 text-balance text-4xl font-black tracking-[-0.04em] text-ink md:text-6xl">
               {section.title}
             </h2>
           </div>
@@ -830,9 +835,9 @@ function EmotionsSection({
           {items.map((item, i) => (
             <Reveal variant="up" delay={i * 110} key={`${item.title}-${item.body}`}>
               <Card
-                className="group h-full overflow-hidden border-[#e3d8cb] bg-[#fbf8f3] transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_70px_rgba(43,27,23,0.13)]"
+                className="group h-full overflow-hidden border-line bg-background transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_70px_rgba(43,27,23,0.13)]"
               >
-                <div className="h-52 overflow-hidden bg-[#e8ded3]">
+                <div className="h-52 overflow-hidden bg-line">
                   <ImageBlock
                     image={item.image}
                     landing={landing}
@@ -841,10 +846,10 @@ function EmotionsSection({
                   />
                 </div>
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-black tracking-tight text-[#2b1b17]">
+                  <h3 className="text-xl font-black tracking-tight text-ink">
                     {humanizeTitle(item.title)}
                   </h3>
-                  <p className="mt-3 text-sm leading-7 text-[#625e57]">{item.body}</p>
+                  <p className="mt-3 text-sm leading-7 text-ink-muted">{item.body}</p>
                 </CardContent>
               </Card>
             </Reveal>
@@ -867,24 +872,24 @@ function ContactSection({
   const href = actionHref(section.primary_cta, phone, "#contacto");
   const formattedPhone = formatContactPhone(phone);
   return (
-    <section id={section.id || "contacto"} className="scroll-mt-28 bg-white py-20">
+    <section id={section.id || "contacto"} className="scroll-mt-28 bg-card py-20">
       <div className="container">
         <Reveal variant="zoom">
-        <div className="relative grid overflow-hidden rounded-[2.6rem] border border-[#361d17]/10 bg-[#2e1610] text-white shadow-[0_36px_95px_rgba(43,27,23,0.2)] lg:grid-cols-[0.62fr_0.38fr]">
+        <div className="relative grid overflow-hidden rounded-[2.6rem] border border-ink/10 bg-surface-inverse text-surface-inverse-foreground shadow-[0_36px_95px_rgba(43,27,23,0.2)] lg:grid-cols-[0.62fr_0.38fr]">
           {/* animated glow inside dark card */}
           <div className="animate-blob pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-primary/30 blur-3xl" />
-          <div className="animate-blob pointer-events-none absolute -bottom-24 right-10 h-64 w-64 rounded-full bg-[#8c4a62]/25 blur-3xl" style={{ animationDelay: "2.5s" }} />
+          <div className="animate-blob pointer-events-none absolute -bottom-24 right-10 h-64 w-64 rounded-full bg-brand-plum/25 blur-3xl" style={{ animationDelay: "2.5s" }} />
           <div className="relative p-8 md:p-12">
             <SectionBadge badge={section.badge} />
             <h2 className="mt-5 text-balance text-4xl font-black tracking-[-0.04em] md:text-6xl">
               {section.title}
             </h2>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-white/72">{section.body}</p>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-surface-inverse-foreground/72">{section.body}</p>
             {section.bullets?.length ? (
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {section.bullets.map((bullet, i) => (
                   <Reveal variant="up" delay={i * 90} key={textFromValue(bullet)}>
-                    <div className="flex h-full items-start gap-3 rounded-2xl border border-white/10 bg-white/8 p-4 text-sm leading-6 text-white/76 transition duration-300 hover:border-emerald-200/40 hover:bg-white/12">
+                    <div className="flex h-full items-start gap-3 rounded-2xl border border-surface-inverse-foreground/10 bg-surface-inverse-foreground/8 p-4 text-sm leading-6 text-surface-inverse-foreground/76 transition duration-300 hover:border-emerald-200/40 hover:bg-surface-inverse-foreground/12">
                       {iconFor(bullet.icon, "mt-0.5 h-5 w-5 shrink-0 text-emerald-200")}
                       {textFromValue(bullet)}
                     </div>
@@ -894,8 +899,8 @@ function ContactSection({
             ) : null}
           </div>
 
-          <div className="relative border-t border-white/10 bg-white/8 p-8 md:p-10 lg:border-l lg:border-t-0">
-            <div className="rounded-[2rem] bg-white p-7 text-[#2b1b17] shadow-[0_22px_70px_rgba(0,0,0,0.18)]">
+          <div className="relative border-t border-surface-inverse-foreground/10 bg-surface-inverse-foreground/8 p-8 md:p-10 lg:border-l lg:border-t-0">
+            <div className="rounded-[2rem] bg-card p-7 text-ink shadow-[0_22px_70px_rgba(0,0,0,0.18)]">
               <p className="text-sm font-black uppercase tracking-[0.18em] text-primary">
                 Contacto
               </p>
@@ -905,7 +910,7 @@ function ContactSection({
                   href={contactHref(phone)}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-5 flex items-center gap-3 rounded-2xl border border-[#d8ccc0] bg-[#fbf8f3] px-4 py-3 font-black text-primary transition hover:bg-[#f4ece2]"
+                  className="mt-5 flex items-center gap-3 rounded-2xl border border-line-strong bg-background px-4 py-3 font-black text-primary transition hover:bg-surface-sunken"
                 >
                   <Phone className="h-5 w-5" aria-hidden="true" />
                   {formattedPhone}
@@ -920,7 +925,7 @@ function ContactSection({
                 </Button>
               ) : null}
               {textFromValue(section.note) ? (
-                <p className="mt-5 flex items-center gap-2 text-xs font-semibold leading-5 text-[#625e57]">
+                <p className="mt-5 flex items-center gap-2 text-xs font-semibold leading-5 text-ink-muted">
                   {iconFor(section.note?.icon, "h-4 w-4 text-primary")}
                   {textFromValue(section.note)}
                 </p>
@@ -942,21 +947,21 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
   const legalLinks = footerLegalLinks(content);
   const formattedPhone = formatContactPhone(phone);
   return (
-    <footer className="border-t border-[#331f1a]/10 bg-[#2e1610] text-white">
+    <footer className="border-t border-ink/10 bg-surface-inverse text-surface-inverse-foreground">
       <div className="container grid gap-10 py-14 lg:grid-cols-[1.15fr_0.75fr_1.1fr]">
         <div>
           <div className="flex items-center gap-3 text-lg font-black">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-surface-inverse-foreground/10">
               {iconFor(footer?.brand?.icon || "favorite", "h-5 w-5")}
             </span>
             {footer?.brand?.label || content.navbar?.brand?.label || "Corazón Migrante"}
           </div>
-          <div className="mt-4 grid gap-2 text-sm leading-6 text-white/64">
+          <div className="mt-4 grid gap-2 text-sm leading-6 text-surface-inverse-foreground/64">
             {footer?.tagline?.map((item) => <p key={item}>{item}</p>)}
           </div>
           {formattedPhone ? (
             <a
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/8 px-4 py-2 text-sm font-bold text-white/85 transition hover:bg-white/12 hover:text-white"
+              className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-surface-inverse-foreground/10 bg-surface-inverse-foreground/8 px-4 py-2 text-sm font-bold text-surface-inverse-foreground/85 transition hover:bg-surface-inverse-foreground/12 hover:text-surface-inverse-foreground"
               href={contactHref(phone)}
               target="_blank"
               rel="noreferrer"
@@ -969,10 +974,10 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
 
         <div>
           <p className="font-semibold">Accesos</p>
-          <div className="mt-3 grid gap-2 text-sm text-white/64">
+          <div className="mt-3 grid gap-2 text-sm text-surface-inverse-foreground/64">
             {links.map((item) => (
               <Link
-                className="transition hover:text-white"
+                className="transition hover:text-surface-inverse-foreground"
                 href={item.href || "#"}
                 key={linkKey(item, "footer")}
               >
@@ -980,7 +985,7 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
               </Link>
             ))}
             {links.some((item) => item.href === "/biblioteca" || /biblioteca/i.test(item.label ?? "")) ? null : (
-              <Link className="transition hover:text-white" href="/biblioteca">
+              <Link className="transition hover:text-surface-inverse-foreground" href="/biblioteca">
                 Biblioteca
               </Link>
             )}
@@ -989,23 +994,23 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
 
         <div>
           <p className="font-semibold">{footer?.notice?.title || "Aviso"}</p>
-          <p className="mt-3 text-sm leading-6 text-white/64">{footer?.notice?.body}</p>
+          <p className="mt-3 text-sm leading-6 text-surface-inverse-foreground/64">{footer?.notice?.body}</p>
           {textFromValue(footer?.notice?.note) ? (
-            <p className="mt-4 flex items-center gap-2 text-sm leading-6 text-white/64">
+            <p className="mt-4 flex items-center gap-2 text-sm leading-6 text-surface-inverse-foreground/64">
               {iconFor(footer?.notice?.note?.icon, "h-4 w-4")}
               {textFromValue(footer?.notice?.note)}
             </p>
           ) : null}
-          <div className="mt-5 flex flex-wrap gap-3 text-xs text-white/50">
+          <div className="mt-5 flex flex-wrap gap-3 text-xs text-surface-inverse-foreground/50">
             {legalLinks.map((item) => (
-              <Link className="transition hover:text-white" href={item.href || "#"} key={linkKey(item, "legal")}>
+              <Link className="transition hover:text-surface-inverse-foreground" href={item.href || "#"} key={linkKey(item, "legal")}>
                 {item.label}
               </Link>
             ))}
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10 py-5 text-center text-xs text-white/45">
+      <div className="border-t border-surface-inverse-foreground/10 py-5 text-center text-xs text-surface-inverse-foreground/45">
         {copyright || `© ${year} Corazón Migrante. Todos los derechos reservados.`}
       </div>
     </footer>
@@ -1015,7 +1020,7 @@ function Footer({ content, phone }: { content: LandingV2Content; phone?: string 
 function FloatingContact({ phone }: { phone?: string }) {
   return (
     <a
-      className="group fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#50251b]"
+      className="group fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-surface-inverse-foreground shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-brand-clay"
       href={phone ? contactHref(phone) : "#contacto"}
       target={phone ? "_blank" : undefined}
       rel={phone ? "noreferrer" : undefined}
@@ -1039,7 +1044,7 @@ export function LandingV2Page({
   phone?: string;
 }) {
   return (
-    <div className="landing-root min-h-screen bg-[#fbf8f3] text-[#2b1b17]">
+    <div className="landing-root min-h-screen bg-background text-ink">
       <ScrollProgress />
       <Navbar content={content} landing={landing} phone={phone} />
       <main>

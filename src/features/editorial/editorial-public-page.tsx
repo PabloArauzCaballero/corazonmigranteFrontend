@@ -3,7 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { BookOpen, HeartHandshake, Search, ShieldCheck, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { env } from "@/config/env";
 import { getHeroFromPage, getPublicCmsPage, getResourcesFromPage } from "@/features/editorial/editorial.api";
 import { EditorialArticleCard } from "@/features/editorial/editorial-card";
@@ -20,17 +21,35 @@ function normalize(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
+const TABS = ["articulos", "recursos", "cursos", "historias"] as const;
+type EditorialTab = (typeof TABS)[number];
+
+export type EditorialPublicPageProps = {
+  slug?: string;
+  /** Pestaña abierta al entrar cuando la URL no trae `?tab=`. */
+  initialTab?: EditorialTab;
+};
+
+function EditorialPublicPageContent({ slug, initialTab }: EditorialPublicPageProps = {}) {
   const [search, setSearch] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
-  const [tab, setTab] = useState<"articulos" | "recursos" | "cursos" | "historias">("articulos");
-  // Permite abrir una pestaña por URL (?tab=cursos), p. ej. desde el navbar.
-  useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get("tab");
-    if (t && ["articulos", "recursos", "cursos", "historias"].includes(t)) {
-      setTab(t as "articulos" | "recursos" | "cursos" | "historias");
-    }
-  }, []);
+  // La pestaña activa sale de tres fuentes, en este orden:
+  //  1. la que pulsa la persona,
+  //  2. `?tab=` en la URL (compatibilidad con enlaces antiguos),
+  //  3. `initialTab`, que fija la ruta que renderiza la página (p. ej. /cursos).
+  // Se deriva durante el render para que no haya un fotograma intermedio con
+  // "articulos" antes de saltar a la pestaña pedida.
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const tabFromUrl = (TABS as readonly string[]).includes(urlTab ?? "") ? (urlTab as EditorialTab) : null;
+  const [manualTab, setManualTab] = useState<EditorialTab | null>(null);
+  const [lastUrlTab, setLastUrlTab] = useState(tabFromUrl);
+  if (tabFromUrl !== lastUrlTab) {
+    setLastUrlTab(tabFromUrl);
+    setManualTab(null);
+  }
+  const tab = manualTab ?? tabFromUrl ?? initialTab ?? "articulos";
+  const setTab = setManualTab;
   const pageSlug = slug?.trim() || env.NEXT_PUBLIC_CMS_LIBRARY_SLUG;
   const pageQuery = useQuery({
     queryKey: ["cms-public-page", pageSlug],
@@ -51,8 +70,8 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
   const rest = resources.slice(1);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
-      <section className="border-b border-slate-200 bg-white/70">
+    <main className="min-h-screen bg-surface-sunken text-slate-950">
+      <section className="border-b border-slate-200 bg-card/70">
         <div className="container grid gap-10 py-10 md:grid-cols-[1fr_0.82fr] md:py-16">
           <div className="flex flex-col justify-between gap-10">
             <div className="space-y-7">
@@ -68,7 +87,7 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
             </div>
 
             <form
-              className="grid max-w-2xl gap-3 border border-slate-200 bg-white p-2 sm:grid-cols-[1fr_auto]"
+              className="grid max-w-2xl gap-3 border border-slate-200 bg-card p-2 sm:grid-cols-[1fr_auto]"
               onSubmit={(event) => {
                 event.preventDefault();
                 setSubmittedSearch(search.trim());
@@ -82,15 +101,15 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
             </form>
           </div>
 
-          <div className="relative min-h-[32rem] overflow-hidden border border-slate-200 bg-slate-100">
+          <div className="relative min-h-[18rem] overflow-hidden border border-slate-200 bg-slate-100 sm:min-h-[24rem] md:min-h-[32rem]">
             {hero?.imageUrl ? <img src={hero.imageUrl} alt={hero.imageAlt} className="h-full w-full object-cover" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : null}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" aria-hidden="true" />
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-8">
-              <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-white/80">
+            <div className="absolute inset-x-0 bottom-0 p-6 text-surface-inverse-foreground md:p-8">
+              <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-surface-inverse-foreground/80">
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Confianza clínica
               </div>
               <h2 className="max-w-md font-serif text-3xl font-bold leading-tight md:text-4xl">Recursos de apoyo para acompañar procesos migrantes.</h2>
-              <p className="mt-3 max-w-md text-sm leading-6 text-white/80">Lecturas, guías y orientación presentadas de forma clara para familias y pacientes.</p>
+              <p className="mt-3 max-w-md text-sm leading-6 text-surface-inverse-foreground/80">Lecturas, guías y orientación presentadas de forma clara para familias y pacientes.</p>
             </div>
           </div>
         </div>
@@ -156,7 +175,7 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
               <ErrorState title="No se pudo cargar la biblioteca" description={humanizeApiError(pageQuery.error)} actionLabel="Reintentar" onAction={() => void pageQuery.refetch()} />
             ) : null}
             {pageQuery.isSuccess && resources.length === 0 ? (
-              <Card className="overflow-hidden rounded-none border-slate-200 bg-white shadow-none">
+              <Card className="overflow-hidden rounded-none border-slate-200 bg-card shadow-none">
                 <CardContent className="grid gap-8 p-0 md:grid-cols-[0.8fr_1fr]">
                   {hero?.imageUrl ? <img src={hero.imageUrl} alt="Biblioteca sin contenidos publicados" className="h-full min-h-80 w-full object-cover" /> : null}
                   <div className="flex flex-col justify-center p-8 md:p-12">
@@ -200,5 +219,18 @@ export function EditorialPublicPage({ slug }: { slug?: string } = {}) {
         )}
       </section>
     </main>
+  );
+}
+
+/**
+ * `useSearchParams()` obliga a un límite de Suspense cuando la página se prerenderiza
+ * (este proyecto usa `output: "export"`). El fallback replica el alto de la biblioteca
+ * para que el cambio no provoque un salto de layout.
+ */
+export function EditorialPublicPage({ slug, initialTab }: EditorialPublicPageProps = {}) {
+  return (
+    <Suspense fallback={<main className="container py-12"><LoadingState title="Cargando biblioteca" /></main>}>
+      <EditorialPublicPageContent slug={slug} initialTab={initialTab} />
+    </Suspense>
   );
 }

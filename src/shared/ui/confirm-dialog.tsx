@@ -44,30 +44,32 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
+      {/* La descripción NO se pasa al Modal: se pinta aquí abajo junto al icono. Si se
+          pasa además como prop, el mismo texto aparece dos veces en el diálogo. */}
       <Modal
         open={open}
         onClose={() => settle(false)}
         title={options?.title ?? "¿Confirmar acción?"}
-        description={options?.description}
       >
         <div className="flex items-start gap-3">
           <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${isDanger ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"}`}>
-            {isDanger ? <Trash2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+            {isDanger ? <Trash2 className="h-5 w-5" aria-hidden="true" /> : <AlertTriangle className="h-5 w-5" aria-hidden="true" />}
           </span>
           <p className="pt-1 text-sm leading-6 text-muted-foreground">
             {options?.description ?? "Esta acción no se puede deshacer. ¿Deseas continuar?"}
           </p>
         </div>
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={() => settle(false)} disabled={pending}>
             {options?.cancelLabel ?? "Cancelar"}
           </Button>
           <Button
             type="button"
             onClick={() => settle(true)}
-            className={isDanger ? "bg-red-600 text-white hover:bg-red-700" : ""}
+            disabled={pending}
+            className={isDanger ? "bg-red-600 text-surface-inverse-foreground hover:bg-red-700" : ""}
           >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : isDanger ? <Trash2 className="h-4 w-4" /> : null}
+            {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : isDanger ? <Trash2 className="h-4 w-4" aria-hidden="true" /> : null}
             {options?.confirmLabel ?? (isDanger ? "Eliminar" : "Confirmar")}
           </Button>
         </div>

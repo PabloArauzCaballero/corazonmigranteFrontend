@@ -103,8 +103,8 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
   const previewBlocks = showPaywall ? bodyBlocks.slice(0, 2) : bodyBlocks;
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
-      <section className="border-b border-slate-200 bg-white/70">
+    <main className="min-h-screen bg-surface-sunken text-slate-950">
+      <section className="border-b border-slate-200 bg-card/70">
         <div className="container py-8 md:py-12">
           <Button asChild className="mb-8 rounded-none" variant="outline"><Link href="/novedades"><ArrowLeft className="h-4 w-4" /> Volver a contenido público</Link></Button>
           {query.isLoading ? <LoadingState title="Cargando publicación" /> : null}
@@ -124,14 +124,14 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
                     </div>
                   ) : null}
                 </div>
-                <Card className="relative rounded-none border-slate-200 bg-white shadow-none">
+                <Card className="relative rounded-none border-slate-200 bg-card shadow-none">
                   <CardContent className="p-7 md:p-10">
                     <div className="prose prose-slate max-w-none prose-p:text-base prose-p:leading-8">
                       {previewBlocks.length ? previewBlocks.map((block) => <p key={block}>{block}</p>) : <p>{publication.summary}</p>}
                     </div>
                   </CardContent>
                   {showPaywall ? (
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-white/90 to-transparent" aria-hidden="true" />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-card via-card/90 to-transparent" aria-hidden="true" />
                   ) : null}
                 </Card>
                 {showPaywall ? (
@@ -148,7 +148,7 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
                 ) : null}
               </article>
               <aside className="space-y-4">
-                <Card className="rounded-none border-slate-200 bg-white shadow-none">
+                <Card className="rounded-none border-slate-200 bg-card shadow-none">
                   <CardContent className="grid gap-5 p-6">
                     <div className="flex items-start gap-3"><CalendarDays className="mt-1 h-5 w-5 text-teal-800" aria-hidden="true" /><div><p className="text-sm font-semibold">Publicado</p><p className="text-sm text-slate-600">{formatDate(publication.publishedAt)}</p></div></div>
                     <div className="flex items-start gap-3"><UserRound className="mt-1 h-5 w-5 text-teal-800" aria-hidden="true" /><div><p className="text-sm font-semibold">Autor</p><p className="text-sm text-slate-600">{publication.author?.displayName ?? "Equipo Corazón Migrante"}</p></div></div>
@@ -156,13 +156,13 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
                   </CardContent>
                 </Card>
                 {(adsQuery.data ?? []).length > 0 ? (
-                  <Card className="rounded-none border-slate-200 bg-white shadow-none">
+                  <Card className="rounded-none border-slate-200 bg-card shadow-none">
                     <CardContent className="grid gap-4 p-4">
                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
                         <Megaphone className="h-4 w-4" aria-hidden="true" /> Publicidad
                       </div>
                       {(adsQuery.data ?? []).slice(0, 2).map((ad) => (
-                        <a key={ad.creativeId} href={ad.destinationUrl} target="_blank" rel="noreferrer" className="group block overflow-hidden border border-slate-200 bg-[#fbfaf8] transition hover:border-teal-900/40">
+                        <a key={ad.creativeId} href={ad.destinationUrl} target="_blank" rel="noreferrer" className="group block overflow-hidden border border-slate-200 bg-surface-raised transition hover:border-teal-900/40">
                           <img src={ad.assetUrl} alt={ad.altText} className="h-40 w-full object-cover transition group-hover:scale-[1.02]" />
                           <div className="space-y-1 p-3">
                             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-800">{ad.sponsorLabel}</p>
@@ -174,12 +174,12 @@ export function NewsDetailPage({ slug, kind = "news" }: { slug: string; kind?: "
                     </CardContent>
                   </Card>
                 ) : null}
-                <Card className="rounded-none border-slate-200 bg-teal-950 text-white shadow-none">
+                <Card className="rounded-none border-slate-200 bg-teal-950 text-surface-inverse-foreground shadow-none">
                   <CardContent className="p-6">
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/65">Acompañamiento</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-surface-inverse-foreground/65">Acompañamiento</p>
                     <h2 className="mt-3 font-serif text-2xl font-bold">¿Necesitas hablar con alguien?</h2>
-                    <p className="mt-3 text-sm leading-6 text-white/75">Agenda una cita y continúa el proceso con el equipo de Corazón Migrante.</p>
-                    <Button asChild className="mt-5 rounded-none bg-white text-teal-950 hover:bg-white/90"><Link href="/booking">Reservar cita</Link></Button>
+                    <p className="mt-3 text-sm leading-6 text-surface-inverse-foreground/75">Agenda una cita y continúa el proceso con el equipo de Corazón Migrante.</p>
+                    <Button asChild className="mt-5 rounded-none bg-card text-teal-950 hover:bg-card/90"><Link href="/booking">Reservar cita</Link></Button>
                   </CardContent>
                 </Card>
               </aside>

@@ -10,9 +10,13 @@ const badgeVariants = cva(
         default:   "bg-primary text-primary-foreground",
         secondary: "bg-secondary text-secondary-foreground",
         muted:     "bg-muted text-muted-foreground",
-        success:   "bg-emerald-100 text-emerald-800",
-        warning:   "bg-amber-100 text-amber-800",
-        danger:    "bg-red-100 text-red-800",
+        // Antes: `emerald-100/800`, `amber-100/800`, `red-100/800` — paletas crudas
+        // de Tailwind que no respondían a ningún token y quedaban en claro sobre el
+        // tema oscuro. Ahora salen del par `*-surface` / `*` del sistema.
+        success:   "bg-success-surface text-success",
+        warning:   "bg-warning-surface text-warning",
+        danger:    "bg-destructive-surface text-destructive",
+        info:      "bg-info-surface text-info",
       },
     },
     defaultVariants: { variant: "default" },

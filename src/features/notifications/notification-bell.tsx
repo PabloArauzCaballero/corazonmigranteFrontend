@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, CheckCheck, ExternalLink } from "lucide-react";
 import { useAdminNotifications } from "./use-admin-notifications";
-import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
 
 const TYPE_LABELS: Record<string, string> = {
   APPOINTMENT_REQUESTED: "Nueva solicitud de cita",
@@ -75,7 +73,7 @@ export function NotificationBell() {
         {unreadCount > 0 && (
           <span
             key={badgeKey}
-            className="animate-badge-pop absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white shadow-sm"
+            className="animate-badge-pop absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-surface-inverse-foreground shadow-sm"
             aria-hidden="true"
           >
             {unreadCount > 99 ? "99+" : unreadCount}

@@ -1,21 +1,20 @@
-import { type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { EmptyState } from "@/shared/ui/state";
 import { Button } from "@/shared/ui/button";
+import { DataTableCards, DataTableCardsSkeleton } from "@/shared/ui/data-table-cards";
+import { type DataTableColumn, resolvePriority } from "@/shared/ui/data-table-types";
+import { TUTORIAL_TARGETS } from "@/features/tutorial/model/tutorial-targets";
 
-export type DataTableColumn<T> = {
-  key: string;
-  header: string;
-  render: (row: T) => ReactNode;
-  className?: string;
-};
+export type { DataTableColumn, DataTableColumnPriority } from "@/shared/ui/data-table-types";
 
 // Skeleton row shown while data is loading
 export function DataTableSkeleton({ columns = 5, rows = 6 }: { columns?: number; rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
+    <>
+      <DataTableCardsSkeleton rows={rows} />
+      <div className="hidden overflow-hidden rounded-2xl border bg-card md:block">
+        <div className="scroll-x-contained">
+          <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="bg-muted/70">
             <tr>
               {Array.from({ length: columns }).map((_, i) => (
@@ -45,9 +44,10 @@ export function DataTableSkeleton({ columns = 5, rows = 6 }: { columns?: number;
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -71,35 +71,49 @@ export function DataTable<T>({
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
 
+  // Las columnas marcadas como `hidden` solo existen en la tabla: en una tarjeta
+  // resultan redundantes (p. ej. un identificador que ya encabeza la tarjeta).
+  const cardColumns = columns.filter(
+    (column, index) => resolvePriority(column, index) !== "hidden"
+  );
+
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card animate-fade-in">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="bg-muted/70 text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              {columns.map((column) => (
-                <th className={column.className ?? "px-4 py-3 font-semibold"} key={column.key}>
-                  {column.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {rows.map((row, i) => (
-              <tr
-                className="table-row-animated transition-colors hover:bg-muted/40"
-                key={getRowKey(row)}
-                style={{ animationDelay: `${i * 35}ms` }}
-              >
+    <div className="animate-fade-in" data-tutorial-id={TUTORIAL_TARGETS.tablaDatos}>
+      {/* Vista compacta (< md): una tarjeta por fila. Ninguna acción queda fuera de
+          pantalla, que era el problema real del desplazamiento horizontal. */}
+      <DataTableCards columns={cardColumns} rows={rows} getRowKey={getRowKey} />
+
+      {/* Vista amplia (>= md): la tabla de siempre. `scroll-x-hint` pinta la señal de
+          que aún queda contenido a los lados cuando la tabla supera su contenedor. */}
+      <div className="hidden overflow-hidden rounded-2xl border bg-card md:block">
+        <div className="scroll-x-contained scroll-x-hint">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="bg-muted/70 text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
                 {columns.map((column) => (
-                  <td className={column.className ?? "px-4 py-4 align-top"} key={column.key}>
-                    {column.render(row)}
-                  </td>
+                  <th className={column.className ?? "px-4 py-3 font-semibold"} key={column.key}>
+                    {column.header}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map((row, i) => (
+                <tr
+                  className="table-row-animated transition-colors hover:bg-muted/40"
+                  key={getRowKey(row)}
+                  style={{ animationDelay: `${i * 35}ms` }}
+                >
+                  {columns.map((column) => (
+                    <td className={column.className ?? "px-4 py-4 align-top"} key={column.key}>
+                      {column.render(row)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

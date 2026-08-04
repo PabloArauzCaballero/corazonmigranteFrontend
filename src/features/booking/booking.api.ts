@@ -4,6 +4,7 @@ import { ENDPOINTS } from "@/shared/api/endpoints";
 import { buildScheduledStartAt, type ManagedBookingInput, type PatientBookingInput } from "@/features/booking/booking.schemas";
 import { buildQueryString } from "@/shared/api/query";
 import { getNumber, getString, isRecord, normalizePaginatedResponse } from "@/shared/api/normalizers";
+import { ATTR, BUSINESS_SPANS, runInSpan } from "@/observability";
 
 export type BookingProduct = {
   id: string;
@@ -258,32 +259,76 @@ export async function getBookingAvailability(input: { therapistUserId: string; p
   }
 }
 
+/**
+ * Solicitud de cita por parte del propio paciente.
+ *
+ * Es el flujo de negocio principal del producto. El span registra únicamente que
+ * ocurrió y cómo terminó: `notesForTherapist` es texto libre escrito por la persona
+ * sobre su estado emocional, y ni ese campo ni los identificadores de paciente,
+ * terapeuta o servicio entran en la traza.
+ */
 export async function createPatientBooking(input: PatientBookingInput) {
-  return apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createMine, {
-    method: "POST",
-    body: {
-      therapistUserId: input.therapistUserId,
-      productId: input.productId,
-      scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
-      timezone: input.timezone,
-      notesForTherapist: input.notesForTherapist
+  return runInSpan(
+    BUSINESS_SPANS.appointmentRequest,
+    {
+      [ATTR.feature]: "appointments",
+      [ATTR.operation]: "create",
+      [ATTR.uiComponent]: "BookingForm"
     },
-    auth: true
-  });
+    async (span) => {
+      try {
+        const created = await apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createMine, {
+          method: "POST",
+          body: {
+            therapistUserId: input.therapistUserId,
+            productId: input.productId,
+            scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
+            timezone: input.timezone,
+            notesForTherapist: input.notesForTherapist
+          },
+          auth: true
+        });
+        span.setAttribute(ATTR.uiResult, "success");
+        return created;
+      } catch (error) {
+        span.setAttribute(ATTR.uiResult, "error");
+        throw error;
+      }
+    }
+  );
 }
 
 /** Booking asistido: ADMIN/SUPER_ADMIN/TERAPEUTA registran una cita para un paciente concreto. */
 export async function createManagedBooking(input: ManagedBookingInput) {
-  return apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createForPatient, {
-    method: "POST",
-    body: {
-      patientUserId: input.patientUserId,
-      therapistUserId: input.therapistUserId,
-      productId: input.productId,
-      scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
-      timezone: input.timezone,
-      notesForTherapist: input.notesForTherapist
+  return runInSpan(
+    BUSINESS_SPANS.appointmentRequest,
+    {
+      [ATTR.feature]: "appointments",
+      // Distingue el booking asistido del que hace la propia persona sin necesidad de
+      // registrar quién lo hizo: dos valores, cardinalidad fija.
+      [ATTR.operation]: "create-managed",
+      [ATTR.uiComponent]: "BookingForm"
     },
-    auth: true
-  });
+    async (span) => {
+      try {
+        const created = await apiRequest<{ id: string; status: string }>(ENDPOINTS.appointments.createForPatient, {
+          method: "POST",
+          body: {
+            patientUserId: input.patientUserId,
+            therapistUserId: input.therapistUserId,
+            productId: input.productId,
+            scheduledStartAt: buildScheduledStartAt(input.scheduledDate, input.scheduledTime),
+            timezone: input.timezone,
+            notesForTherapist: input.notesForTherapist
+          },
+          auth: true
+        });
+        span.setAttribute(ATTR.uiResult, "success");
+        return created;
+      } catch (error) {
+        span.setAttribute(ATTR.uiResult, "error");
+        throw error;
+      }
+    }
+  );
 }

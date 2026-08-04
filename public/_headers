@@ -1,0 +1,57 @@
+# Cabeceras de seguridad para Cloudflare Pages.
+#
+# El sitio se despliega como HTML estático (`output: "export"`), así que no hay
+# servidor Next.js donde definir headers desde next.config.ts: Cloudflare Pages lee
+# este archivo desde la raíz del artefacto publicado (`out/`).
+#
+# Si algún día se migra a un despliegue con servidor (Node/Vercel), estas mismas
+# reglas deben moverse a `headers()` en next.config.ts — este archivo se ignoraría.
+
+/*
+  # Evita que el sitio se embeba en un iframe ajeno (clickjacking sobre el panel).
+  X-Frame-Options: DENY
+  # Impide que el navegador "adivine" el tipo de un recurso y lo ejecute como script.
+  X-Content-Type-Options: nosniff
+  # No filtrar rutas internas del panel al navegar hacia dominios externos.
+  Referrer-Policy: strict-origin-when-cross-origin
+  # El sitio no usa cámara, micrófono ni geolocalización: se deniegan explícitamente.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  # Fuerza HTTPS durante un año en visitas posteriores.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  # CSP: `unsafe-inline`/`unsafe-eval` siguen siendo necesarios para el runtime de
+  # Next.js y los estilos en línea de Tailwind. El resto de directivas quedan
+  # cerradas — en particular `frame-ancestors` y `object-src`.
+  #
+  # connect-src: era `*`. Se cierra a `'self' https:`, que ya cubre todo lo que la
+  # aplicación necesita y elimina dos vectores reales:
+  #   - `http:` en claro (exfiltración sin TLS desde una extensión o un script inyectado),
+  #   - `ws:`/`wss:` hacia cualquier host (este proyecto no usa WebSockets; el stream de
+  #     notificaciones es SSE, que viaja por https y entra en `https:`).
+  #
+  # La TELEMETRÍA no exige abrir nada: el exportador OTLP escribe en `/otel/v1/traces`,
+  # que es el mismo origen y lo cubre `'self'`. Ver docs/observability/frontend/01 y 30.
+  #
+  # PENDIENTE_CM_CSP_CONNECT_SRC: el cierre definitivo es sustituir `https:` por la lista
+  # explícita de orígenes. No se puede hacer desde el repositorio porque el dominio real
+  # del backend vive en NEXT_PUBLIC_API_BASE_URL (fuera del control de versiones) y
+  # escribir uno inventado dejaría la aplicación sin API. Con el dominio a mano queda:
+  #   connect-src 'self' https://api.EL-DOMINIO-REAL https://res.cloudinary.com;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
+
+# Los portales privados nunca deben quedar en un índice de búsqueda ni en la caché
+# de un proxy compartido, aunque su HTML sea estático.
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+/paciente/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+/terapeuta/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+# Los bundles llevan hash en el nombre: se pueden cachear de forma inmutable.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

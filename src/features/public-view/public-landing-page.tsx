@@ -28,14 +28,15 @@ import {
   MigrationInvite,
 } from "@/features/public-view/landing-sections";
 import { extractLandingV2 } from "@/features/public-view/landing-v2.mapper";
-import { TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
+import { TutorialLauncher } from "@/features/tutorial/ui/tutorial-launcher";
+import { TUTORIAL_TARGETS } from "@/features/tutorial/model/tutorial-targets";
 
 const hiddenPublicLabels = /^(proceso|agendar|booking|cita|citas)$/i;
 const hiddenPublicHrefs = /(booking|paciente|terapeuta|admin|#proceso)/i;
 const sectionTone = [
-  "bg-[#f6f0ee] text-primary",
-  "bg-[#f6edf0] text-[#87485e]",
-  "bg-[#f5efe4] text-[#7a5830]",
+  "bg-surface-accent text-primary",
+  "bg-surface-accent text-brand-plum",
+  "bg-background text-brand-gold",
 ];
 
 function safeHref(link?: LandingLink, fallback = "#") {
@@ -80,7 +81,7 @@ function cleanNavLinks(landing: NormalizedPublicLanding) {
   return [
     ...links.slice(0, 3),
     ...(hasLibrary ? [] : [{ label: "Biblioteca", href: "/biblioteca" }]),
-    ...(hasCourses ? [] : [{ label: "Cursos", href: "/biblioteca?tab=cursos" }]),
+    ...(hasCourses ? [] : [{ label: "Cursos", href: "/cursos" }]),
   ];
 }
 
@@ -98,10 +99,10 @@ function TextBlock({ value }: { value?: string | string[] }) {
     const items = value.filter(Boolean);
     if (items.length === 0) return null;
     return (
-      <ul className="mt-7 grid gap-3 text-sm text-[#5f5b54] sm:grid-cols-2">
+      <ul className="mt-7 grid gap-3 text-sm text-ink-soft sm:grid-cols-2">
         {items.map((item) => (
           <li
-            className="flex items-start gap-2 rounded-2xl border border-[#eadfd4] bg-white/78 px-4 py-3 shadow-sm"
+            className="flex items-start gap-2 rounded-2xl border border-line bg-card/78 px-4 py-3 shadow-sm"
             key={item}
           >
             <CheckCircle2
@@ -115,7 +116,7 @@ function TextBlock({ value }: { value?: string | string[] }) {
     );
   }
   return (
-    <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-[#625e57] md:text-xl">
+    <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-ink-muted md:text-xl">
       {value}
     </p>
   );
@@ -134,14 +135,14 @@ function PublicNavbar({
   const formattedPhone = formatContactPhone(phone);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#361d17]/10 bg-[#fbf8f3]/88 backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 border-b border-ink/10 bg-background/88 backdrop-blur-2xl">
       <div className="container flex h-20 items-center justify-between gap-4">
         <Link
           href="/"
           className="group flex min-w-0 items-center gap-3 font-bold"
           aria-label="Ir al inicio"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#361d17]/10 bg-white shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
+          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-ink/10 bg-card shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
             {logo ? (
               <img
                 src={logo}
@@ -158,10 +159,10 @@ function PublicNavbar({
               />
             )}
           </span>
-          <span className="truncate leading-tight text-[#2b1b17]">
+          <span className="truncate leading-tight text-ink">
             {brand}
             {landing.navbar.tagline ? (
-              <span className="block truncate text-xs font-medium text-[#6d675f]">
+              <span className="block truncate text-xs font-medium text-ink-muted">
                 {landing.navbar.tagline}
               </span>
             ) : null}
@@ -174,7 +175,7 @@ function PublicNavbar({
         >
           {links.map((item) => (
             <Link
-              className="relative text-sm font-semibold text-[#625e57] transition duration-300 hover:text-primary after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
+              className="relative text-sm font-semibold text-ink-muted transition duration-300 hover:text-primary after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
               href={safeHref(item)}
               key={`${item.label}-${item.href}`}
             >
@@ -186,7 +187,7 @@ function PublicNavbar({
         <div className="hidden items-center gap-2 md:flex">
           {formattedPhone ? (
             <a
-              className="hidden items-center gap-2 rounded-2xl border border-[#d9cec2] bg-white/70 px-4 py-2 text-sm font-semibold text-[#625e57] transition hover:bg-white xl:inline-flex"
+              className="hidden items-center gap-2 rounded-2xl border border-line-strong bg-card/70 px-4 py-2 text-sm font-semibold text-ink-muted transition hover:bg-card xl:inline-flex"
               href={contactHref(phone)}
               target="_blank"
               rel="noreferrer"
@@ -215,7 +216,7 @@ function PublicNavbar({
       >
         {links.map((item) => (
           <Link
-            className="shrink-0 rounded-full border border-[#361d17]/10 bg-white/76 px-4 py-2 text-xs font-semibold text-[#625e57]"
+            className="shrink-0 rounded-full border border-ink/10 bg-card/76 px-4 py-2 text-xs font-semibold text-ink-muted"
             href={safeHref(item)}
             key={`${item.label}-${item.href}-mobile`}
           >
@@ -223,7 +224,7 @@ function PublicNavbar({
           </Link>
         ))}
         <Link
-          className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
+          className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-surface-inverse-foreground"
           href="/login"
         >
           Ingresar
@@ -254,34 +255,34 @@ function Hero({
     "Migrar cansa por dentro. Aquí encuentras un lugar tranquilo para hablar de la ansiedad, la culpa y la nostalgia, con alguien que de verdad entiende lo que estás viviendo.";
 
   return (
-    <section className="landing-root relative isolate overflow-hidden bg-[#fbf8f3]">
+    <section className="landing-root relative isolate overflow-hidden bg-background">
       {/* Fondos aurora animados */}
       <div className="animate-aurora absolute left-[-20rem] top-[-18rem] -z-10 h-[42rem] w-[42rem] rounded-full bg-primary/14 blur-3xl" />
-      <div className="animate-blob absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-[#8c4a62]/12 blur-3xl" />
-      <div className="animate-blob absolute left-[28%] top-[38%] -z-10 h-[26rem] w-[26rem] rounded-full bg-[#c98a4b]/8 blur-3xl" style={{ animationDelay: "3s" }} />
+      <div className="animate-blob absolute bottom-[-20rem] right-[-16rem] -z-10 h-[44rem] w-[44rem] rounded-full bg-brand-plum/12 blur-3xl" />
+      <div className="animate-blob absolute left-[28%] top-[38%] -z-10 h-[26rem] w-[26rem] rounded-full bg-brand-gold/8 blur-3xl" style={{ animationDelay: "3s" }} />
 
       <div className="container grid gap-12 py-14 lg:grid-cols-[0.94fr_1.06fr] lg:items-center lg:py-20">
         <div className="max-w-3xl">
-          <div className="animate-soft-float inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/80 px-4 py-2 text-sm font-semibold text-primary shadow-sm backdrop-blur">
+          <div className="animate-soft-float inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/80 px-4 py-2 text-sm font-semibold text-primary shadow-sm backdrop-blur">
             <Heart className="h-4 w-4" aria-hidden="true" />
             {hero?.badge || hero?.eyebrow || "Acompañamiento emocional para migrantes"}
           </div>
 
-          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black leading-[1.02] tracking-[-0.05em] text-[#2b1b17] md:text-7xl">
+          <h1 className="mt-7 max-w-4xl text-balance text-5xl font-black leading-[1.02] tracking-[-0.05em] text-ink md:text-7xl">
             {title}
             <span className="mt-2 block text-gradient-migrant">Calma. Ahora irá mejor.</span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-[#5c574f] md:text-xl">{lead}</p>
+          <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-ink-soft md:text-xl">{lead}</p>
           <TextBlock value={hero?.description} />
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button asChild className="cta-shine h-[3.35rem] rounded-2xl px-7 text-base shadow-[0_18px_45px_rgba(99,48,35,0.22)] transition-transform hover:-translate-y-1" size="lg">
-              <Link href={actionHref(hero?.primaryCta, "/registro")} data-tour="empezar">
+              <Link href={actionHref(hero?.primaryCta, "/registro")} data-tutorial-id={TUTORIAL_TARGETS.landingEmpezar}>
                 {hero?.primaryCta?.label || "Dar el primer paso"} <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
-            <Button asChild className="h-[3.35rem] rounded-2xl border-[#cfc4b8] bg-white/78 px-7 text-base transition-transform hover:-translate-y-1 hover:bg-white" size="lg" variant="outline">
+            <Button asChild className="h-[3.35rem] rounded-2xl border-line-strong bg-card/78 px-7 text-base transition-transform hover:-translate-y-1 hover:bg-card" size="lg" variant="outline">
               <a href={contactUrl} target={phone ? "_blank" : undefined} rel={phone ? "noreferrer" : undefined}>
                 <MessageCircle className="h-5 w-5" aria-hidden="true" /> Escríbenos
               </a>
@@ -298,12 +299,12 @@ function Hero({
                     src={cloudImg(s.image)}
                     alt={s.name}
                     loading="eager"
-                    className="h-10 w-10 rounded-full border-2 border-white object-cover shadow-sm"
+                    className="h-10 w-10 rounded-full border-2 border-card object-cover shadow-sm"
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
                 ))}
               </div>
-              <p className="text-sm leading-5 text-[#625e57]"><strong className="text-[#2b1b17]">Psicólogos y psiquiatras</strong><br />que también han migrado.</p>
+              <p className="text-sm leading-5 text-ink-muted"><strong className="text-ink">Psicólogos y psiquiatras</strong><br />que también han migrado.</p>
             </div>
           </div>
 
@@ -314,7 +315,7 @@ function Hero({
               { icon: Lock, label: "Confidencial" },
               { icon: Globe, label: "Online y presencial" },
             ].map((chip) => (
-              <span key={chip.label} className="inline-flex items-center gap-1.5 rounded-full border border-[#e5dccd] bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#6d675f] backdrop-blur">
+              <span key={chip.label} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/70 px-3 py-1.5 text-xs font-semibold text-ink-muted backdrop-blur">
                 <chip.icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> {chip.label}
               </span>
             ))}
@@ -323,24 +324,24 @@ function Hero({
 
         <div className="relative mx-auto w-full max-w-[38rem] lg:max-w-none">
           {/* Tarjeta flotante superior */}
-          <div className="animate-soft-float absolute -left-5 top-8 z-10 hidden w-[16.5rem] rounded-[1.75rem] border border-white/70 bg-white/90 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.13)] backdrop-blur md:block">
+          <div className="animate-soft-float absolute -left-5 top-8 z-10 hidden w-[16.5rem] rounded-[1.75rem] border border-card/70 bg-card/90 p-4 shadow-[0_20px_55px_rgba(43,27,23,0.13)] backdrop-blur md:block">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#f1e7e5] text-primary"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-surface-accent text-primary"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
               <div>
-                <p className="text-sm font-bold text-[#2b1b17]">Espacio seguro</p>
-                <p className="text-xs leading-5 text-[#6d675f]">Tu historia se queda contigo.</p>
+                <p className="text-sm font-bold text-ink">Espacio seguro</p>
+                <p className="text-xs leading-5 text-ink-muted">Tu historia se queda contigo.</p>
               </div>
             </div>
           </div>
 
           {/* Tarjeta flotante superior derecha (no debe tapar la frase inferior) */}
-          <div className="absolute -right-4 top-8 z-10 hidden rounded-[1.6rem] border border-white/70 bg-white/90 px-5 py-4 shadow-[0_20px_55px_rgba(43,27,23,0.14)] backdrop-blur md:block" style={{ animation: "soft-float 5s ease-in-out infinite", animationDelay: "1.5s" }}>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8a7d70]">Cada sesión</p>
-            <p className="mt-1 text-lg font-black text-[#2b1b17]">60 min · a tu ritmo</p>
+          <div className="absolute -right-4 top-8 z-10 hidden rounded-[1.6rem] border border-card/70 bg-card/90 px-5 py-4 shadow-[0_20px_55px_rgba(43,27,23,0.14)] backdrop-blur md:block" style={{ animation: "soft-float 5s ease-in-out infinite", animationDelay: "1.5s" }}>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-subtle">Cada sesión</p>
+            <p className="mt-1 text-lg font-black text-ink">60 min · a tu ritmo</p>
           </div>
 
-          <div className="overflow-hidden rounded-[2.75rem] border border-white/80 bg-white/60 p-3 shadow-[0_38px_100px_rgba(43,27,23,0.18)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_46px_120px_rgba(43,27,23,0.22)]">
-            <div className="relative min-h-[32rem] overflow-hidden rounded-[2.2rem] bg-[#d8d0c4] md:min-h-[38rem]">
+          <div className="overflow-hidden rounded-[2.75rem] border border-card/80 bg-card/60 p-3 shadow-[0_38px_100px_rgba(43,27,23,0.18)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_46px_120px_rgba(43,27,23,0.22)]">
+            <div className="relative min-h-[18rem] overflow-hidden rounded-[2.2rem] bg-line-strong sm:min-h-[24rem] md:min-h-[38rem]">
               <SmartImage
                 src={heroImage}
                 fallbackSrc={cloudImg("carrusel-2.webp")}
@@ -350,9 +351,9 @@ function Hero({
                 imgClassName="animate-ken-burns"
                 rounded="rounded-[2.2rem]"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2e1610]/92 via-[#2e1610]/28 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-7 text-white md:p-9">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">{landing.navbar.brand || "Corazón Migrante"}</p>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-inverse/92 via-surface-inverse/28 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-7 text-surface-inverse-foreground md:p-9">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-surface-inverse-foreground/70">{landing.navbar.brand || "Corazón Migrante"}</p>
                 <h2 className="mt-3 max-w-md font-display text-3xl font-medium italic leading-tight md:text-4xl">
                   {hero?.image?.footerText || "“Cuando migras, no te vas solo: te llevas tu gente, tu idioma y tu historia.”"}
                 </h2>
@@ -363,7 +364,7 @@ function Hero({
       </div>
 
       {/* Banda de confianza inferior */}
-      <div className="border-t border-[#ece2d6] bg-white/60 backdrop-blur">
+      <div className="border-t border-line bg-card/60 backdrop-blur">
         <div className="container grid gap-6 py-6 text-center sm:grid-cols-3">
           {[
             { k: "Ansiedad · culpa · nostalgia", v: "Lo que trabajamos" },
@@ -371,8 +372,8 @@ function Hero({
             { k: "Desde donde estés", v: "Atención online" },
           ].map((item) => (
             <div key={item.v}>
-              <p className="text-sm font-black text-[#2b1b17]">{item.k}</p>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8a7d70]">{item.v}</p>
+              <p className="text-sm font-black text-ink">{item.k}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-subtle">{item.v}</p>
             </div>
           ))}
         </div>
@@ -393,17 +394,17 @@ function SectionHeading({ section }: { section: LandingSection }) {
         </Badge>
       ) : null}
       {section.title ? (
-        <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#2b1b17] md:text-5xl">
+        <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-ink md:text-5xl">
           {section.title}
         </h2>
       ) : null}
       {section.subtitle ? (
-        <p className="mt-4 text-lg leading-8 text-[#625e57]">
+        <p className="mt-4 text-lg leading-8 text-ink-muted">
           {section.subtitle}
         </p>
       ) : null}
       {section.body ? (
-        <p className="mt-4 text-base leading-8 text-[#625e57]">
+        <p className="mt-4 text-base leading-8 text-ink-muted">
           {section.body}
         </p>
       ) : null}
@@ -417,7 +418,7 @@ function CardGrid({ section }: { section: LandingSection }) {
     <div className="mt-11 grid gap-5 md:grid-cols-3">
       {section.items.map((item, index) => (
         <Card
-          className="group overflow-hidden border-[#e3d8cb] bg-white/86 transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(43,27,23,0.13)]"
+          className="group overflow-hidden border-line bg-card/86 transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(43,27,23,0.13)]"
           key={`${item.title}-${index}`}
         >
           {item.image?.src ? (
@@ -442,12 +443,12 @@ function CardGrid({ section }: { section: LandingSection }) {
               </p>
             ) : null}
             {item.title ? (
-              <h3 className="mt-3 text-xl font-black tracking-tight text-[#2b1b17]">
+              <h3 className="mt-3 text-xl font-black tracking-tight text-ink">
                 {item.title}
               </h3>
             ) : null}
             {item.body || item.description ? (
-              <p className="mt-3 text-sm leading-7 text-[#625e57]">
+              <p className="mt-3 text-sm leading-7 text-ink-muted">
                 {item.body || item.description}
               </p>
             ) : null}
@@ -481,23 +482,23 @@ function SplitSection({
           </p>
         ) : null}
         {section.title ? (
-          <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-[#2b1b17] md:text-5xl">
+          <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.035em] text-ink md:text-5xl">
             {section.title}
           </h2>
         ) : null}
         {section.subtitle ? (
-          <p className="mt-5 text-lg leading-8 text-[#625e57]">
+          <p className="mt-5 text-lg leading-8 text-ink-muted">
             {section.subtitle}
           </p>
         ) : null}
         {section.body ? (
-          <p className="mt-5 text-base leading-8 text-[#625e57]">
+          <p className="mt-5 text-base leading-8 text-ink-muted">
             {section.body}
           </p>
         ) : null}
         {section.paragraphs?.map((paragraph) => (
           <p
-            className="mt-4 text-base leading-8 text-[#625e57]"
+            className="mt-4 text-base leading-8 text-ink-muted"
             key={paragraph}
           >
             {paragraph}
@@ -511,7 +512,7 @@ function SplitSection({
           </Button>
         ) : null}
       </div>
-      <div className="rounded-[2.2rem] border border-white/80 bg-white/72 p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
+      <div className="rounded-[2.2rem] border border-card/80 bg-card/72 p-3 shadow-[0_28px_80px_rgba(43,27,23,0.13)]">
         {sectionImage ? (
           <img
             src={sectionImage}
@@ -522,7 +523,7 @@ function SplitSection({
             }}
           />
         ) : (
-          <div className="grid h-[28rem] place-items-center rounded-[1.75rem] bg-[#f1e7e5] text-center text-sm font-semibold text-primary">
+          <div className="grid h-[28rem] place-items-center rounded-[1.75rem] bg-surface-accent text-center text-sm font-semibold text-primary">
             Corazón Migrante
           </div>
         )}
@@ -549,14 +550,14 @@ function Section({
   if (section.layout === "cta" || section.layout === "quote") {
     return (
       <section id={section.id} className="container scroll-mt-28 py-16">
-        <div className="rounded-[2.4rem] border border-[#d7ccc0] bg-[#2e1610] p-8 text-white shadow-[0_30px_90px_rgba(43,27,23,0.18)] md:p-12">
+        <div className="rounded-[2.4rem] border border-line-strong bg-surface-inverse p-8 text-surface-inverse-foreground shadow-[0_30px_90px_rgba(43,27,23,0.18)] md:p-12">
           {section.title ? (
             <h2 className="max-w-3xl text-3xl font-black tracking-tight md:text-5xl">
               {section.title}
             </h2>
           ) : null}
           {section.body || section.subtitle ? (
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-white/72">
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-surface-inverse-foreground/72">
               {section.body || section.subtitle}
             </p>
           ) : null}
@@ -582,8 +583,8 @@ function Section({
 function FloatingContact({ phone }: { phone?: string }) {
   return (
     <a
-      data-tour="contacto"
-      className="fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#50251b]"
+      data-tutorial-id={TUTORIAL_TARGETS.landingContacto}
+      className="fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-surface-inverse-foreground shadow-[0_18px_45px_rgba(99,48,35,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-brand-clay"
       href={contactHref(phone)}
       target={phone ? "_blank" : undefined}
       rel={phone ? "noreferrer" : undefined}
@@ -605,11 +606,11 @@ function Footer({
   const brand = landing.navbar.brand || landing.title || "Corazón Migrante";
   const formattedPhone = formatContactPhone(phone);
   return (
-    <footer className="border-t border-[#331f1a]/10 bg-[#2e1610] text-white">
+    <footer className="border-t border-ink/10 bg-surface-inverse text-surface-inverse-foreground">
       <div className="container grid gap-10 py-14 md:grid-cols-[1.15fr_0.85fr_1fr]">
         <div>
           <p className="text-lg font-black">{brand}</p>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-white/64">
+          <p className="mt-3 max-w-sm text-sm leading-6 text-surface-inverse-foreground/64">
             {landing.footer?.note ||
               landing.seoDescription ||
               "Acompañamiento emocional con atención clara, humana y responsable."}
@@ -617,14 +618,14 @@ function Footer({
         </div>
         <div>
           <p className="font-semibold">Accesos</p>
-          <div className="mt-3 grid gap-2 text-sm text-white/64">
-            <Link className="transition hover:text-white" href="/biblioteca">
+          <div className="mt-3 grid gap-2 text-sm text-surface-inverse-foreground/64">
+            <Link className="transition hover:text-surface-inverse-foreground" href="/biblioteca">
               Biblioteca
             </Link>
-            <Link className="transition hover:text-white" href="/privacidad">
+            <Link className="transition hover:text-surface-inverse-foreground" href="/privacidad">
               Política de privacidad
             </Link>
-            <Link className="transition hover:text-white" href="/terminos">
+            <Link className="transition hover:text-surface-inverse-foreground" href="/terminos">
               Términos y condiciones
             </Link>
           </div>
@@ -633,7 +634,7 @@ function Footer({
           <p className="font-semibold">Contacto</p>
           {formattedPhone ? (
             <a
-              className="mt-3 inline-flex text-sm font-semibold text-white/74 transition hover:text-white"
+              className="mt-3 inline-flex text-sm font-semibold text-surface-inverse-foreground/74 transition hover:text-surface-inverse-foreground"
               href={contactHref(phone)}
               target="_blank"
               rel="noreferrer"
@@ -641,11 +642,11 @@ function Footer({
               {formattedPhone}
             </a>
           ) : (
-            <p className="mt-3 text-sm leading-6 text-white/64">
+            <p className="mt-3 text-sm leading-6 text-surface-inverse-foreground/64">
               Completa tu registro para recibir orientación inicial.
             </p>
           )}
-          <p className="mt-4 text-sm leading-6 text-white/64">
+          <p className="mt-4 text-sm leading-6 text-surface-inverse-foreground/64">
             La información publicada es orientativa y no reemplaza servicios de
             emergencia.
           </p>
@@ -671,7 +672,7 @@ function GenericPublicLandingPage({
   );
 
   return (
-    <div className="min-h-screen bg-[#fbf8f3] text-[#2b1b17]">
+    <div className="min-h-screen bg-background text-ink">
       <PublicNavbar landing={landing} phone={phone} />
       <main>
         <Hero landing={landing} phone={phone} />
@@ -682,17 +683,17 @@ function GenericPublicLandingPage({
           ))
         ) : (
           <section className="container py-16">
-            <div className="rounded-[2rem] border border-[#e3d8cb] bg-white/82 p-8 shadow-[0_26px_80px_rgba(43,27,23,0.10)]">
+            <div className="rounded-[2rem] border border-line bg-card/82 p-8 shadow-[0_26px_80px_rgba(43,27,23,0.10)]">
               <div className="flex items-start gap-3">
                 <BookOpenText
                   className="mt-1 h-5 w-5 text-primary"
                   aria-hidden="true"
                 />
                 <div>
-                  <h2 className="text-2xl font-black text-[#2b1b17]">
+                  <h2 className="text-2xl font-black text-ink">
                     Contenido en preparación
                   </h2>
-                  <p className="mt-2 leading-7 text-[#625e57]">
+                  <p className="mt-2 leading-7 text-ink-muted">
                     Estamos preparando nuevas secciones para explicar mejor los
                     servicios de Corazón Migrante.
                   </p>

@@ -1,4 +1,5 @@
 import { apiRequest } from "@/shared/api/client";
+import { ENDPOINTS } from "@/shared/api/endpoints";
 
 export type AdminNotification = {
   id: string;
@@ -26,17 +27,21 @@ export async function listNotifications(params?: { page?: number; unreadOnly?: b
   const qs = new URLSearchParams();
   if (params?.page) qs.set("page", String(params.page));
   if (params?.unreadOnly) qs.set("unreadOnly", "true");
-  return apiRequest(`/api/v1/admin/notifications?${qs}`, { auth: true });
+  const query = qs.toString();
+  return apiRequest(query ? `${ENDPOINTS.notifications.list}?${query}` : ENDPOINTS.notifications.list, { auth: true });
 }
 
 export async function getUnreadCount(): Promise<{ unreadCount: number }> {
-  return apiRequest("/api/v1/admin/notifications/unread-count", { auth: true });
+  return apiRequest(ENDPOINTS.notifications.unreadCount, { auth: true });
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
-  await apiRequest(`/api/v1/admin/notifications/${id}/read`, { method: "PATCH", auth: true });
+  await apiRequest(ENDPOINTS.notifications.markRead.replace(":notificationId", encodeURIComponent(id)), {
+    method: "PATCH",
+    auth: true
+  });
 }
 
 export async function markAllRead(): Promise<void> {
-  await apiRequest("/api/v1/admin/notifications/read-all", { method: "PATCH", auth: true });
+  await apiRequest(ENDPOINTS.notifications.markAllRead, { method: "PATCH", auth: true });
 }

@@ -9,30 +9,43 @@ import { Badge } from "@/shared/ui/badge";
 import { LoadingState, ErrorState } from "@/shared/ui/state";
 import { humanizeApiError } from "@/shared/api/errors";
 
+// Definido fuera de `SiteWireframe`: declararlo dentro obligaba a React a tratarlo
+// como un componente nuevo en cada render, desmontando y remontando los recuadros
+// (y perdiendo la transición) cada vez que cambiaban las ubicaciones.
+function Slot({
+  code,
+  label,
+  className = "",
+  activeCodes,
+}: {
+  code: string;
+  label: string;
+  className?: string;
+  activeCodes: Set<string>;
+}) {
+  const active = activeCodes.has(code);
+  return (
+    <div
+      className={`flex items-center justify-center rounded-lg border-2 border-dashed text-center text-xs font-semibold transition-all duration-200 ${
+        active
+          ? "border-primary/50 bg-primary/10 text-primary"
+          : "border-muted-foreground/20 bg-muted/40 text-muted-foreground/50"
+      } ${className}`}
+      title={active ? `${label} — activo` : `${label} — inactivo`}
+    >
+      <div>
+        {active
+          ? <CheckCircle className="mx-auto mb-1 h-4 w-4 text-primary" aria-hidden="true" />
+          : <XCircle className="mx-auto mb-1 h-4 w-4 text-muted-foreground/40" aria-hidden="true" />}
+        <span className="leading-tight">{label}</span>
+        <span className="mt-0.5 block text-[10px] font-normal opacity-70">{active ? "Activo" : "Inactivo"}</span>
+      </div>
+    </div>
+  );
+}
+
 function SiteWireframe({ placements }: { placements: AdsPlacement[] }) {
   const activeCodes = new Set(placements.filter((p) => p.isActive).map((p) => p.code));
-
-  function Slot({ code, label, className = "" }: { code: string; label: string; className?: string }) {
-    const active = activeCodes.has(code);
-    return (
-      <div
-        className={`flex items-center justify-center rounded-lg border-2 border-dashed text-center text-xs font-semibold transition-all duration-200 ${
-          active
-            ? "border-primary/50 bg-primary/10 text-primary"
-            : "border-muted-foreground/20 bg-muted/40 text-muted-foreground/50"
-        } ${className}`}
-        title={active ? `${label} — activo` : `${label} — inactivo`}
-      >
-        <div>
-          {active
-            ? <CheckCircle className="mx-auto mb-1 h-4 w-4 text-primary" />
-            : <XCircle className="mx-auto mb-1 h-4 w-4 text-muted-foreground/40" />}
-          <span className="leading-tight">{label}</span>
-          {active && <span className="mt-0.5 block text-[10px] font-normal opacity-70">Activo</span>}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -41,7 +54,7 @@ function SiteWireframe({ placements }: { placements: AdsPlacement[] }) {
         <CardContent className="p-5">
           <p className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Página de inicio</p>
           <div className="grid gap-2">
-            {/* Nav bar mockup */}
+            {/* Barra de navegación esquemática (solo decorativa) */}
             <div className="flex h-8 items-center gap-2 rounded-lg bg-muted/60 px-3">
               <div className="h-4 w-4 rounded-full bg-primary/30" />
               <div className="h-2 w-20 rounded bg-muted-foreground/20" />
@@ -50,13 +63,13 @@ function SiteWireframe({ placements }: { placements: AdsPlacement[] }) {
               </div>
             </div>
             {/* Hero slot */}
-            <Slot code="home_hero" label="Banner inicio" className="h-20" />
+            <Slot activeCodes={activeCodes} code="home_hero" label="Banner inicio" className="h-20" />
             {/* Content + sidebar */}
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-2 space-y-2">
                 {[1,2].map(i => <div key={i} className="h-14 rounded-lg bg-muted/50" />)}
               </div>
-              <Slot code="home_sidebar" label="Lateral inicio" className="h-32" />
+              <Slot activeCodes={activeCodes} code="home_sidebar" label="Lateral inicio" className="h-32" />
             </div>
           </div>
         </CardContent>
@@ -71,16 +84,16 @@ function SiteWireframe({ placements }: { placements: AdsPlacement[] }) {
               <div className="h-2 w-16 rounded bg-muted-foreground/20" />
               <div className="h-2 w-24 rounded bg-primary/30" />
             </div>
-            <Slot code="article_top" label="Sobre el artículo" className="h-16" />
+            <Slot activeCodes={activeCodes} code="article_top" label="Sobre el artículo" className="h-16" />
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-2 space-y-2">
                 <div className="h-5 rounded bg-muted/50 w-3/4" />
                 <div className="h-3 rounded bg-muted/40" />
-                <Slot code="article_inline" label="Dentro del artículo" className="h-16" />
+                <Slot activeCodes={activeCodes} code="article_inline" label="Dentro del artículo" className="h-16" />
                 <div className="h-3 rounded bg-muted/40" />
                 <div className="h-3 rounded bg-muted/40 w-4/5" />
               </div>
-              <Slot code="article_sidebar" label="Lateral artículo" className="h-40" />
+              <Slot activeCodes={activeCodes} code="article_sidebar" label="Lateral artículo" className="h-40" />
             </div>
           </div>
         </CardContent>
@@ -92,7 +105,7 @@ function SiteWireframe({ placements }: { placements: AdsPlacement[] }) {
           <p className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Página de categoría</p>
           <div className="grid gap-2">
             <div className="h-6 w-32 rounded-lg bg-muted/50" />
-            <Slot code="category_top" label="Top de categoría" className="h-12" />
+            <Slot activeCodes={activeCodes} code="category_top" label="Top de categoría" className="h-12" />
             <div className="grid grid-cols-3 gap-2">
               {[1,2,3,4,5,6].map(i => <div key={i} className="h-16 rounded-lg bg-muted/50" />)}
             </div>

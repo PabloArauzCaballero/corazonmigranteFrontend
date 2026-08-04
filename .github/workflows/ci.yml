@@ -35,12 +35,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
 
+    # Los nombres deben coincidir EXACTAMENTE con el esquema de src/config/env.ts.
+    # Antes se definían NEXT_PUBLIC_API_URL y NEXT_PUBLIC_CLOUDINARY_*, que ese
+    # esquema no conoce: el build pasaba igualmente porque zod aplica valores por
+    # defecto, así que CI llevaba tiempo construyendo SIN API configurada y nadie lo
+    # detectaba. Cualquier variable nueva debe añadirse en los tres sitios: env.ts,
+    # .env.example y aquí.
     env:
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_PUBLIC_ASSETS_BASE_URL: https://res.cloudinary.com/placeholder
-      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: placeholder
-      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: placeholder
+      NEXT_PUBLIC_FILE_SERVER_PUBLIC_ASSETS_BASE_URL: https://res.cloudinary.com/placeholder
 
     steps:
       - uses: actions/checkout@v4
@@ -61,12 +65,24 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
 
+    # Los nombres deben coincidir EXACTAMENTE con el esquema de src/config/env.ts.
+    # Antes se definían NEXT_PUBLIC_API_URL y NEXT_PUBLIC_CLOUDINARY_*, que ese
+    # esquema no conoce: el build pasaba igualmente porque zod aplica valores por
+    # defecto, así que CI llevaba tiempo construyendo SIN API configurada y nadie lo
+    # detectaba. Cualquier variable nueva debe añadirse en los tres sitios: env.ts,
+    # .env.example y aquí.
     env:
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_PUBLIC_ASSETS_BASE_URL: https://res.cloudinary.com/placeholder
-      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: placeholder
-      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: placeholder
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
+      # NO puede ser localhost: `NEXT_PUBLIC_APP_URL` se hornea en metadataBase, las
+      # canónicas, Open Graph, robots.txt, sitemap.xml y el manifest, y este job sube
+      # un artefacto desplegable. `assertDeployableAppUrl` (src/config/env.ts) rompe
+      # el build en CI si detecta un host local.
+      #
+      # Define la variable de repositorio `PUBLIC_APP_URL` con el dominio real. El
+      # valor de reserva permite que el pipeline verifique la compilación, pero el
+      # artefacto NO se publica sin la variable (ver el paso de subida).
+      NEXT_PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL || 'https://corazon-migrante.invalid' }}
+      NEXT_PUBLIC_FILE_SERVER_PUBLIC_ASSETS_BASE_URL: https://res.cloudinary.com/placeholder
 
     steps:
       - uses: actions/checkout@v4
@@ -82,10 +98,54 @@ jobs:
       - name: Build
         run: yarn build
 
+      # `output: "export"` produce el artefacto desplegable en out/. Verificarlo antes
+      # de publicarlo evita subir un build incompleto.
+      - name: Verificar artefacto de exportación
+        run: |
+          test -f out/index.html || { echo "::error::falta out/index.html"; exit 1; }
+          # public/_headers aporta CSP, HSTS, X-Frame-Options y el no-store de los
+          # portales privados. Si no llega a out/, Cloudflare Pages no aplica NINGUNA
+          # cabecera de seguridad y la aplicación sigue funcionando con normalidad:
+          # es el fallo más silencioso del despliegue.
+          test -f out/_headers || { echo "::error::falta out/_headers — el despliegue quedaría sin cabeceras de seguridad"; exit 1; }
+          echo "Artefacto verificado: $(find out -name '*.html' | wc -l) páginas HTML."
+
+      # Sin `vars.PUBLIC_APP_URL` el build usa un dominio de reserva y sus canónicas,
+      # sitemap y manifest serían incorrectos. Publicar ese artefacto sería peor que
+      # no publicar nada, así que se avisa y se omite la subida.
+      - name: Comprobar dominio público configurado
+        if: github.ref == 'refs/heads/main' && vars.PUBLIC_APP_URL == ''
+        run: echo "::warning::vars.PUBLIC_APP_URL no está definida; no se publica el artefacto porque las URLs canónicas, el sitemap y el manifest serían incorrectos."
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && vars.PUBLIC_APP_URL != ''
         with:
-          name: nextjs-build
-          path: .next/
+          name: frontend-export
+          # Antes se subía .next/, que es el directorio intermedio de compilación.
+          # Lo desplegable es out/.
+          path: out/
           retention-days: 3
+
+  # Auditoría de dependencias. NO bloquea: la Fase 17 del plan documental prohíbe
+  # hacer fallar el pipeline por deuda preexistente sin una estrategia de adopción
+  # acordada. Informa para que la deuda sea visible y se pueda gobernar.
+  audit:
+    name: Auditoría de dependencias
+    runs-on: ubuntu-latest
+    needs: quality
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Vulnerabilidades conocidas
+        run: yarn npm audit --severity high --recursive

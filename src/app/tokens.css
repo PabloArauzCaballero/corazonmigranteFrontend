@@ -1,0 +1,344 @@
+/* ============================================================
+   TOKENS DEL SISTEMA DE DISEÑO — Corazón Migrante
+   ------------------------------------------------------------
+   Fuente única de verdad del color, la elevación y el movimiento.
+
+   Se declaran como HSL SIN envolver (`38 44% 97%`, no `hsl(...)`)
+   para poder componerlos con opacidad desde Tailwind:
+   `bg-primary/10`, `text-ink/60`.
+
+   Dos capas:
+
+   1. ROLES SEMÁNTICOS (`--primary`, `--success`, `--ink-muted`…)
+      Es la capa que debe usar el código nuevo.
+
+   2. ESCALAS NUMÉRICAS (`--brand-500`, `--neutral-200`…)
+      Alimentan las paletas `teal`, `slate`, `emerald`, `amber` y
+      `red` de Tailwind, que ~490 usos del proyecto ya emplean.
+      Se convierten en variables para que ESAS clases existentes
+      respondan al tema sin reescribir cada componente.
+
+      En el tema oscuro la escala se INVIERTE: `text-slate-700`
+      (tinta oscura sobre fondo claro) pasa a ser un tono claro,
+      que es exactamente lo que ese uso necesita. Por eso los
+      valores oscuros no son "el mismo color más apagado".
+
+   Ver docs/design-system/tokens.md y docs/adr/ADR-0011.
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* ==========================================================
+     1. ROLES SEMÁNTICOS
+     ========================================================== */
+
+  /* --- Superficies e ink (escala de elevación) ---------------
+     No son colores nuevos: son los literales hexadecimales que
+     la landing y los portales ya repetían (`#fbfaf8`, `#2b1b17`,
+     `#e3d8cb`…), promovidos a token. */
+  --background: 38 50% 97%;         /* #fbf8f3 — fondo de página      */
+  --surface-raised: 40 27% 98%;     /* #fbfaf8 — panel sobre el fondo */
+  --surface-sunken: 38 33% 95%;     /* #f7f4ef — zona hundida         */
+  --surface-accent: 10 30% 92%;     /* #f1e7e5 — realce rosado        */
+  --surface-inverse: 12 48% 12%;    /* #2e1610 — secciones oscuras    */
+  --surface-inverse-deep: 9 54% 5%; /* #140806 — degradado editorial  */
+  --surface-inverse-foreground: 38 50% 97%;
+
+  --foreground: 12 30% 13%;         /* #2b1b17 — tinta principal      */
+  --ink-soft: 33 8% 27%;            /* #4a453f                         */
+  --ink-muted: 38 6% 36%;           /* #625e57 — texto secundario     */
+  --ink-subtle: 30 10% 49%;         /* #8a7d70 — texto terciario      */
+
+  --line: 33 30% 84%;               /* #e3d8cb — borde estándar       */
+  --line-strong: 31 19% 77%;        /* #cfc4b8 — borde marcado        */
+
+  /* --- Roles de componente ---------------------------------- */
+  --card: 0 0% 100%;
+  --card-foreground: 12 30% 13%;
+  --primary: 0 82% 28%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 34 42% 91%;
+  --secondary-foreground: 12 30% 16%;
+  --muted: 36 28% 92%;
+  --muted-foreground: 38 6% 36%;
+  --accent: 342 31% 92%;
+  --accent-foreground: 342 36% 25%;
+  --border: 33 30% 84%;
+  --input: 33 30% 84%;
+  --ring: 0 82% 28%;
+
+  /* --- Acentos editoriales de marca -------------------------- */
+  --brand-terracotta: 12 55% 46%;   /* #b64f35 */
+  --brand-clay: 12 55% 32%;         /* #7e3725 */
+  --brand-plum: 338 31% 42%;        /* #8c4a62 */
+  --brand-gold: 30 54% 54%;         /* #c98a4b */
+  --brand-sand: 29 21% 61%;         /* #b09a86 */
+
+  /* --- Estados ----------------------------------------------
+     Antes vivían como paletas crudas de Tailwind repartidas por
+     Badge, toast y ForbiddenState: cambiar el color de «éxito»
+     obligaba a tocar varios archivos y ninguno se adaptaba al
+     tema oscuro. `DEFAULT` es el color fuerte (texto/icono);
+     `surface` + `border` componen el aviso suave. */
+  --success: 152 55% 26%;
+  --success-foreground: 0 0% 100%;
+  --success-surface: 150 45% 94%;
+  --success-border: 150 35% 80%;
+
+  --warning: 32 82% 30%;
+  --warning-foreground: 0 0% 100%;
+  --warning-surface: 40 88% 94%;
+  --warning-border: 38 70% 78%;
+
+  --info: 210 72% 34%;
+  --info-foreground: 0 0% 100%;
+  --info-surface: 206 80% 95%;
+  --info-border: 206 55% 82%;
+
+  --destructive: 0 62% 44%;
+  --destructive-foreground: 0 0% 100%;
+  --destructive-surface: 0 75% 96%;
+  --destructive-border: 0 55% 86%;
+
+  /* --- Forma, elevación y movimiento ------------------------- */
+  --radius: 1rem;
+
+  --shadow-sm: 0 1px 2px hsl(20 30% 12% / 0.06);
+  --shadow-md: 0 8px 24px hsl(20 30% 12% / 0.08);
+  --shadow-lg: 0 18px 60px hsl(20 30% 12% / 0.10);
+  --shadow-overlay: 0 24px 80px hsl(20 30% 12% / 0.24);
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Escala de apilamiento. Existía de facto (z-40 en la cabecera,
+     z-50 en modales, z-999 en el skip link) pero sin nombre, así
+     que cada componente nuevo elegía un número al azar. */
+  --z-sticky: 30;
+  --z-header: 40;
+  --z-overlay: 50;
+  --z-toast: 60;
+  --z-skip-link: 999;
+
+  /* ==========================================================
+     2. ESCALAS NUMÉRICAS (alimentan las paletas de Tailwind)
+     Los valores claros reproducen EXACTAMENTE los que había, de
+     modo que el tema claro no cambia de aspecto.
+     ========================================================== */
+
+  /* --- brand → paleta `teal` (rojo/marrón del logo) -----------
+     `teal` está remapeada desde hace tiempo (ADR-0006): en este
+     proyecto `text-teal-800` NO es verde azulado, es marrón. */
+  --brand-50: 9 43% 96%;    /* #faf1ef */
+  --brand-100: 11 47% 91%;  /* #f5e0db */
+  --brand-200: 13 53% 82%;  /* #eac2b8 */
+  --brand-300: 12 57% 70%;  /* #dd9988 */
+  --brand-400: 13 55% 58%;  /* #cf7159 */
+  --brand-500: 12 55% 46%;  /* #b64f35 */
+  --brand-600: 12 55% 38%;  /* #96412c */
+  --brand-700: 12 55% 32%;  /* #7e3725 */
+  --brand-800: 11 51% 27%;  /* #673022 */
+  --brand-900: 12 50% 22%;  /* #54271c */
+  --brand-950: 12 51% 14%;  /* #361912 */
+
+  /* --- neutral → paleta `slate` ------------------------------
+     Se templan hacia el matiz cálido de la marca (28–38°) en vez
+     del gris azulado de Tailwind: los grises fríos junto al crema
+     de fondo era la inconsistencia cromática que señalaba la
+     auditoría. Las LUMINOSIDADES se mantienen equivalentes a las
+     de `slate`, así que las relaciones de contraste no bajan. */
+  --neutral-50: 38 40% 98%;
+  --neutral-100: 36 32% 95%;
+  --neutral-200: 34 26% 89%;
+  --neutral-300: 32 20% 80%;
+  --neutral-400: 30 12% 62%;
+  --neutral-500: 34 9% 47%;
+  --neutral-600: 34 9% 37%;
+  --neutral-700: 33 11% 28%;
+  --neutral-800: 12 20% 18%;
+  --neutral-900: 12 28% 12%;
+  --neutral-950: 12 34% 7%;
+
+  /* --- positive → paleta `emerald` (valores de Tailwind) ------ */
+  --positive-50: 152 81% 96%;
+  --positive-100: 149 80% 90%;
+  --positive-200: 152 76% 80%;
+  --positive-300: 156 72% 67%;
+  --positive-400: 158 64% 52%;
+  --positive-500: 160 84% 39%;
+  --positive-600: 161 94% 30%;
+  --positive-700: 163 94% 24%;
+  --positive-800: 163 88% 20%;
+  --positive-900: 164 86% 16%;
+  --positive-950: 166 91% 9%;
+
+  /* --- caution → paleta `amber` (valores de Tailwind) --------- */
+  --caution-50: 48 100% 96%;
+  --caution-100: 48 96% 89%;
+  --caution-200: 48 97% 77%;
+  --caution-300: 46 97% 65%;
+  --caution-400: 43 96% 56%;
+  --caution-500: 38 92% 50%;
+  --caution-600: 32 95% 44%;
+  --caution-700: 26 90% 37%;
+  --caution-800: 23 83% 31%;
+  --caution-900: 22 78% 26%;
+  --caution-950: 21 92% 14%;
+
+  /* --- negative → paleta `red` (valores de Tailwind) ---------- */
+  --negative-50: 0 86% 97%;
+  --negative-100: 0 93% 94%;
+  --negative-200: 0 96% 89%;
+  --negative-300: 0 94% 82%;
+  --negative-400: 0 91% 71%;
+  --negative-500: 0 84% 60%;
+  --negative-600: 0 72% 51%;
+  --negative-700: 0 74% 42%;
+  --negative-800: 0 70% 35%;
+  --negative-900: 0 63% 31%;
+  --negative-950: 0 75% 15%;
+}
+
+/* ============================================================
+   TEMA OSCURO
+   ------------------------------------------------------------
+   Se activa con la clase `.dark` en <html> (ver ThemeProvider y
+   THEME_INIT_SCRIPT). No es una inversión mecánica: se conserva
+   la calidez de la marca (matices 12–38°) para que el producto
+   no se vuelva azul-grisáceo genérico.
+   ============================================================ */
+.dark {
+  color-scheme: dark;
+
+  --background: 12 30% 7%;
+  --surface-raised: 12 20% 14%;
+  --surface-sunken: 12 32% 5%;
+  --surface-accent: 338 18% 16%;
+  /* En claro, las secciones «inverse» son marrón profundo sobre
+     crema. En oscuro esa inversión desaparecería contra el fondo,
+     así que pasan a ser paneles ELEVADOS: conservan el papel de
+     «bloque destacado» que tenían en la composición. */
+  --surface-inverse: 12 18% 17%;
+  --surface-inverse-deep: 12 22% 11%;
+  --surface-inverse-foreground: 36 30% 93%;
+
+  --foreground: 36 30% 93%;
+  --ink-soft: 34 12% 78%;
+  --ink-muted: 34 10% 66%;
+  --ink-subtle: 32 9% 54%;
+
+  --line: 18 14% 22%;
+  --line-strong: 18 13% 30%;
+
+  --card: 12 22% 11%;
+  --card-foreground: 36 30% 93%;
+  --primary: 0 70% 54%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 16 14% 18%;
+  --secondary-foreground: 36 30% 93%;
+  --muted: 14 14% 16%;
+  --muted-foreground: 34 10% 66%;
+  --accent: 338 18% 20%;
+  --accent-foreground: 342 40% 88%;
+  --border: 18 14% 22%;
+  --input: 18 14% 22%;
+  --ring: 0 70% 60%;
+
+  --brand-terracotta: 12 60% 62%;
+  --brand-clay: 12 45% 54%;
+  --brand-plum: 338 40% 64%;
+  --brand-gold: 30 60% 62%;
+  --brand-sand: 29 22% 62%;
+
+  --success: 152 45% 60%;
+  --success-foreground: 152 60% 8%;
+  --success-surface: 152 35% 13%;
+  --success-border: 152 25% 24%;
+
+  --warning: 38 75% 62%;
+  --warning-foreground: 34 60% 8%;
+  --warning-surface: 34 40% 13%;
+  --warning-border: 34 30% 26%;
+
+  --info: 206 70% 66%;
+  --info-foreground: 208 60% 8%;
+  --info-surface: 208 45% 14%;
+  --info-border: 208 32% 26%;
+
+  --destructive: 0 68% 62%;
+  --destructive-foreground: 0 60% 8%;
+  --destructive-surface: 0 40% 14%;
+  --destructive-border: 0 30% 26%;
+
+  --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.4);
+  --shadow-md: 0 8px 24px hsl(0 0% 0% / 0.45);
+  --shadow-lg: 0 18px 60px hsl(0 0% 0% / 0.5);
+  --shadow-overlay: 0 24px 80px hsl(0 0% 0% / 0.6);
+
+  /* --- Escalas invertidas ------------------------------------
+     `bg-*-50` sigue significando «fondo muy sutil» y `text-*-800`
+     sigue significando «tinta de alto contraste»: lo que cambia
+     es el valor que hace falta para cumplirlo sobre fondo oscuro. */
+  --brand-50: 12 30% 10%;
+  --brand-100: 12 28% 14%;
+  --brand-200: 12 26% 20%;
+  --brand-300: 12 30% 28%;
+  --brand-400: 12 38% 38%;
+  --brand-500: 12 50% 50%;
+  --brand-600: 12 55% 58%;
+  --brand-700: 13 58% 66%;
+  --brand-800: 14 55% 76%;
+  --brand-900: 16 50% 85%;
+  --brand-950: 20 45% 92%;
+
+  --neutral-50: 12 30% 9%;
+  --neutral-100: 12 24% 13%;
+  --neutral-200: 14 18% 19%;
+  --neutral-300: 16 14% 27%;
+  --neutral-400: 24 10% 45%;
+  --neutral-500: 30 9% 58%;
+  --neutral-600: 32 10% 68%;
+  --neutral-700: 34 12% 78%;
+  --neutral-800: 36 20% 86%;
+  --neutral-900: 38 28% 92%;
+  --neutral-950: 40 34% 96%;
+
+  --positive-50: 166 40% 10%;
+  --positive-100: 164 38% 14%;
+  --positive-200: 163 34% 20%;
+  --positive-300: 163 32% 28%;
+  --positive-400: 160 40% 40%;
+  --positive-500: 158 50% 50%;
+  --positive-600: 156 55% 60%;
+  --positive-700: 154 60% 70%;
+  --positive-800: 152 65% 80%;
+  --positive-900: 150 70% 88%;
+  --positive-950: 150 75% 94%;
+
+  --caution-50: 21 40% 11%;
+  --caution-100: 22 38% 15%;
+  --caution-200: 23 36% 21%;
+  --caution-300: 26 40% 30%;
+  --caution-400: 32 50% 42%;
+  --caution-500: 38 60% 52%;
+  --caution-600: 43 70% 62%;
+  --caution-700: 46 80% 70%;
+  --caution-800: 48 85% 78%;
+  --caution-900: 48 88% 86%;
+  --caution-950: 48 92% 93%;
+
+  --negative-50: 0 40% 12%;
+  --negative-100: 0 38% 16%;
+  --negative-200: 0 36% 22%;
+  --negative-300: 0 40% 32%;
+  --negative-400: 0 50% 44%;
+  --negative-500: 0 60% 55%;
+  --negative-600: 0 70% 64%;
+  --negative-700: 0 78% 72%;
+  --negative-800: 0 85% 80%;
+  --negative-900: 0 88% 87%;
+  --negative-950: 0 90% 94%;
+}

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import Link from "next/link";
 import { ArrowUpRight, Check, Download, Lock, ShoppingCart, Sparkles } from "lucide-react";
 import { myLibrary, requestDownload, type LibraryCard } from "@/features/downloadables/downloadables.api";
 import { humanizeApiError } from "@/shared/api/errors";
@@ -36,15 +37,14 @@ function DownloadableCard({ card }: { card: LibraryCard }) {
     <Card className="group flex h-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(43,27,23,0.12)]">
       <div className="relative h-36 overflow-hidden bg-muted">
         {card.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.coverUrl} alt={card.title} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <img src={card.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         ) : (
           <div className="grid h-full place-items-center text-muted-foreground"><Download className="h-8 w-8 opacity-40" /></div>
         )}
         <span className="absolute left-3 top-3"><Badge variant={badge.variant}>{badge.text}</Badge></span>
       </div>
       <CardContent className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-lg font-bold text-[#2b1b17]">{card.title}</h3>
+        <h3 className="font-display text-lg font-bold text-ink">{card.title}</h3>
         {card.shortDescription && <p className="mt-1 flex-1 text-sm leading-6 text-muted-foreground">{card.shortDescription}</p>}
         <div className="mt-4">
           {card.access.allowed ? (
@@ -56,7 +56,7 @@ function DownloadableCard({ card }: { card: LibraryCard }) {
               <a href={card.access.checkoutUrl} target="_blank" rel="noreferrer"><ShoppingCart className="h-4 w-4" /> Comprar en Hotmart <ArrowUpRight className="h-4 w-4" /></a>
             </Button>
           ) : card.access.action === "UPGRADE_REQUIRED" ? (
-            <Button asChild className="w-full" variant="outline"><a href="/paciente/premium"><Sparkles className="h-4 w-4" /> Hazte premium</a></Button>
+            <Button asChild className="w-full" variant="outline"><Link href="/paciente/premium"><Sparkles className="h-4 w-4" aria-hidden="true" /> Hazte premium</Link></Button>
           ) : (
             <Button className="w-full" variant="outline" disabled><Lock className="h-4 w-4" /> No disponible</Button>
           )}

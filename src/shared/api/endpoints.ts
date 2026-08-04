@@ -140,6 +140,37 @@ export const ENDPOINTS = {
     transactionSaleCreate: `${API_PREFIX}/admin/accounting/transactions`,
     transactionSaleFromAppointment: `${API_PREFIX}/admin/accounting/transactions/from-appointment/:appointmentId`
   },
+  /**
+   * Progreso de tutoriales del usuario autenticado. El backend deduce el usuario del
+   * JWT: estas rutas nunca reciben un identificador ajeno.
+   * Estado del contrato: PENDIENTE_CM (ver docs/api/api-contracts.md). Mientras no
+   * exista, `NEXT_PUBLIC_TUTORIALS_REMOTE_PROGRESS` queda desactivado y el progreso
+   * vive solo en el navegador.
+   */
+  tutorials: {
+    progress: `${API_PREFIX}/me/tutorials/progress`,
+    progressById: `${API_PREFIX}/me/tutorials/progress/:tutorialId`
+  },
+  /**
+   * Notificaciones del panel administrativo.
+   *
+   * `stream` es un canal SSE (`EventSource`), no una petición de `apiRequest`. Se
+   * registra aquí igualmente para que exista UN solo sitio donde consultar qué URLs
+   * del backend consume el frontend: antes se construía a mano en
+   * `use-admin-notifications.ts` y quedaba fuera de cualquier revisión que se apoyara
+   * en este archivo.
+   *
+   * ⚠️ `stream` recibe el JWT por query string porque `EventSource` no admite
+   * cabeceras propias. Es una limitación de la API del navegador, no una elección.
+   * Ver docs/security/threat-model.md (SEC-01).
+   */
+  notifications: {
+    list: `${API_PREFIX}/admin/notifications`,
+    unreadCount: `${API_PREFIX}/admin/notifications/unread-count`,
+    markRead: `${API_PREFIX}/admin/notifications/:notificationId/read`,
+    markAllRead: `${API_PREFIX}/admin/notifications/read-all`,
+    stream: `${API_PREFIX}/admin/notifications/stream`
+  },
   health: {
     check: `${API_PREFIX}/health`
   }
