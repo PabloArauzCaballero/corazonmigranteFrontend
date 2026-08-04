@@ -56,7 +56,7 @@ export const COURSES: Course[] = [
 export function CoursesGrid({ courses = COURSES }: { courses?: Course[] }) {
   if (courses.length === 0) {
     return (
-      <div className="border border-slate-200 bg-white p-10 text-center">
+      <div className="border border-slate-200 bg-card p-10 text-center">
         <p className="text-lg font-semibold text-slate-900">
           Pronto abriremos nuevos cursos
         </p>
@@ -75,7 +75,7 @@ export function CoursesGrid({ courses = COURSES }: { courses?: Course[] }) {
           href={course.hotmartUrl}
           target="_blank"
           rel="noreferrer"
-          className="group flex flex-col overflow-hidden border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
+          className="group flex flex-col overflow-hidden border border-slate-200 bg-card transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
         >
           <div className="relative h-48 overflow-hidden bg-slate-100">
             <img
@@ -88,7 +88,7 @@ export function CoursesGrid({ courses = COURSES }: { courses?: Course[] }) {
               }}
             />
             {course.badge ? (
-              <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/92 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-primary backdrop-blur">
+              <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-card/92 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-primary backdrop-blur">
                 <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
                 {course.badge}
               </span>
@@ -101,8 +101,8 @@ export function CoursesGrid({ courses = COURSES }: { courses?: Course[] }) {
             <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">
               {course.description}
             </p>
-            <span className="mt-5 inline-flex items-center justify-center gap-2 bg-primary px-4 py-3 text-sm font-bold text-white transition group-hover:bg-[#5f0a0a]">
-              Ver en Hotmart
+            <span className="mt-5 inline-flex items-center justify-center gap-2 bg-primary px-4 py-3 text-sm font-bold text-surface-inverse-foreground transition group-hover:bg-primary">
+              Empezar a sanar
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </span>
           </div>

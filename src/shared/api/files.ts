@@ -2,6 +2,14 @@ import { env } from "@/config/env";
 import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { ApiError } from "@/shared/api/errors";
+import {
+  ATTR,
+  BUSINESS_SPANS,
+  fileExtension,
+  fileSizeBucket,
+  fileTypeFamily,
+  runInSpan
+} from "@/observability";
 
 const API_PREFIX_PATTERN = /\/(api\/v1|api)$/i;
 const DIRECT_CLOUDINARY_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
@@ -176,12 +184,40 @@ async function completeCloudinaryUpload(input: UploadFileInput, signature: Cloud
 /**
  * Sube imagenes publicas directo a Cloudinary y luego registra la URL en el backend.
  * Los archivos no-imagen conservan el endpoint multipart legacy.
+ *
+ * Trazabilidad (Fase 17): se registran familia MIME, extensión, bucket de tamaño y
+ * estrategia. **Nunca** el nombre del archivo (`input.file.name` puede ser
+ * "informe-psicologico-ana.pdf"), ni su contenido, ni la URL firmada de Cloudinary,
+ * que lleva `api_key` y `signature`.
  */
 export async function uploadFile(input: UploadFileInput) {
-  if (!supportsDirectCloudinary(input.file)) {
-    return uploadFileThroughServidor(input);
-  }
+  const direct = supportsDirectCloudinary(input.file);
 
+  return runInSpan(
+    BUSINESS_SPANS.documentUpload,
+    {
+      [ATTR.feature]: "files",
+      [ATTR.operation]: "upload",
+      [ATTR.fileType]: fileTypeFamily(input.file.type),
+      [ATTR.fileExtension]: fileExtension(input.file.name),
+      [ATTR.fileSizeBucket]: fileSizeBucket(input.file.size),
+      [ATTR.uploadStrategy]: direct ? "cloudinary-direct" : "backend-multipart"
+    },
+    async (span) => {
+      try {
+        const result = direct ? await uploadThroughCloudinary(input) : await uploadFileThroughServidor(input);
+        span.setAttribute(ATTR.uiResult, "success");
+        return result;
+      } catch (error) {
+        span.setAttribute(ATTR.uiResult, "error");
+        throw error;
+      }
+    }
+  );
+}
+
+/** Ruta directa a Cloudinary, extraída para que `uploadFile` quede legible. */
+async function uploadThroughCloudinary(input: UploadFileInput) {
   const publicInput = { ...input, visibility: "PUBLIC" as const };
   const signature = await requestCloudinarySignature(publicInput);
   const uploaded = await uploadDirectlyToCloudinary(publicInput, signature);

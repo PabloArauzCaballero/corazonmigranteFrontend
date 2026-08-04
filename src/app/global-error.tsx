@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { REACT_ERROR_BOUNDARIES, reportReactError } from "@/observability";
 
 export default function GlobalError({
   error,
@@ -14,12 +15,17 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("[GlobalError]", error);
+    // `global-error.tsx` reemplaza al layout raíz, así que aquí ya no hay proveedor de
+    // telemetría montado. `reportReactError` no lo necesita: solo usa
+    // `@opentelemetry/api`, que sigue apuntando al proveedor global registrado en el
+    // arranque. Si la telemetría está apagada, no hace nada.
+    reportReactError(error, REACT_ERROR_BOUNDARIES.global);
   }, [error]);
 
   return (
     <html lang="es">
       <body>
-        <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#f7f4ef] p-6 text-center">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-surface-sunken p-6 text-center">
           <div className="grid h-16 w-16 place-items-center rounded-2xl bg-red-100">
             <AlertTriangle className="h-8 w-8 text-red-600" aria-hidden="true" />
           </div>

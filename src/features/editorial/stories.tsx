@@ -109,23 +109,23 @@ function StoryModal({ story, onClose }: { story: Story; onClose: () => void }) {
   if (typeof document === "undefined") return null;
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto p-4 md:p-8" role="dialog" aria-modal="true" aria-label={`Historia de ${story.name}`}>
-      <div className="absolute inset-0 bg-[#140806]/70" onClick={onClose} aria-hidden="true" />
-      <div className="relative z-10 my-auto w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-[0_40px_120px_rgba(0,0,0,0.5)]">
+      <div className="absolute inset-0 bg-surface-inverse-deep/70" onClick={onClose} aria-hidden="true" />
+      <div className="relative z-10 my-auto w-full max-w-3xl overflow-hidden rounded-2xl bg-card shadow-[0_40px_120px_rgba(0,0,0,0.5)]">
         <div className="relative h-64 w-full overflow-hidden bg-slate-100 sm:h-80">
           <img src={story.image} alt={story.name} className="h-full w-full object-cover object-[center_20%]" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#140806] via-[#140806]/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-inverse-deep via-surface-inverse-deep/30 to-transparent" />
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar historia"
-            className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-slate-700 transition hover:bg-white"
+            className="absolute right-4 top-4 rounded-full bg-card/90 p-2 text-slate-700 transition hover:bg-card"
           >
             <X className="h-5 w-5" />
           </button>
-          <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/75">{story.meta}</p>
+          <div className="absolute inset-x-0 bottom-0 p-6 text-surface-inverse-foreground">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-surface-inverse-foreground/75">{story.meta}</p>
             <h3 className="mt-1 font-serif text-3xl font-bold">{story.name}</h3>
-            <p className="mt-1 font-serif text-lg italic text-white/85">“{story.title}”</p>
+            <p className="mt-1 font-serif text-lg italic text-surface-inverse-foreground/85">“{story.title}”</p>
           </div>
         </div>
         <div className="max-h-[50vh] overflow-y-auto px-6 py-7 md:px-9">
@@ -146,7 +146,7 @@ export function StoriesGrid({ stories = MIGRANT_STORIES }: { stories?: Story[] }
 
   if (stories.length === 0) {
     return (
-      <div className="border border-slate-200 bg-white p-10 text-center">
+      <div className="border border-slate-200 bg-card p-10 text-center">
         <p className="text-lg font-semibold text-slate-900">Pronto compartiremos nuevas historias</p>
       </div>
     );
@@ -160,7 +160,7 @@ export function StoriesGrid({ stories = MIGRANT_STORIES }: { stories?: Story[] }
             key={story.id}
             type="button"
             onClick={() => setActive(story)}
-            className="group flex flex-col overflow-hidden border border-slate-200 bg-white text-left transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
+            className="group flex flex-col overflow-hidden border border-slate-200 bg-card text-left transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
           >
             <div className="relative h-56 overflow-hidden bg-slate-100">
               <img
@@ -172,9 +172,9 @@ export function StoriesGrid({ stories = MIGRANT_STORIES }: { stories?: Story[] }
                   event.currentTarget.style.display = "none";
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#140806]/85 via-[#140806]/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/75">{story.meta}</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-inverse-deep/85 via-surface-inverse-deep/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-5 text-surface-inverse-foreground">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-surface-inverse-foreground/75">{story.meta}</p>
                 <p className="font-serif text-xl font-bold">{story.name}</p>
               </div>
             </div>

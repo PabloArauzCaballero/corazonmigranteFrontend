@@ -1,0 +1,49 @@
+# Entorno local de trazas: Collector + Jaeger.
+#
+#   yarn dev                                            (frontend en :4173)
+#   docker compose -f infra/otel-collector/docker-compose.yml up -d
+#   → Jaeger UI en http://localhost:16686
+#
+# Solo para desarrollo. En producción, ni el Collector ni Jaeger se publican: quien
+# recibe al navegador es el gateway del mismo origen.
+
+name: corazon-migrante-observability
+
+services:
+  jaeger:
+    image: jaegertracing/jaeger:2.11.0
+    container_name: cm-jaeger
+    ports:
+      # Interfaz web. Se publica SOLO en localhost: nunca en 0.0.0.0.
+      - "127.0.0.1:16686:16686"
+    environment:
+      # Retención corta a propósito: las trazas de navegador tienen mucho volumen y
+      # poco valor pasadas unas horas. En producción, ver §16 de 01-architecture-design.md.
+      - COLLECTOR_OTLP_ENABLED=true
+    networks: [observability]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:16686/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.140.0
+    container_name: cm-otel-collector
+    command: ["--config=/etc/otelcol/config.yml"]
+    volumes:
+      - ./otel-collector.frontend.yml:/etc/otelcol/config.yml:ro
+    ports:
+      # El receptor OTLP se publica en localhost únicamente para que el Route Handler
+      # de desarrollo (`/api/otel/traces`) pueda alcanzarlo desde el proceso de Next.
+      # El navegador NO habla con este puerto.
+      - "127.0.0.1:4318:4318"
+      - "127.0.0.1:13133:13133"
+    depends_on:
+      jaeger:
+        condition: service_healthy
+    networks: [observability]
+
+networks:
+  observability:
+    driver: bridge

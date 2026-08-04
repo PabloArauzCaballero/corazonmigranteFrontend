@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck, ChevronLeft, ChevronRight } from "lucide-react";
-import { listNotifications, markAllRead, markNotificationRead, type AdminNotification, type NotificationsListResponse } from "@/features/notifications/notifications.api";
+import { listNotifications, markAllRead, markNotificationRead, type AdminNotification } from "@/features/notifications/notifications.api";
+import { humanizeApiError } from "@/shared/api/errors";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent } from "@/shared/ui/card";
 import { PageHeader } from "@/shared/ui/page-header";
 import { DataTableSkeleton } from "@/shared/ui/data-table";
+import { ErrorState } from "@/shared/ui/state";
 
 const TYPE_LABELS: Record<string, string> = {
   APPOINTMENT_REQUESTED: "Nueva solicitud de cita",
@@ -44,53 +47,39 @@ function formatRelative(dateStr: string): string {
 }
 
 export default function NotificationsPage() {
-  const [data, setData] = useState<NotificationsListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const [markingAll, setMarkingAll] = useState(false);
-  const [markingId, setMarkingId] = useState<string | null>(null);
 
-  const load = useCallback(async (p: number, unread: boolean) => {
-    setLoading(true);
-    try {
-      const result = await listNotifications({ page: p, unreadOnly: unread });
-      setData(result);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Se usa React Query (como en el resto del panel) en lugar de useState+useEffect:
+  // evita el render en cascada del `setLoading(true)` dentro del efecto, cachea entre
+  // páginas y — sobre todo — expone el estado de error, que antes se confundía con
+  // "no hay notificaciones".
+  const query = useQuery({
+    queryKey: ["admin-notifications", { page, unreadOnly }],
+    queryFn: () => listNotifications({ page, unreadOnly }),
+    placeholderData: (previous) => previous,
+  });
 
-  useEffect(() => { void load(page, unreadOnly); }, [load, page, unreadOnly]);
+  const markRead = useMutation({
+    mutationFn: (id: string) => markNotificationRead(id),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-notifications"] }),
+  });
 
-  async function handleMarkRead(id: string) {
-    setMarkingId(id);
-    try {
-      await markNotificationRead(id);
-      setData((prev) => prev
-        ? { ...prev, items: prev.items.map((n) => n.id === id ? { ...n, isRead: true } : n) }
-        : prev
-      );
-    } finally {
-      setMarkingId(null);
-    }
-  }
-
-  async function handleMarkAll() {
-    setMarkingAll(true);
-    try {
-      await markAllRead();
-      await load(page, unreadOnly);
-    } finally {
-      setMarkingAll(false);
-    }
-  }
+  const markAll = useMutation({
+    mutationFn: () => markAllRead(),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-notifications"] }),
+  });
 
   // Derivadas seguras: el endpoint puede fallar o devolver otra forma sin
   // items/pagination, y accederlos directo crashea ("reading 'length'").
+  const data = query.data;
+  const loading = query.isPending;
   const items: AdminNotification[] = Array.isArray(data?.items) ? data.items : [];
   const unreadCount = items.filter((n) => !n.isRead).length;
   const totalPages = data?.pagination?.totalPages ?? 1;
+  const markingId = markRead.isPending ? markRead.variables : null;
+  const markingAll = markAll.isPending;
 
   return (
     <div className="grid gap-6">
@@ -118,7 +107,7 @@ export default function NotificationsPage() {
           >
             Solo no leídas
             {unreadCount > 0 && !unreadOnly && (
-              <span className="ml-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+              <span className="ml-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-surface-inverse-foreground leading-none">
                 {unreadCount}
               </span>
             )}
@@ -127,7 +116,7 @@ export default function NotificationsPage() {
         {unreadCount > 0 && (
           <Button
             loading={markingAll}
-            onClick={() => void handleMarkAll()}
+            onClick={() => markAll.mutate()}
             size="sm"
             variant="outline"
           >
@@ -140,6 +129,13 @@ export default function NotificationsPage() {
       {/* Content */}
       {loading ? (
         <DataTableSkeleton columns={3} rows={6} />
+      ) : query.isError ? (
+        <ErrorState
+          title="No se pudieron cargar las notificaciones"
+          description={humanizeApiError(query.error)}
+          actionLabel="Reintentar"
+          onAction={() => void query.refetch()}
+        />
       ) : items.length === 0 ? (
         <Card className="animate-fade-in">
           <CardContent className="flex flex-col items-center gap-4 py-16 text-muted-foreground">
@@ -177,7 +173,7 @@ export default function NotificationsPage() {
               {!n.isRead && (
                 <Button
                   loading={markingId === n.id}
-                  onClick={() => void handleMarkRead(n.id)}
+                  onClick={() => markRead.mutate(n.id)}
                   size="sm"
                   variant="outline"
                   className="shrink-0"

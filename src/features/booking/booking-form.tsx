@@ -87,8 +87,8 @@ function initials(name: string) {
 
 function BookingAuthCard({ title, description, href, cta }: { title: string; description: string; href: string; cta: string }) {
   return (
-    <Card className="mx-auto max-w-3xl overflow-hidden rounded-xl border-slate-200 bg-white shadow-none">
-      <CardHeader className="border-b border-slate-200 bg-[#f7f4ef]">
+    <Card className="mx-auto max-w-3xl overflow-hidden rounded-xl border-slate-200 bg-card shadow-none">
+      <CardHeader className="border-b border-slate-200 bg-surface-sunken">
         <Badge className="w-fit" variant="secondary">Reserva segura</Badge>
         <CardTitle className="font-serif text-3xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -120,7 +120,7 @@ export function BookingAuthWall() {
   }
 
   return (
-    <Card className="mx-auto max-w-3xl rounded-xl border-slate-200 bg-white shadow-none">
+    <Card className="mx-auto max-w-3xl rounded-xl border-slate-200 bg-card shadow-none">
       <CardHeader>
         <Badge className="w-fit" variant="secondary">Requiere sesion</Badge>
         <CardTitle className="font-serif text-3xl">Para reservar necesitas iniciar sesion</CardTitle>
@@ -153,13 +153,13 @@ function TherapistPicker({
             type="button"
             onClick={() => onChange(therapist.id)}
             className={cn(
-              "grid min-h-36 grid-cols-[4.5rem_1fr] gap-4 rounded-xl border bg-white p-4 text-left transition",
+              "grid min-h-36 grid-cols-[4.5rem_1fr] gap-4 rounded-xl border bg-card p-4 text-left transition",
               selected ? "border-teal-900 ring-2 ring-teal-900/20" : "border-slate-200 hover:border-teal-900/50"
             )}
           >
             <span className="relative h-16 w-16 overflow-hidden rounded-full bg-teal-900/10 text-teal-950">
               {therapist.avatarUrl ? <img src={therapist.avatarUrl} alt={therapist.name} className="h-full w-full object-cover" /> : <span className="flex h-full w-full items-center justify-center font-serif text-xl font-bold">{initials(therapist.name)}</span>}
-              {selected ? <span className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-teal-900 text-white"><Check className="h-4 w-4" /></span> : null}
+              {selected ? <span className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-teal-900 text-surface-inverse-foreground"><Check className="h-4 w-4" /></span> : null}
             </span>
             <span className="min-w-0">
               <span className="block font-semibold text-slate-950">{therapist.name}</span>
@@ -176,7 +176,7 @@ function TherapistPicker({
 
 function ProductSelect({ products, registerName, register }: { products: BookingProduct[]; registerName: "productId"; register: ReturnType<typeof useForm<PatientBookingInput>>["register"] }) {
   return (
-    <select id={registerName} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" {...register(registerName)}>
+    <select id={registerName} className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" {...register(registerName)}>
       <option value="">Seleccionar servicio</option>
       {products.map((product) => (
         <option key={product.id} value={product.id}>
@@ -194,7 +194,7 @@ function TimezoneSelect({ value, register }: { value: string; register: ReturnTy
   }, [value]);
 
   return (
-    <select id="timezone" className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" {...register("timezone" as never)}>
+    <select id="timezone" className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50" {...register("timezone" as never)}>
       {options.map((option) => (
         <option key={option.value} value={option.value}>{option.label}</option>
       ))}
@@ -219,10 +219,10 @@ function AvailabilityPicker({
   isFetching: boolean;
   error: unknown;
 }) {
-  if (isFetching) return <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Consultando disponibilidad calculada...</p>;
+  if (isFetching) return <p className="rounded-xl border border-slate-200 bg-card px-4 py-3 text-sm text-slate-600">Consultando disponibilidad calculada...</p>;
   if (error) return <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{humanizeApiError(error)}</p>;
   if (slots.length === 0 && therapist) return <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">No hay horarios disponibles para esta fecha. Si eres administrador, registra horarios para este terapeuta desde Admin &gt; Usuarios &gt; Horarios.</p>;
-  if (slots.length === 0) return <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Selecciona terapeuta, servicio y fecha para ver horarios disponibles.</p>;
+  if (slots.length === 0) return <p className="rounded-xl border border-slate-200 bg-card px-4 py-3 text-sm text-slate-600">Selecciona terapeuta, servicio y fecha para ver horarios disponibles.</p>;
 
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -235,7 +235,7 @@ function AvailabilityPicker({
             type="button"
             onClick={() => onChange(slot.scheduledStartAt)}
             className={cn(
-              "rounded-xl border bg-white p-4 text-left transition",
+              "rounded-xl border bg-card p-4 text-left transition",
               selected ? "border-teal-900 bg-teal-900/5 ring-2 ring-teal-900/20" : "border-slate-200 hover:border-teal-900/50"
             )}
           >
@@ -281,7 +281,7 @@ function BookingFields<T extends BookingFormValues>({
           {patients && patients.options.length > 0 ? (
             <select
               id="patientUserId"
-              className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               {...form.register("patientUserId" as never)}
             >
               <option value="">Seleccionar paciente</option>
@@ -292,9 +292,9 @@ function BookingFields<T extends BookingFormValues>({
               ))}
             </select>
           ) : patients?.isLoading ? (
-            <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Cargando lista de pacientes...</p>
+            <p className="rounded-xl border border-slate-200 bg-card px-4 py-3 text-sm text-slate-600">Cargando lista de pacientes...</p>
           ) : (
-            <p className="rounded-xl border border-dashed bg-white px-4 py-3 text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed bg-card px-4 py-3 text-sm text-muted-foreground">
               {patients?.error ? humanizeApiError(patients.error) : "No hay usuarios paciente disponibles para seleccionar."}
             </p>
           )}
@@ -394,8 +394,8 @@ export function PatientBookingForm({ title = "Reservar mi cita", description = "
   if (therapists.isError) return <ErrorState title="No se pudo consultar terapeutas" description={humanizeApiError(therapists.error)} actionLabel="Reintentar" onAction={() => void therapists.refetch()} />;
 
   return (
-    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-xl border-slate-200 bg-white shadow-none">
-      <CardHeader className="border-b border-slate-200 bg-[#f7f4ef] p-7">
+    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-xl border-slate-200 bg-card shadow-none">
+      <CardHeader className="border-b border-slate-200 bg-surface-sunken p-7">
         <Badge className="w-fit" variant="secondary">Paciente autenticado</Badge>
         <CardTitle className="font-serif text-4xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -434,8 +434,8 @@ export function ManagedBookingForm({ actorLabel }: { actorLabel: "administrador"
   if (data.therapists.isError) return <ErrorState title="No se pudo consultar terapeutas" description={humanizeApiError(data.therapists.error)} actionLabel="Reintentar" onAction={() => void data.therapists.refetch()} />;
 
   return (
-    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-xl border-slate-200 bg-white shadow-none">
-      <CardHeader className="border-b border-slate-200 bg-[#f7f4ef] p-7">
+    <Card className="mx-auto w-full max-w-6xl overflow-hidden rounded-xl border-slate-200 bg-card shadow-none">
+      <CardHeader className="border-b border-slate-200 bg-surface-sunken p-7">
         <Badge className="w-fit" variant="secondary">Booking por {actorLabel}</Badge>
         <CardTitle className="font-serif text-4xl">Agendar cita para un paciente concreto</CardTitle>
         <CardDescription>Selecciona paciente, terapeuta, servicio y horario calculado antes de registrar la cita.</CardDescription>

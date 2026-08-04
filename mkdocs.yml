@@ -1,0 +1,190 @@
+# Portal técnico del frontend de Corazón Migrante.
+#
+# INSTRUMENTACIÓN SEGURA: MkDocs NO es dependencia del proyecto ni participa en
+# `next build`. El portal documental se construye por separado del bundle productivo.
+# Requiere Python:
+#
+#   pip install mkdocs-material
+#   mkdocs serve                 # http://localhost:8000
+#   mkdocs build --strict        # falla ante cualquier enlace roto
+#
+# Si MkDocs no está disponible, la documentación sigue siendo legible como Markdown
+# en el repositorio y en GitHub: ningún documento depende de este archivo.
+
+site_name: Frontend Corazón Migrante
+site_description: Documentación técnica del frontend — Next.js 15 exportado como HTML estático
+docs_dir: docs
+site_dir: .docs-site        # ignorado por git; nunca se mezcla con out/
+
+theme:
+  name: material
+  language: es
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: brown
+      toggle:
+        icon: material/weather-night
+        name: Cambiar a modo oscuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: brown
+      toggle:
+        icon: material/weather-sunny
+        name: Cambiar a modo claro
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Validación estricta: cualquier enlace interno roto detiene la construcción.
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  nav:
+    omitted_files: info
+
+nav:
+  - Inicio: index.md
+
+  - Empezar:
+      - Variables de entorno: getting-started/environment-variables.md
+      - Build: operations/build.md
+      - Pruebas: testing/strategy.md
+
+  - Producto:
+      - Catálogo de rutas: routes/route-catalog.md
+      - Journeys: business/user-journeys.md
+      - Actores y roles: business/actors-and-roles.md
+      - Inventario funcional: reports/frontend-inventory.md
+
+  - Arquitectura:
+      - Visión general: architecture/overview.md
+      - Contexto (C4): architecture/system-context.md
+      - Contenedores (C4): architecture/containers.md
+      - Capas: architecture/frontend-layers.md
+      - Dependencias: architecture/module-dependencies.md
+      - Renderizado: architecture/rendering-strategy.md
+      - Routing y navegación: architecture/routing-and-navigation.md
+      - Estado: architecture/state-management.md
+      - Flujo de datos: architecture/data-flow.md
+      - Errores: architecture/error-boundaries.md
+      - Integraciones: architecture/integration-map.md
+      - Diagramas: architecture/diagrams/README.md
+
+  - Interfaz:
+      - Catálogo de componentes: components/catalog.md
+      - Reglas de composición: components/composition-rules.md
+      - Formularios: components/forms.md
+      - Deprecación: components/deprecation.md
+      - Color: design-system/colors.md
+      - Temas: design-system/themes.md
+
+  - Datos e integraciones:
+      - Backend: integrations/backend-api.md
+      - Archivos (Cloudinary): integrations/file-storage.md
+      - Analítica: integrations/analytics.md
+      - Estado de servidor: data-and-state/server-state.md
+      - Invalidación: data-and-state/invalidation.md
+      - Formularios y validación: data-and-state/forms-and-validation.md
+      - Actualizaciones optimistas: data-and-state/optimistic-updates.md
+
+  - Accesibilidad:
+      - Informe: accessibility/audit-report.md
+      - Estándar y alcance: accessibility/standard-and-scope.md
+      - Teclado: accessibility/keyboard.md
+      - Foco: accessibility/focus-management.md
+      - Lectores de pantalla: accessibility/screen-readers.md
+      - Formularios y errores: accessibility/forms-and-errors.md
+      - Color y contraste: accessibility/color-and-contrast.md
+
+  - Rendimiento:
+      - Presupuestos: performance/budgets.md
+      - Bundle: performance/bundle-analysis.md
+      - Core Web Vitals: performance/core-web-vitals.md
+      - Imágenes y fuentes: performance/images-and-fonts.md
+      - Renderizado: performance/rendering.md
+      - Monitorización: performance/monitoring.md
+
+  - Seguridad:
+      - Seguridad del frontend: security/frontend-security.md
+      - Modelo de amenazas: security/threat-model.md
+      - Sesión y tokens: security/session-and-tokens.md
+      - Almacenamiento: security/browser-storage.md
+      - CSP y cabeceras: security/content-security-policy.md
+      - Privacidad: security/privacy.md
+      - Dependencias: security/dependencies.md
+      - Respuesta a incidentes: security/incident-response.md
+      - Auth y RBAC (equipo): security/auth-rbac.md
+
+  - Operación:
+      - Despliegue: operations/deployment.md
+      - Entornos: operations/environments.md
+      - Build: operations/build.md
+      - Configuración: operations/configuration.md
+      - Feature flags: operations/feature-flags.md
+      - Rollback: operations/rollback.md
+      - Caché y CDN: operations/cache-and-cdn.md
+      - Runbooks: operations/runbooks/README.md
+
+  - Observabilidad:
+      - Reporte de errores: observability/error-reporting.md
+      - Catálogo de eventos: observability/analytics-events.md
+      - Paneles y alertas: observability/dashboards-and-alerts.md
+      - Documentación del equipo: observability/frontend/README.md
+
+  - Pruebas:
+      - Estrategia: testing/strategy.md
+      - Unitarias: testing/unit-tests.md
+      - Componentes: testing/component-tests.md
+      - Contrato: testing/contract-tests.md
+      - Plan de pruebas (equipo): testing/test-plan.md
+
+  - Decisiones (ADR):
+      - Índice: adr/index.md
+      - 0001 Next.js App Router: adr/ADR-0001-nextjs-app-router.md
+      - 0002 Exportación estática: adr/ADR-0002-exportacion-estatica.md
+      - 0003 Protección en cliente: adr/ADR-0003-proteccion-cliente.md
+      - 0004 React Query: adr/ADR-0004-estado-servidor-react-query.md
+      - 0005 Arquitectura por features: adr/ADR-0005-arquitectura-por-features.md
+      - 0006 Tailwind y Radix: adr/ADR-0006-tailwind-radix.md
+      - 0007 OpenTelemetry: adr/ADR-0007-observabilidad-opentelemetry.md
+      - 0008 El lint bloquea el build: adr/ADR-0008-lint-bloquea-build.md
+      - 0009 Tipos manuales: adr/ADR-0009-tipos-manuales-sin-openapi.md
+      - 0010 Sin i18n: adr/ADR-0010-sin-i18n.md
+
+  - Gobierno:
+      - Trazabilidad: governance/traceability-matrix.md
+      - Cero regresiones: governance/zero-regression-policy.md
+      - Gestión del cambio: governance/change-management.md
+      - Proceso de revisión: governance/review-process.md
+      - Propiedad: governance/ownership.md
+
+  - Informes:
+      - Línea base: reports/baseline.md
+      - Auditoría Graphify: reports/graphify-audit.md
+      - Inventario: reports/frontend-inventory.md
+      - Análisis de brechas: reports/documentation-gap-analysis.md
+      - Validación de regresiones: reports/regression-validation.md
+      - Preparación productiva: reports/production-readiness.md
+      - Informe final: reports/final-validation.md

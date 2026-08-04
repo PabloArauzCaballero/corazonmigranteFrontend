@@ -50,8 +50,8 @@ export function AppointmentsCalendar({ items, title = "Agenda semanal" }: { item
   }
 
   return (
-    <section className="overflow-hidden border border-slate-200 bg-white">
-      <div className="flex items-center gap-2 border-b border-slate-200 bg-[#f7f4ef] px-5 py-4">
+    <section className="overflow-hidden border border-slate-200 bg-card">
+      <div className="flex items-center gap-2 border-b border-slate-200 bg-surface-sunken px-5 py-4">
         <CalendarDays className="h-5 w-5 text-teal-800" />
         <h2 className="font-serif text-xl font-bold text-slate-950">{title}</h2>
       </div>
@@ -60,7 +60,7 @@ export function AppointmentsCalendar({ items, title = "Agenda semanal" }: { item
           const key = dayKey(date);
           const dayItems = grouped.get(key) ?? [];
           return (
-            <div key={key} className="min-h-40 bg-white p-3">
+            <div key={key} className="min-h-40 bg-card p-3">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{new Intl.DateTimeFormat("es-BO", { weekday: "short" }).format(date)}</p>
               <p className="mt-1 text-lg font-bold text-slate-950">{new Intl.DateTimeFormat("es-BO", { day: "2-digit", month: "short" }).format(date)}</p>
               <div className="mt-4 grid gap-2">

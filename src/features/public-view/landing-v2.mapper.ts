@@ -108,20 +108,27 @@ export function resolveV2Image(
 ) {
   const idUi = image?.id_ui ?? image?.idUi ?? null;
   const idNum = idUi != null ? Number(idUi) : NaN;
-  // Prioriza imágenes conocidas por id_ui (Cloudinary; respaldo local vía onError).
+
+  // ORDEN CORRECTO: primero lo que manda el backend, y solo después el mapa local.
+  //
+  // Antes el mapa `LANDING_IMAGE_NAME_BY_ID` tenía prioridad absoluta, así que para
+  // los id_ui 2..20 la landing mostraba SIEMPRE el archivo fijo de Cloudinary e
+  // ignoraba en silencio la imagen que un admin hubiera subido desde "Vistas
+  // Públicas". Es decir: el CMS parecía funcionar pero el cambio nunca se veía.
+  // Ahora el mapa actúa solo como respaldo cuando el backend no trae nada para ese id.
+  const fromBackend = resolveLandingImage(
+    image
+      ? { src: image.src ?? image.fallback_src ?? image.fallbackSrc, alt: image.alt, idUi }
+      : undefined,
+    landing.uiById,
+  );
+  if (fromBackend) return fromBackend;
+
   if (!Number.isNaN(idNum) && LANDING_IMAGE_NAME_BY_ID[idNum]) {
     return cloudImg(LANDING_IMAGE_NAME_BY_ID[idNum]);
   }
-  if (!image) return resolveLandingImage(undefined, landing.uiById, fallback);
-  return resolveLandingImage(
-    {
-      src: image.src ?? image.fallback_src ?? image.fallbackSrc,
-      alt: image.alt,
-      idUi,
-    },
-    landing.uiById,
-    fallback,
-  );
+
+  return resolveLandingImage(undefined, landing.uiById, fallback);
 }
 
 export function linkKey(link: LandingV2Link | undefined, fallback: string) {

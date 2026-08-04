@@ -1,11 +1,65 @@
+import type { Span } from "@opentelemetry/api";
 import { env } from "@/config/env";
 import { ApiError } from "@/shared/api/errors";
 import { clearClientSession, readClientSession } from "@/shared/auth/cookies";
+import {
+  ATTR,
+  BUSINESS_SPANS,
+  TECHNICAL_SPANS,
+  apiRouteTemplate,
+  runInSpan,
+  startSpan
+} from "@/observability";
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
   auth?: boolean;
+  /**
+   * Milisegundos antes de abortar la petición. `0` la deja sin límite.
+   * Por defecto `DEFAULT_TIMEOUT_MS`.
+   */
+  timeoutMs?: number;
 };
+
+/**
+ * Sin límite de tiempo, un backend que acepta la conexión pero no responde deja la
+ * petición viva hasta que el navegador la corte por su cuenta (minutos). React Query
+ * no puede rescatar ese caso: seguiría mostrando estado de carga indefinidamente y la
+ * persona usuaria no vería ni datos ni error.
+ *
+ * 30 s es holgado para las operaciones más pesadas del panel (listados con
+ * paginación, subida de archivos ya excluida por usar FormData con su propio flujo) y
+ * lo bastante corto para que un fallo se manifieste como tal.
+ */
+const DEFAULT_TIMEOUT_MS = 30_000;
+
+/**
+ * Combina la señal de cancelación que llegue del consumidor (React Query cancela las
+ * consultas obsoletas) con la del timeout propio. La petición se aborta cuando
+ * cualquiera de las dos se dispara.
+ *
+ * `AbortSignal.any` es lo natural aquí, pero no está disponible en todos los entornos
+ * que el proyecto soporta —incluido el jsdom de las pruebas—, así que se compone a
+ * mano cuando falta.
+ */
+function combineSignals(signals: AbortSignal[]): AbortSignal | undefined {
+  const active = signals.filter(Boolean);
+  if (active.length === 0) return undefined;
+  if (active.length === 1) return active[0];
+
+  const anyOf = (AbortSignal as unknown as { any?: (list: AbortSignal[]) => AbortSignal }).any;
+  if (typeof anyOf === "function") return anyOf(active);
+
+  const controller = new AbortController();
+  for (const signal of active) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
+      break;
+    }
+    signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+  }
+  return controller.signal;
+}
 
 type ParsedResponse = {
   response: Response;
@@ -129,13 +183,33 @@ function stripQueryFromPath(path: string) {
   return index >= 0 ? path.slice(0, index) : path;
 }
 
-const SENSITIVE_KEY_PATTERN = /password|token|secret|authorization/i;
+/** Credenciales y secretos: nunca deben aparecer en un log, ni en desarrollo. */
+const SECRET_KEY_PATTERN = /password|contrasena|contraseña|token|secret|authorization|signature|firma|apikey|api_key/i;
+
+/**
+ * Datos personales y clínicos.
+ *
+ * Este proyecto trata datos de salud de personas migrantes. `logs/api-requests.log`
+ * solo se escribe en desarrollo, pero quien desarrolle apuntando a un backend con
+ * datos reales acumularía historiales de pacientes en un archivo local sin cifrar.
+ * Redactar por nombre de clave no es infalible —el backend podría llamar `campo7` a
+ * un diagnóstico— pero cubre la forma en que el contrato real nombra estos campos.
+ *
+ * El log conserva su utilidad: estructura de la petición, claves presentes, códigos
+ * de estado y tiempos siguen visibles. Lo único que se sustituye es el VALOR.
+ */
+const PERSONAL_KEY_PATTERN =
+  /email|correo|phone|telefono|teléfono|celular|whatsapp|address|direccion|dirección|dni|nif|nie|passport|pasaporte|documento|birth|nacimiento|edad|nombre|apellido|name|fullname|avatar|foto|photo|symptom|sintoma|síntoma|diagnos|tratamiento|therapy_goal|objetivo|motivo|nota|note|observacion|observación|comentario|mensaje|message/i;
 
 function sanitizeForLog(value: unknown): unknown {
   if (value === null || typeof value !== "object") return value;
   if (Array.isArray(value)) return value.map(sanitizeForLog);
   return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([key, nested]) => [key, SENSITIVE_KEY_PATTERN.test(key) ? "[redacted]" : sanitizeForLog(nested)])
+    Object.entries(value as Record<string, unknown>).map(([key, nested]) => {
+      if (SECRET_KEY_PATTERN.test(key)) return [key, "[redacted]"];
+      if (PERSONAL_KEY_PATTERN.test(key)) return [key, "[dato personal omitido]"];
+      return [key, sanitizeForLog(nested)];
+    })
   );
 }
 
@@ -183,11 +257,21 @@ function logApiCall(entry: { method: string; url: string; status?: number; ok?: 
  */
 function handleUnauthorizedSession() {
   if (typeof window === "undefined") return;
+
+  // Span de negocio: "la sesión murió y se echó a la persona al login". Es distinto de
+  // un 401 cualquiera y es de las cosas que más se investigan cuando alguien reporta
+  // que "se sale solo". No lleva ningún dato de la sesión, solo el hecho.
+  startSpan(BUSINESS_SPANS.authSessionExpired, {
+    [ATTR.feature]: "auth",
+    [ATTR.operation]: "session-expired"
+  }).end();
+
   clearClientSession();
   const currentPath = window.location.pathname;
   const loginPath = currentPath.startsWith("/admin") ? "/admin/login" : "/login";
   if (currentPath !== loginPath) {
-    window.location.replace(loginPath);
+    // Se conserva el destino para volver ahí tras reautenticarse, igual que el guard.
+    window.location.replace(`${loginPath}?next=${encodeURIComponent(currentPath)}`);
   }
 }
 
@@ -199,20 +283,51 @@ async function parseResponse(response: Response): Promise<ParsedResponse> {
 
 async function performRequest(path: string, options: RequestOptions, body: BodyInit | undefined, headers: Headers): Promise<ParsedResponse> {
   const url = buildRequestUrl(path);
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  // El controlador del timeout es propio; la señal del consumidor (si la hay) se
+  // respeta igualmente. Se limpia siempre en `finally` para no dejar temporizadores
+  // vivos tras una respuesta rápida.
+  const timeoutController = timeoutMs > 0 ? new AbortController() : null;
+  const timer = timeoutController ? setTimeout(() => timeoutController.abort(), timeoutMs) : null;
+
+  const signal = combineSignals([
+    ...(options.signal ? [options.signal] : []),
+    ...(timeoutController ? [timeoutController.signal] : [])
+  ]);
+
   try {
     const response = await fetch(url, {
       ...options,
       headers,
-      body
+      body,
+      signal
     });
     return parseResponse(response);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+
+    // Se distinguen tres finales distintos porque exigen reacciones distintas:
+    // que la cancele el consumidor es normal (React Query descartando una consulta
+    // obsoleta) y no debe presentarse como un fallo del servidor.
+    if (options.signal?.aborted) {
+      throw new ApiError("La petición se canceló.", 0, { url, method: options.method ?? "GET", cancelled: true });
+    }
+    if (timeoutController?.signal.aborted) {
+      throw new ApiError(
+        `El servidor no respondió a tiempo (${Math.round(timeoutMs / 1000)} s). Inténtalo de nuevo.`,
+        0,
+        { url, method: options.method ?? "GET", timeout: true }
+      );
+    }
+
     throw new ApiError(
       `No se pudo conectar con el servidor (${url}). Detalle: ${message}`,
       0,
       { url, method: options.method ?? "GET", originalError: message }
     );
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -222,8 +337,44 @@ function buildBody(body: unknown): BodyInit | undefined {
   return undefined;
 }
 
+/**
+ * Envoltura de trazabilidad de `apiRequest`.
+ *
+ * El span `http.client` es el **padre de negocio** de la petición; el span de red lo
+ * crea `FetchInstrumentation` como hijo, así que no hay duplicación: uno mide "la
+ * llamada a la API tal y como la ve la aplicación" (incluyendo el reintento que hace
+ * `executeRequest` ante un 400 con propiedades rechazadas) y el otro mide el viaje HTTP.
+ *
+ * Solo se registran método, plantilla de ruta, host y código de respuesta. Nunca el
+ * cuerpo, ni las cabeceras, ni la query string: `apiRouteTemplate()` la descarta y el
+ * `SanitizingSpanProcessor` vuelve a comprobarlo antes de exportar.
+ */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const method = String(options.method ?? "GET").toUpperCase();
+
+  return runInSpan(
+    TECHNICAL_SPANS.httpClient,
+    {
+      "http.request.method": method,
+      [ATTR.routeTemplate]: apiRouteTemplate(path),
+      [ATTR.networkRequestType]: "api"
+    },
+    async (span) => {
+      try {
+        return await executeRequest<T>(path, options, method, span);
+      } catch (error) {
+        // El código de estado es el dato más útil para diagnosticar y no revela nada:
+        // el mensaje del backend sí podría (puede citar un correo o un archivo).
+        if (error instanceof ApiError) {
+          span.setAttribute("http.response.status_code", error.status);
+        }
+        throw error;
+      }
+    }
+  );
+}
+
+async function executeRequest<T>(path: string, options: RequestOptions, method: string, span: Span): Promise<T> {
   const url = buildRequestUrl(path);
   const startedAt = Date.now();
   const headers = new Headers(options.headers);
@@ -252,15 +403,23 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     const rejected = extractRejectedProperties(parsed.payload);
 
     if (rejected.length > 0) {
+      // Este reintento es una compatibilidad con validaciones estrictas del backend.
+      // Hacerlo visible importa: una petición que "tarda el doble" sin explicación
+      // suele ser esto. Se registra el número de reintentos, nunca qué propiedades
+      // se quitaron (son nombres de campos del formulario).
       if (method === "GET" && path.includes("?")) {
+        span.setAttribute(ATTR.retryCount, 1);
         parsed = await performRequest(stripQueryFromPath(path), options, undefined, headers);
       } else if (!isFormData && options.body !== undefined) {
+        span.setAttribute(ATTR.retryCount, 1);
         const cleanedBody = removeRejectedProperties(pruneOptionalEmptyValues(options.body), new Set(rejected));
         requestBody = buildBody(cleanedBody);
         parsed = await performRequest(path, options, requestBody, headers);
       }
     }
   }
+
+  span.setAttribute("http.response.status_code", parsed.response.status);
 
   logApiCall({
     method,

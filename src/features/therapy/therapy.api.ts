@@ -2,6 +2,7 @@ import { apiRequest } from "@/shared/api/client";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { getString, isRecord, normalizePaginatedResponse, normalizeStatus, type PaginatedResult } from "@/shared/api/normalizers";
 import { buildQueryString, type SistemaListQuery } from "@/shared/api/query";
+import { ATTR, BUSINESS_SPANS, runInSpan } from "@/observability";
 
 export type AppointmentRequestRow = {
   id: string;
@@ -120,12 +121,25 @@ export type UpdateAdminAppointmentInput = Partial<{
   adminNotes: string;
 }>;
 
+/**
+ * Cambio de cita desde el panel. El span no lleva `appointmentId` (identificador de un
+ * dato clínico) ni `adminNotes` (texto libre sobre la persona atendida).
+ */
 export async function updateAdminAppointment(appointmentId: string, input: UpdateAdminAppointmentInput) {
   const body = Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined && value !== ""));
-  return apiRequest<unknown>(ENDPOINTS.therapy.adminUpdateAppointment.replace(":appointmentId", appointmentId), {
-    method: "PATCH",
-    body
-  });
+  return runInSpan(
+    BUSINESS_SPANS.appointmentStatusUpdate,
+    {
+      [ATTR.feature]: "appointments",
+      [ATTR.operation]: "admin-update",
+      [ATTR.uiComponent]: "RequestsTable"
+    },
+    () =>
+      apiRequest<unknown>(ENDPOINTS.therapy.adminUpdateAppointment.replace(":appointmentId", appointmentId), {
+        method: "PATCH",
+        body
+      })
+  );
 }
 
 export async function updateAppointmentPayment(appointmentId: string, isPaid: boolean) {
@@ -153,10 +167,19 @@ export async function listPatientAppointments(query: SistemaListQuery = {}): Pro
 }
 
 export async function cancelPatientAppointment(appointmentId: string) {
-  return apiRequest<unknown>(ENDPOINTS.therapy.updateAppointmentStatus.replace(":appointmentId", appointmentId), {
-    method: "PATCH",
-    body: { status: "CANCELLED_BY_PATIENT" }
-  });
+  return runInSpan(
+    BUSINESS_SPANS.appointmentStatusUpdate,
+    {
+      [ATTR.feature]: "appointments",
+      [ATTR.operation]: "cancel-by-patient",
+      [ATTR.uiComponent]: "PatientAppointmentsTable"
+    },
+    () =>
+      apiRequest<unknown>(ENDPOINTS.therapy.updateAppointmentStatus.replace(":appointmentId", appointmentId), {
+        method: "PATCH",
+        body: { status: "CANCELLED_BY_PATIENT" }
+      })
+  );
 }
 
 export async function listTherapistAgenda(query: SistemaListQuery = {}): Promise<PaginatedResult<TherapistAgendaRow>> {

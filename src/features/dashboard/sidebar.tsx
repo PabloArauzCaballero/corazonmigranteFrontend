@@ -1,21 +1,22 @@
 "use client";
 
 import type { ComponentType, ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bell, BookOpen, CalendarDays, ChevronDown, Clock3, Crown, Download, Files, HeartPulse,
-  Home, LayoutDashboard, LogOut, Megaphone, Newspaper, Package, ReceiptText,
-  Tags, UserCog, UserRound, UsersRound,
+  Bell, BookOpen, CalendarDays, ChevronDown, Clock3, Crown, Download, Files, GraduationCap, HeartPulse,
+  Home, LayoutDashboard, LogOut, Megaphone, Menu, Newspaper, Package, ReceiptText,
+  Tags, UserCog, UserRound, UsersRound, X,
 } from "lucide-react";
 import { clearClientSession } from "@/shared/auth/cookies";
 import { fileServer } from "@/config/file-server";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { NotificationBell } from "@/features/notifications/notification-bell";
-import { TutorialLauncher } from "@/features/tutorial/tutorial-launcher";
-import { getRouteTour } from "@/features/tutorial/portal-tours";
+import { ThemeToggle } from "@/shared/ui/theme-toggle";
+import { TutorialLauncher } from "@/features/tutorial/ui/tutorial-launcher";
+import { navGroupTutorialId, navTutorialId, TUTORIAL_TARGETS } from "@/features/tutorial/model/tutorial-targets";
 import { ReactiveBackground } from "@/features/dashboard/reactive-background";
 
 export type SidebarItem = {
@@ -37,6 +38,7 @@ export const patientNav: SidebarItem[] = [
   { href: "/paciente/premium", label: "Contenido premium",icon: Crown },
   { href: "/paciente/descargables", label: "Mis descargables", icon: Download },
   { href: "/paciente/perfil",  label: "Perfil",           icon: UserRound },
+  { href: "/paciente/ayuda",   label: "Centro de ayuda",  icon: GraduationCap },
 ];
 
 export const therapistNav: SidebarItem[] = [
@@ -45,6 +47,7 @@ export const therapistNav: SidebarItem[] = [
   { href: "/terapeuta/horarios", label: "Horarios",       icon: Clock3 },
   { href: "/terapeuta/booking",  label: "Disponibilidad", icon: HeartPulse },
   { href: "/terapeuta/perfil",   label: "Perfil",         icon: UserRound },
+  { href: "/terapeuta/ayuda",    label: "Centro de ayuda",icon: GraduationCap },
 ];
 
 // Flat items for the admin nav (used in mobile horizontal scroll)
@@ -71,6 +74,7 @@ export const adminNav: SidebarItem[] = [
   { href: "/admin/contenido/homepage",       label: "Portada",              icon: Home },
   { href: "/admin/contabilidad",             label: "Contabilidad",         icon: ReceiptText },
   { href: "/admin/contabilidad/cuentas",     label: "Cuentas",              icon: UserCog },
+  { href: "/admin/ayuda",                    label: "Centro de ayuda",      icon: GraduationCap },
 ];
 
 // Structured nav for desktop sidebar — Publicidad as collapsible group
@@ -109,6 +113,7 @@ const adminDesktopNav: NavEntry[] = [
   { kind: "link", href: "/admin/contenido/homepage",      label: "Portada del sitio",      icon: Home },
   { kind: "link", href: "/admin/contabilidad",            label: "Contabilidad",           icon: ReceiptText },
   { kind: "link", href: "/admin/contabilidad/cuentas",    label: "Cuentas contables",      icon: UserCog },
+  { kind: "link", href: "/admin/ayuda",                   label: "Centro de ayuda",        icon: GraduationCap },
 ];
 
 function isActive(href: string, pathname: string) {
@@ -121,6 +126,7 @@ function NavLink({ href, label, icon: Icon, pathname }: { href: string; label: s
   return (
     <Link
       href={href}
+      data-tutorial-id={navTutorialId(href)}
       aria-current={active ? "page" : undefined}
       className={cn(
         "group flex min-w-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-150",
@@ -145,7 +151,8 @@ function NavGroup({ entry, pathname }: { entry: Extract<NavEntry, { kind: "group
     <div>
       <button
         type="button"
-        data-tour={`nav-group-${entry.label.toLowerCase()}`}
+        data-tutorial-id={navGroupTutorialId(entry.label)}
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "group flex w-full min-w-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-150",
@@ -185,6 +192,30 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
   const pathname = usePathname();
   const router = useRouter();
   const [logoFailed, setLogoFailed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // El cajón se cierra al navegar (ajustado durante el render, para que la página
+  // destino no se pinte con el cajón todavía abierto) y con Escape; mientras está
+  // abierto se bloquea el scroll del contenido de detrás.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMenuOpen(false);
+  }
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   function logout() {
     clearClientSession();
@@ -193,9 +224,6 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
 
   const showLogo = Boolean(fileServer.logoUrl) && !logoFailed;
   const isAdmin = navItems === adminNav;
-  // Tutorial interactivo POR PANTALLA (admin y paciente): cada ruta tiene su tour.
-  const isPatient = navItems === patientNav;
-  const portalTour = isAdmin || isPatient ? getRouteTour(pathname) : null;
 
   return (
     <div className="relative min-h-screen">
@@ -205,7 +233,7 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
         {/* Logo */}
         <div className="flex items-center justify-between gap-2 pb-4">
           <Link href="/" className="flex min-w-0 items-center gap-2.5 font-bold">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-sm">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-card shadow-sm">
               {showLogo ? (
                 <img src={fileServer.logoUrl} alt="Corazón Migrante" className="h-full w-full object-contain p-1" onError={() => setLogoFailed(true)} />
               ) : (
@@ -217,7 +245,11 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
               <p className="truncate text-xs font-normal text-muted-foreground">Corazón Migrante</p>
             </div>
           </Link>
-          {showNotifications && <div className="shrink-0"><NotificationBell /></div>}
+          {showNotifications && (
+            <div className="shrink-0" data-tutorial-id={TUTORIAL_TARGETS.campanaNotificaciones}>
+              <NotificationBell />
+            </div>
+          )}
         </div>
 
         {/* Nav */}
@@ -236,8 +268,12 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
           </div>
         </nav>
 
-        {/* Logout */}
-        <Button className="mt-2 w-full" onClick={logout} variant="outline" size="sm">
+        {/* Preferencias y salida */}
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Tema</span>
+          <ThemeToggle />
+        </div>
+        <Button className="mt-2 w-full" data-tutorial-id={TUTORIAL_TARGETS.cerrarSesion} onClick={logout} variant="outline" size="sm">
           <LogOut className="h-4 w-4" /> Cerrar sesión
         </Button>
       </aside>
@@ -247,49 +283,102 @@ export function DashboardShell({ navItems, title, children, showNotifications = 
         {/* Mobile header */}
         <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur lg:hidden">
           <div className="container flex h-14 items-center justify-between gap-2">
-            <Link href="/" className="flex min-w-0 items-center gap-2 font-bold">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-white shadow-sm">
-                {showLogo ? (
-                  <img src={fileServer.logoUrl} alt="Corazón Migrante" className="h-full w-full object-contain p-0.5" onError={() => setLogoFailed(true)} />
-                ) : (
-                  <HeartPulse className="h-4 w-4 text-primary" />
-                )}
-              </span>
-              <span className="truncate text-sm">{title}</span>
-            </Link>
+            <div className="flex min-w-0 items-center gap-2">
+              {/* Antes el menú móvil era una tira con scroll horizontal: en el panel
+                  admin son 22 enlaces, así que la mayoría quedaba fuera de pantalla
+                  sin ninguna pista de que existieran. Ahora hay un cajón completo. */}
+              <button
+                type="button"
+                data-tutorial-id={TUTORIAL_TARGETS.menuMovil}
+                aria-controls="menu-panel-movil"
+                aria-expanded={menuOpen}
+                aria-label="Abrir menú de navegación"
+                className="focus-ring grid h-9 w-9 shrink-0 place-items-center rounded-xl border bg-card transition hover:bg-muted"
+                onClick={() => setMenuOpen(true)}
+              >
+                <Menu className="h-5 w-5" aria-hidden="true" />
+              </button>
+              <Link href="/" className="flex min-w-0 items-center gap-2 font-bold">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-card shadow-sm">
+                  {showLogo ? (
+                    <img src={fileServer.logoUrl} alt="" className="h-full w-full object-contain p-0.5" onError={() => setLogoFailed(true)} />
+                  ) : (
+                    <HeartPulse className="h-4 w-4 text-primary" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="truncate text-sm">{title}</span>
+              </Link>
+            </div>
             <div className="flex shrink-0 items-center gap-2">
-              {showNotifications && <NotificationBell />}
+              {showNotifications && (
+                <span data-tutorial-id={TUTORIAL_TARGETS.campanaNotificaciones}>
+                  <NotificationBell />
+                </span>
+              )}
+              <ThemeToggle />
               <Button onClick={logout} size="sm" variant="outline">Salir</Button>
             </div>
           </div>
-          <nav className="scrollbar-none container flex gap-1.5 overflow-x-auto pb-2 pt-1" aria-label="Navegación móvil">
-            {navItems.map((item) => {
-              const active = isActive(item.href, pathname);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150",
-                    active ? "bg-primary text-primary-foreground shadow-sm" : "border bg-card hover:bg-muted"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
         </header>
 
-        <main className="container py-8 md:py-10">
+        {/* Cajón de navegación móvil */}
+        {menuOpen ? (
+          /* `h-dvh`: con `fixed inset-0` a secas la altura es la de la ventana con las
+             barras del navegador retraídas, así que en móvil el botón "Cerrar sesión"
+             del pie quedaba por debajo del área visible. */
+          <div className="fixed inset-0 z-40 h-dvh lg:hidden">
+            <button
+              type="button"
+              aria-label="Cerrar menú de navegación"
+              className="animate-fade-in absolute inset-0 h-full w-full cursor-default bg-slate-950/50"
+              onClick={() => setMenuOpen(false)}
+            />
+            {/* `pb-safe`: en dispositivos con notch el indicador de inicio se superpone
+                al último control del cajón y lo vuelve impulsable. */}
+            <div className="animate-slide-down pb-safe absolute inset-y-0 left-0 flex w-[min(19rem,85vw)] flex-col border-r bg-card p-4 shadow-2xl">
+              <div className="flex items-center justify-between gap-2 pb-4">
+                <p className="truncate text-sm font-bold">{title}</p>
+                <button
+                  type="button"
+                  aria-label="Cerrar menú"
+                  className="focus-ring grid h-9 w-9 shrink-0 place-items-center rounded-xl border transition hover:bg-muted"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+              <nav className="grid flex-1 gap-0.5 overflow-y-auto pb-4" id="menu-panel-movil" aria-label="Navegación del panel">
+                {isAdmin
+                  ? adminDesktopNav.map((entry, i) =>
+                      entry.kind === "group"
+                        ? <NavGroup key={i} entry={entry} pathname={pathname} />
+                        : <NavLink key={entry.href} href={entry.href} label={entry.label} icon={entry.icon} pathname={pathname} />
+                    )
+                  : navItems.map((item) => (
+                      <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} pathname={pathname} />
+                    ))
+                }
+              </nav>
+              <Button className="mt-2 w-full" data-tutorial-id={TUTORIAL_TARGETS.cerrarSesion} onClick={logout} variant="outline" size="sm">
+                <LogOut className="h-4 w-4" aria-hidden="true" /> Cerrar sesión
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        <main
+          className="container py-6 sm:py-8 md:py-10"
+          id="contenido-principal"
+          data-tutorial-id={TUTORIAL_TARGETS.contenidoPrincipal}
+          tabIndex={-1}
+        >
           <div className="page-enter">{children}</div>
         </main>
       </div>
 
-      {portalTour ? (
-        <TutorialLauncher key={pathname} steps={portalTour.steps} storageKey={portalTour.key} position="right" />
-      ) : null}
+      {/* El lanzador elige por sí mismo el tutorial de la pantalla actual y se oculta
+          si el rol no tiene ninguno disponible. */}
+      <TutorialLauncher position="right" />
     </div>
   );
 }

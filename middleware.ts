@@ -1,11 +1,41 @@
+/**
+ * ⚠️ ESTE MIDDLEWARE NO SE EJECUTA EN EL DESPLIEGUE ACTUAL.
+ *
+ * `next.config.ts` usa `output: "export"`: el build produce HTML estático que
+ * Cloudflare Pages sirve sin ningún servidor Next.js, y el middleware de Next
+ * requiere un runtime en el servidor. Se conserva por dos motivos:
+ *
+ *  1. sigue siendo la protección real si algún día se despliega con servidor
+ *     (Node/Vercel), y basta con quitar `output: "export"`;
+ *  2. documenta en un solo sitio el mapa ruta → roles.
+ *
+ * Mientras tanto, quien protege de verdad las rutas privadas es `ClientRoleGuard`
+ * (`src/shared/auth/guard.tsx`), aplicado en los layouts de /admin, /paciente y
+ * /terapeuta. Si se añade una ruta protegida hay que actualizar AMBOS sitios.
+ */
 import { NextResponse, type NextRequest } from "next/server";
 import { roleFromCookie } from "@/shared/auth/cookies";
 import { hasRole, type UserRole } from "@/shared/auth/roles";
 
+/**
+ * Este mapa debe coincidir EXACTAMENTE con los `allowedRoles` de cada
+ * `ClientRoleGuard`. Si divergen, en un despliegue con servidor el middleware dejaría
+ * pasar a alguien que el guard después rechaza con `ForbiddenState`: el resultado
+ * final sería correcto, pero la defensa en profundidad quedaría degradada y el
+ * diagnóstico sería confuso.
+ *
+ * Fuente de verdad de cada prefijo:
+ *   /paciente   → src/app/paciente/layout.tsx
+ *   /terapeuta  → src/app/terapeuta/layout.tsx
+ *   /admin      → src/app/admin/layout.tsx
+ */
 const protectedRoutes: Array<{ prefix: string; loginPath: string; roles: UserRole[] }> = [
   { prefix: "/paciente", loginPath: "/login", roles: ["PACIENTE"] },
   { prefix: "/terapeuta", loginPath: "/admin/login", roles: ["TERAPEUTA"] },
-  { prefix: "/admin", loginPath: "/admin/login", roles: ["ADMIN", "SUPER_ADMIN", "CONTADOR", "TERAPEUTA"] }
+  // TERAPEUTA no entra en /admin: su portal es /terapeuta y el guard del layout de
+  // admin no lo incluye. Estaba aquí por arrastre y era la única divergencia entre
+  // ambas capas.
+  { prefix: "/admin", loginPath: "/admin/login", roles: ["ADMIN", "SUPER_ADMIN", "CONTADOR"] }
 ];
 
 const publicAdminPaths = ["/admin/login"];

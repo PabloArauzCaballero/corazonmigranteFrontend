@@ -38,9 +38,9 @@ function publicationKind(item: Publication): "news" | "columns" {
 
 function PublicationCard({ item, featured = false }: { item: Publication; featured?: boolean }) {
   return (
-    <Card className={featured ? "overflow-hidden rounded-none border-slate-200 bg-white shadow-none lg:col-span-2" : "overflow-hidden rounded-none border-slate-200 bg-white shadow-none"}>
+    <Card className={featured ? "overflow-hidden rounded-none border-slate-200 bg-card shadow-none lg:col-span-2" : "overflow-hidden rounded-none border-slate-200 bg-card shadow-none"}>
       <CardContent className="flex h-full flex-col p-0">
-        <div className="border-b border-slate-200 bg-[#f7f4ef] p-5">
+        <div className="border-b border-slate-200 bg-surface-sunken p-5">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-teal-900">
             <span>{item.category?.name ?? "Editorial"}</span>
             <span className="text-slate-300">/</span>
@@ -87,8 +87,8 @@ export function NewsPublicPage() {
   const groupedRest = useMemo(() => groupPublicationsByDate(rest), [rest]);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ef] text-slate-950">
-      <section className="border-b border-slate-200 bg-white/70">
+    <main className="min-h-screen bg-surface-sunken text-slate-950">
+      <section className="border-b border-slate-200 bg-card/70">
         <div className="container grid gap-10 py-10 md:grid-cols-[1fr_0.72fr] md:py-16">
           <div className="space-y-8">
             <div className="inline-flex w-fit items-center gap-2 border border-teal-900/20 bg-teal-900/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-teal-900">
@@ -98,7 +98,7 @@ export function NewsPublicPage() {
               <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.98] tracking-tight text-slate-950 md:text-7xl">Lecturas serias para acompanar procesos migrantes.</h1>
               <p className="max-w-2xl text-base leading-8 text-slate-600 md:text-lg">Publicaciones, columnas y recursos editoriales publicados por Corazon Migrante con una mirada clinica y humana.</p>
             </div>
-            <form className="grid max-w-2xl gap-3 border border-slate-200 bg-white p-2 sm:grid-cols-[1fr_auto]" onSubmit={(event) => { event.preventDefault(); setSubmittedSearch(search.trim()); }}>
+            <form className="grid max-w-2xl gap-3 border border-slate-200 bg-card p-2 sm:grid-cols-[1fr_auto]" onSubmit={(event) => { event.preventDefault(); setSubmittedSearch(search.trim()); }}>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                 <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por titular" className="rounded-xl border-0 bg-transparent pl-9 shadow-none focus-visible:ring-0" />
@@ -106,14 +106,14 @@ export function NewsPublicPage() {
               <Button type="submit" className="rounded-none bg-teal-900 hover:bg-teal-950">Buscar</Button>
             </form>
           </div>
-          <div className="relative min-h-[28rem] overflow-hidden border border-slate-200 bg-teal-950 p-8 text-white">
-            <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" aria-hidden="true" />
+          <div className="relative min-h-[18rem] overflow-hidden border border-slate-200 bg-teal-950 p-5 text-surface-inverse-foreground sm:min-h-[22rem] sm:p-8 md:min-h-[28rem]">
+            <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-surface-inverse-foreground/10 blur-3xl" aria-hidden="true" />
             <div className="relative flex h-full flex-col justify-between gap-10">
-              <Sparkles className="h-10 w-10 text-white/80" aria-hidden="true" />
+              <Sparkles className="h-10 w-10 text-surface-inverse-foreground/80" aria-hidden="true" />
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/70">Corazón Migrante</p>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-surface-inverse-foreground/70">Corazón Migrante</p>
                 <h2 className="mt-4 font-serif text-4xl font-bold leading-tight">Contenido claro, confiable y conectado con la comunidad.</h2>
-                <p className="mt-4 text-sm leading-7 text-white/75">La estética se mantiene sobria, editorial y cálida para que no parezca una pantalla heredada de otro sistema.</p>
+                <p className="mt-4 text-sm leading-7 text-surface-inverse-foreground/75">La estética se mantiene sobria, editorial y cálida para que no parezca una pantalla heredada de otro sistema.</p>
               </div>
             </div>
           </div>
@@ -121,13 +121,13 @@ export function NewsPublicPage() {
       </section>
 
       <section className="container grid gap-4 border-b border-slate-200 py-6 md:grid-cols-3">
-        <button className={`flex items-start gap-3 border bg-white p-4 text-left transition ${mode === "news" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("news")} type="button">
+        <button className={`flex items-start gap-3 border bg-card p-4 text-left transition ${mode === "news" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("news")} type="button">
           <Newspaper className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Novedades</b><span className="text-sm">Noticias, reportes, entrevistas y análisis.</span></span>
         </button>
-        <button className={`flex items-start gap-3 border bg-white p-4 text-left transition ${mode === "columns" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("columns")} type="button">
+        <button className={`flex items-start gap-3 border bg-card p-4 text-left transition ${mode === "columns" ? "border-teal-900 text-teal-950" : "border-slate-200 text-slate-600 hover:border-teal-900/40"}`} onClick={() => setMode("columns")} type="button">
           <BookOpen className="mt-1 h-5 w-5" aria-hidden="true" /> <span><b className="block">Columnas</b><span className="text-sm">Columnas y opinión editorial.</span></span>
         </button>
-        <div className="flex items-start gap-3 border border-slate-200 bg-white p-4 text-slate-600">
+        <div className="flex items-start gap-3 border border-slate-200 bg-card p-4 text-slate-600">
           <ShieldCheck className="mt-1 h-5 w-5 text-teal-800" aria-hidden="true" /> <span><b className="block text-slate-950">Publicación controlada</b><span className="text-sm">Solo aparecen contenidos publicados.</span></span>
         </div>
       </section>
@@ -135,7 +135,7 @@ export function NewsPublicPage() {
       <section className="container py-10 md:py-14">
         <div className="mb-6 flex flex-wrap gap-2">
           {categoryOptions(categories.data).map((category) => (
-            <button key={category.slug || "all"} className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${categorySlug === category.slug ? "border-teal-900 bg-teal-900 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-teal-900/40"}`} type="button" onClick={() => setCategorySlug(category.slug)}>{category.name}</button>
+            <button key={category.slug || "all"} className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${categorySlug === category.slug ? "border-teal-900 bg-teal-900 text-surface-inverse-foreground" : "border-slate-200 bg-card text-slate-600 hover:border-teal-900/40"}`} type="button" onClick={() => setCategorySlug(category.slug)}>{category.name}</button>
           ))}
         </div>
         {list.isLoading ? <LoadingState title="Cargando publicaciones" /> : null}

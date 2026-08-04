@@ -12,10 +12,10 @@ import { Textarea } from "@/shared/ui/textarea";
 import { useToast } from "@/shared/ui/toast";
 
 export function Panel({ title, description, children, icon }: { title: string; description?: string; children: ReactNode; icon?: ReactNode }) {
-  return <Card className="overflow-hidden rounded-xl border-slate-200 bg-white shadow-none transition-shadow hover:shadow-sm"><CardHeader className="border-b bg-[#f7f4ef]/70"><div className="flex items-start gap-3">{icon ? <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-teal-900 text-white">{icon}</span> : null}<div><CardTitle>{title}</CardTitle>{description ? <CardDescription>{description}</CardDescription> : null}</div></div></CardHeader><CardContent className="p-6">{children}</CardContent></Card>;
+  return <Card className="overflow-hidden rounded-xl border-slate-200 bg-card shadow-none transition-shadow hover:shadow-sm"><CardHeader className="border-b bg-surface-sunken/70"><div className="flex items-start gap-3">{icon ? <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-teal-900 text-surface-inverse-foreground">{icon}</span> : null}<div><CardTitle>{title}</CardTitle>{description ? <CardDescription>{description}</CardDescription> : null}</div></div></CardHeader><CardContent className="p-6">{children}</CardContent></Card>;
 }
 export function Field({ label, children, hint, className }: { label: string; children: ReactNode; hint?: string; className?: string }) { return <div className={cn("space-y-2", className)}><Label>{label}</Label>{children}{hint ? <p className="text-xs leading-5 text-muted-foreground">{hint}</p> : null}</div>; }
-export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) { return <select className={cn("focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />; }
+export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) { return <select className={cn("focus-ring h-14 w-full rounded-[14px] border border-slate-500/80 bg-surface-raised px-4 py-3 text-sm shadow-sm hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />; }
 export function NativeInput({ className, ...props }: ComponentProps<typeof Input>) { return <Input className={cn("rounded-[14px]", className)} {...props} />; }
 
 export type MultiOption = { value: string; label: string };
@@ -64,7 +64,7 @@ export function MultiSelectChips({
     <div className="relative" ref={ref}>
       {selected.map((v) => <input key={v} type="hidden" name={name} value={v} />)}
       <div
-        className="focus-ring flex min-h-14 w-full flex-wrap items-center gap-1.5 rounded-[14px] border border-slate-500/80 bg-[#fbfaf8] px-3 py-2 text-sm shadow-sm"
+        className="focus-ring flex min-h-14 w-full flex-wrap items-center gap-1.5 rounded-[14px] border border-slate-500/80 bg-surface-raised px-3 py-2 text-sm shadow-sm"
         onClick={() => setOpen(true)}
       >
         {selected.map((v) => (
@@ -164,7 +164,7 @@ export function TagPicker({ options, value, onChange, loading, placeholder = "Bu
           ))}
         </div>
       ) : open && !loading && options.length === 0 ? (
-        <p className="rounded-[14px] border border-dashed bg-[#fbfaf8] px-4 py-3 text-xs text-muted-foreground">No hay tags cargados todavía. Crea tags en el módulo Tags o revisa permisos de contenido.</p>
+        <p className="rounded-[14px] border border-dashed bg-surface-raised px-4 py-3 text-xs text-muted-foreground">No hay tags cargados todavía. Crea tags en el módulo Tags o revisa permisos de contenido.</p>
       ) : null}
     </div>
   );
