@@ -22,12 +22,26 @@ Retirada también la contradicción de `colorScheme: "light"` fijo con `themeCol
 oscuro: ahora `color-scheme` lo declaran `:root`/`.dark` y la barra del navegador sigue
 a la elección manual, no solo al sistema.
 
-## PENDIENTE_CM_CONTRASTE_OSCURO (2026-08-03)
-El tema oscuro se construyó conservando las luminosidades de la escala de partida, y
-`tests/e2e/theme.spec.ts` comprueba que texto y fondo caigan en lados opuestos de la
-escala. **No se ha ejecutado una auditoría de contraste WCAG par por par sobre el tema
-oscuro** (Axe/Lighthouse con la clase `dark` activa). Es el complemento natural de
-`docs/accessibility/color-and-contrast.md`, que hoy solo cubre el tema claro.
+## RESUELTO_CM_CONTRASTE_OSCURO (2026-08-04)
+Auditoría de contraste WCAG 2.2 AA ejecutada **par por par y en los dos temas**, no
+sobre una muestra de pantallas: `tests/unit/contrast.test.ts` calcula la relación real
+de 33 pares texto/fondo (4,5:1 para texto, 3:1 para componentes de interfaz y foco).
+67 comprobaciones en verde.
+
+La auditoría encontró un **defecto de accesibilidad heredado** que el paso a tokens
+dejó visible y permitió corregir en un solo sitio:
+
+| Token | Antes | Después | Motivo |
+|---|---|---|---|
+| `--ink-subtle` (claro) | 49 % → 4,01:1 sobre tarjeta y 3,80:1 sobre página | 43 % → 4,98:1 y 4,72:1 | **Incumplía AA.** Es el antiguo literal `#8a7d70` del texto terciario |
+| `--primary` (oscuro) | 54 % → 4,51:1 en el texto del botón | 52 % → 4,73:1 | Pasaba por dos centésimas; margen inasumible |
+| `--destructive` (oscuro) | 62 % → 4,66:1 sobre su superficie | 66 % → 5,33:1 | Es el aviso que menos puede permitirse un margen justo |
+
+**No se exige 3:1 a los bordes decorativos** (`--line`, `--line-strong`, hoy en 1,61:1
+y 2,18:1). WCAG 1.4.11 aplica a los límites que son *el único* medio de identificar un
+control; aquí cada borde acompaña a una superficie rellena y a su texto, así que
+subirlos endurecería el diseño sin aportar información. Queda documentado en la propia
+prueba para que la exclusión sea una decisión y no un olvido.
 
 ## RESUELTO_CM_ENV_PRODUCCION (2026-08-03)
 `assertDeployableAppUrl` (`src/config/env.ts`) rompe el build **en CI** si

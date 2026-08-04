@@ -87,6 +87,10 @@ Dos decisiones que no son obvias:
 
 La de paridad es la que más regresiones evitará: añadir un token al bloque claro y olvidarlo en el oscuro no rompe ni el build ni el lint, y solo se nota cuando alguien abre esa pantalla en oscuro.
 
-## 6. Límite conocido
+## 6. Contraste
 
-El contraste se ha construido conservando las luminosidades de la escala de partida, y hay una comprobación automática de que texto y fondo caen en lados opuestos de la escala. **No se ha ejecutado una auditoría de contraste WCAG par por par sobre el tema oscuro.** Queda registrado en [pending-items.md](../pending/pending-items.md) como `PENDIENTE_CM_CONTRASTE_OSCURO`.
+Auditoría WCAG 2.2 AA ejecutada **par por par y en los dos temas** — `tests/unit/contrast.test.ts`, 33 pares y 67 comprobaciones. Umbrales: 4,5:1 para texto normal (1.4.3) y 3:1 para componentes de interfaz y el indicador de foco (1.4.11, 2.4.11).
+
+La auditoría destapó un defecto **heredado del diseño anterior**, que solo fue corregible en un sitio gracias al paso a tokens: `--ink-subtle` —el antiguo literal `#8a7d70` del texto terciario— daba 4,01:1 sobre tarjeta, por debajo de AA. Corregido al 43 % de luminosidad (4,98:1) conservando matiz y saturación, así que el tono es el mismo, solo un punto más legible. También se ampliaron los márgenes de `--primary` y `--destructive` en oscuro, que pasaban por décimas.
+
+**Los bordes decorativos quedan excluidos a propósito.** 1.4.11 exige 3:1 a los límites que son *el único* medio de identificar un control; `--line` y `--line-strong` acompañan siempre a una superficie rellena y a su texto, de modo que subirlos endurecería el diseño sin aportar información a nadie. La exclusión está razonada dentro de la prueba para que sea una decisión revisable y no un olvido.

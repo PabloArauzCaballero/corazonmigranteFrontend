@@ -48,7 +48,11 @@
   --foreground: 12 30% 13%;         /* #2b1b17 — tinta principal      */
   --ink-soft: 33 8% 27%;            /* #4a453f                         */
   --ink-muted: 38 6% 36%;           /* #625e57 — texto secundario     */
-  --ink-subtle: 30 10% 49%;         /* #8a7d70 — texto terciario      */
+  /* Antes 49 % (#8a7d70, el literal que ya usaba la landing): daba 4,01:1 sobre
+     tarjeta y 3,80:1 sobre página, por debajo del 4,5:1 que exige WCAG AA para
+     texto normal. Al 43 % sube a 4,98:1 y 4,72:1 sin cambiar matiz ni saturación,
+     así que el tono sigue siendo el mismo, solo un punto más legible. */
+  --ink-subtle: 30 10% 43%;         /* texto terciario                */
 
   --line: 33 30% 84%;               /* #e3d8cb — borde estándar       */
   --line-strong: 31 19% 77%;        /* #cfc4b8 — borde marcado        */
@@ -235,7 +239,10 @@
 
   --card: 12 22% 11%;
   --card-foreground: 36 30% 93%;
-  --primary: 0 70% 54%;
+  /* 54 % dejaba el texto blanco del botón primario en 4,51:1 — pasa AA por dos
+     centésimas, que es un margen que cualquier retoque futuro se come. Al 52 %
+     queda en 4,73:1 y el propio botón conserva 3,9:1 contra el fondo. */
+  --primary: 0 70% 52%;
   --primary-foreground: 0 0% 100%;
   --secondary: 16 14% 18%;
   --secondary-foreground: 36 30% 93%;
@@ -268,7 +275,9 @@
   --info-surface: 208 45% 14%;
   --info-border: 208 32% 26%;
 
-  --destructive: 0 68% 62%;
+  /* 62 % dejaba el texto de error en 4,66:1 sobre su propia superficie: pasa,
+     pero es el aviso que peor se puede permitir un margen justo. */
+  --destructive: 0 68% 66%;
   --destructive-foreground: 0 60% 8%;
   --destructive-surface: 0 40% 14%;
   --destructive-border: 0 30% 26%;
