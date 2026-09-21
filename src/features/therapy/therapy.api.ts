@@ -227,6 +227,32 @@ export function mapTherapistSchedule(item: unknown, index: number): TherapistSch
   };
 }
 
+export type TherapistBlockedTimeRow = {
+  id: string;
+  startAt: string;
+  endAt: string;
+  reason: string;
+  status: string;
+};
+
+export type TherapistBlockedTimeInput = {
+  startAt: string;
+  endAt: string;
+  reason?: string;
+  status?: "ACTIVE" | "INACTIVE";
+};
+
+export function mapTherapistBlockedTime(item: unknown, index: number): TherapistBlockedTimeRow {
+  const record = isRecord(item) ? item : {};
+  return {
+    id: getString(record, ["id", "blocked_time_id", "uuid"], `bloqueo-${index + 1}`),
+    startAt: getString(record, ["startAt", "start_at", "inicio"], ""),
+    endAt: getString(record, ["endAt", "end_at", "fin"], ""),
+    reason: getString(record, ["reason", "motivo"], ""),
+    status: getString(record, ["status", "estado"], "ACTIVE")
+  };
+}
+
 function adminSchedulesPath(therapistUserId: string) {
   return ENDPOINTS.therapy.adminTherapistSchedules.replace(":therapistUserId", therapistUserId);
 }
@@ -237,7 +263,18 @@ function adminSchedulePath(therapistUserId: string, scheduleId: string) {
     .replace(":scheduleId", scheduleId);
 }
 
-function cleanScheduleInput(input: Partial<TherapistScheduleInput>) {
+function adminBlockedTimesPath(therapistUserId: string) {
+  return ENDPOINTS.therapy.adminTherapistBlockedTimes.replace(":therapistUserId", therapistUserId);
+}
+
+function adminBlockedTimePath(therapistUserId: string, blockedTimeId: string) {
+  return ENDPOINTS.therapy.adminTherapistBlockedTimeById
+    .replace(":therapistUserId", therapistUserId)
+    .replace(":blockedTimeId", blockedTimeId);
+}
+
+/** Quita los campos vacíos: el backend distingue "no enviado" de "cadena vacía". */
+function cleanScheduleInput(input: Record<string, unknown>) {
   return Object.fromEntries(
     Object.entries(input).filter(([, value]) => {
       if (value === undefined || value === null) return false;
@@ -266,6 +303,69 @@ export async function updateAdminTherapistSchedule(therapistUserId: string, sche
   });
 }
 
-export async function deactivateAdminTherapistSchedule(therapistUserId: string, scheduleId: string) {
+export async function deleteAdminTherapistSchedule(therapistUserId: string, scheduleId: string) {
   return apiRequest<unknown>(adminSchedulePath(therapistUserId, scheduleId), { method: "DELETE" });
+}
+
+export async function listAdminTherapistBlockedTimes(therapistUserId: string) {
+  const payload = await apiRequest<unknown>(adminBlockedTimesPath(therapistUserId));
+  return normalizePaginatedResponse(payload, mapTherapistBlockedTime, { page: 1, pageSize: 100 }).items;
+}
+
+export async function createAdminTherapistBlockedTime(therapistUserId: string, input: TherapistBlockedTimeInput) {
+  return apiRequest<unknown>(adminBlockedTimesPath(therapistUserId), { method: "POST", body: cleanScheduleInput(input) });
+}
+
+export async function updateAdminTherapistBlockedTime(therapistUserId: string, blockedTimeId: string, input: Partial<TherapistBlockedTimeInput>) {
+  return apiRequest<unknown>(adminBlockedTimePath(therapistUserId, blockedTimeId), { method: "PATCH", body: cleanScheduleInput(input) });
+}
+
+export async function deleteAdminTherapistBlockedTime(therapistUserId: string, blockedTimeId: string) {
+  return apiRequest<unknown>(adminBlockedTimePath(therapistUserId, blockedTimeId), { method: "DELETE" });
+}
+
+// ---------------------------------------------------------------------------
+// Horarios y bloqueos del terapeuta autenticado (/terapeuta/horarios)
+// ---------------------------------------------------------------------------
+
+function mySchedulePath(scheduleId: string) {
+  return ENDPOINTS.therapy.therapistScheduleById.replace(":scheduleId", scheduleId);
+}
+
+function myBlockedTimePath(blockedTimeId: string) {
+  return ENDPOINTS.therapy.therapistBlockedTimeById.replace(":blockedTimeId", blockedTimeId);
+}
+
+export async function listMySchedules() {
+  const payload = await apiRequest<unknown>(ENDPOINTS.therapy.therapistSchedules);
+  return normalizePaginatedResponse(payload, mapTherapistSchedule, { page: 1, pageSize: 100 }).items;
+}
+
+export async function createMySchedule(input: TherapistScheduleInput) {
+  return apiRequest<unknown>(ENDPOINTS.therapy.therapistSchedules, { method: "POST", body: cleanScheduleInput(input) });
+}
+
+export async function updateMySchedule(scheduleId: string, input: Partial<TherapistScheduleInput>) {
+  return apiRequest<unknown>(mySchedulePath(scheduleId), { method: "PATCH", body: cleanScheduleInput(input) });
+}
+
+export async function deleteMySchedule(scheduleId: string) {
+  return apiRequest<unknown>(mySchedulePath(scheduleId), { method: "DELETE" });
+}
+
+export async function listMyBlockedTimes() {
+  const payload = await apiRequest<unknown>(ENDPOINTS.therapy.therapistBlockedTimes);
+  return normalizePaginatedResponse(payload, mapTherapistBlockedTime, { page: 1, pageSize: 100 }).items;
+}
+
+export async function createMyBlockedTime(input: TherapistBlockedTimeInput) {
+  return apiRequest<unknown>(ENDPOINTS.therapy.therapistBlockedTimes, { method: "POST", body: cleanScheduleInput(input) });
+}
+
+export async function updateMyBlockedTime(blockedTimeId: string, input: Partial<TherapistBlockedTimeInput>) {
+  return apiRequest<unknown>(myBlockedTimePath(blockedTimeId), { method: "PATCH", body: cleanScheduleInput(input) });
+}
+
+export async function deleteMyBlockedTime(blockedTimeId: string) {
+  return apiRequest<unknown>(myBlockedTimePath(blockedTimeId), { method: "DELETE" });
 }

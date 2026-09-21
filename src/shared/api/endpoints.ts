@@ -13,15 +13,20 @@ export const ENDPOINTS = {
   users: {
     me: `${API_PREFIX}/me`,
     list: `${API_PREFIX}/admin/users`,
+    detail: `${API_PREFIX}/admin/users/:userId`,
     updatePatientProfile: `${API_PREFIX}/me/patient-profile`,
     updateTherapistProfile: `${API_PREFIX}/me/therapist-profile`,
     createAdmin: `${API_PREFIX}/admin/users`,
     createTherapist: `${API_PREFIX}/auth/register/therapist`,
     updateAdmin: `${API_PREFIX}/admin/users/:userId`,
     updateTherapist: `${API_PREFIX}/admin/users/:userId/therapist-profile`,
+    updatePatient: `${API_PREFIX}/admin/users/:userId/patient-profile`,
     updateStatus: `${API_PREFIX}/admin/users/:userId/status`,
     updateAvatar: `${API_PREFIX}/admin/users/:userId/avatar`,
     updateOwnAvatar: `${API_PREFIX}/me/avatar`,
+    /** Restablecimiento de contraseña hecho por administración (no pide la anterior). */
+    resetPassword: `${API_PREFIX}/admin/users/:userId/password`,
+    delete: `${API_PREFIX}/admin/users/:userId`,
     patients: `${API_PREFIX}/admin/users/patients`
   },
   appointments: {
@@ -45,9 +50,13 @@ export const ENDPOINTS = {
     adminUpdateAppointmentPayment: `${API_PREFIX}/appointments/admin/:appointmentId/payment`,
     bookingAvailability: `${API_PREFIX}/booking/availability`,
     therapistSchedules: `${API_PREFIX}/therapists/me/schedules`,
+    therapistScheduleById: `${API_PREFIX}/therapists/me/schedules/:scheduleId`,
     therapistBlockedTimes: `${API_PREFIX}/therapists/me/blocked-times`,
+    therapistBlockedTimeById: `${API_PREFIX}/therapists/me/blocked-times/:blockedTimeId`,
     adminTherapistSchedules: `${API_PREFIX}/admin/therapists/:therapistUserId/schedules`,
-    adminTherapistScheduleById: `${API_PREFIX}/admin/therapists/:therapistUserId/schedules/:scheduleId`
+    adminTherapistScheduleById: `${API_PREFIX}/admin/therapists/:therapistUserId/schedules/:scheduleId`,
+    adminTherapistBlockedTimes: `${API_PREFIX}/admin/therapists/:therapistUserId/blocked-times`,
+    adminTherapistBlockedTimeById: `${API_PREFIX}/admin/therapists/:therapistUserId/blocked-times/:blockedTimeId`
   },
   products: {
     approachesCreate: `${API_PREFIX}/admin/therapy/approaches`,
@@ -113,9 +122,14 @@ export const ENDPOINTS = {
     pageElementByCode: `${API_PREFIX}/public/pages/:slug`,
     pageElementById: `${API_PREFIX}/public/pages/:slug`,
     elementsList: `${API_PREFIX}/public/pages/:slug`,
-    elementsCreate: `${API_PREFIX}/admin/cms/pages`,
-    elementsUpdate: `${API_PREFIX}/admin/cms/pages/:pageId/elements`,
-    elementsUpdateWithFile: `${API_PREFIX}/admin/cms/pages/:pageId/elements`,
+    /**
+     * Alta de una sección dentro de una página existente. Ojo: `elementsCreate`
+     * apuntaba a la colección de páginas, no a la de secciones — crear una sección
+     * desde el panel creaba en realidad una página nueva.
+     */
+    elementsCreate: `${API_PREFIX}/admin/cms/pages/:pageId/elements`,
+    elementsUpdate: `${API_PREFIX}/admin/cms/pages/:pageId/elements/:elementId`,
+    elementsUpdateWithFile: `${API_PREFIX}/admin/cms/pages/:pageId/elements/:elementId`,
     elementsDelete: `${API_PREFIX}/admin/cms/pages/:pageId/elements/:elementId`,
     filesList: `${API_PREFIX}/files`,
     filesUpload: `${API_PREFIX}/files`,

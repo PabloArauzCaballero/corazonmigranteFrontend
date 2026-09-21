@@ -4,6 +4,7 @@
 - `/`: landing.
 - `/login`: login paciente.
 - `/registro`: registro paciente.
+- `/recuperar-clave`: recuperación de contraseña en dos pasos (pedir PIN por correo y canjearlo).
 - `/booking`: puerta de acceso. No muestra formulario público; redirige conceptualmente según sesión.
 - `/privacidad`: política de privacidad base.
 - `/terminos`: términos base.

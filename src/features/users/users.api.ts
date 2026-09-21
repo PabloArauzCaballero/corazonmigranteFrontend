@@ -8,9 +8,16 @@ import { ApiError } from "@/shared/api/errors";
 import { ROLES, type UserRole } from "@/shared/auth/roles";
 import type { AdminPatientProfile, AdminTherapistProfile, AdminUser, AdminUserRole, AdminUserStatus } from "@/features/users/users.types";
 
+/** El backend usa códigos en inglés; el panel los muestra en español. */
+const ROLE_TRANSLATIONS: Record<string, string> = {
+  PATIENT: "PACIENTE",
+  THERAPIST: "TERAPEUTA",
+  ACCOUNTANT: "CONTADOR"
+};
+
 function normalizeRole(value: unknown): AdminUserRole {
   const role = String(value ?? "").trim().toUpperCase();
-  const normalized = role === "PATIENT" ? "PACIENTE" : role === "THERAPIST" ? "TERAPEUTA" : role;
+  const normalized = ROLE_TRANSLATIONS[role] ?? role;
   return ROLES.includes(normalized as UserRole) ? (normalized as UserRole) : "NO_EXPUESTO";
 }
 
@@ -136,40 +143,57 @@ export type CreateUserInput = {
   personalPhrase?: string;
 };
 
+/**
+ * Alta desde el panel. Usa el endpoint administrativo, que cubre los cinco roles;
+ * antes solo existía el registro público de paciente y terapeuta, así que crear un
+ * admin, un super admin o un contador devolvía un 501 escrito a mano.
+ */
 export async function createUser(input: CreateUserInput) {
-  if (input.role === "PACIENTE") {
-    return apiRequest<unknown>(ENDPOINTS.auth.registerPatient, {
-      method: "POST",
-      body: {
-        email: input.email,
-        password: input.password,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        phone: input.phone
-      },
-      auth: false
-    });
-  }
+  return apiRequest<unknown>(ENDPOINTS.users.createAdmin, {
+    method: "POST",
+    body: cleanInput({
+      role: input.role,
+      email: input.email,
+      password: input.password,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      phone: input.phone,
+      title: input.title,
+      mainSpecialty: input.mainSpecialty,
+      bio: input.bio,
+      personalPhrase: input.personalPhrase
+    })
+  });
+}
 
-  if (input.role === "TERAPEUTA") {
-    return apiRequest<unknown>(ENDPOINTS.auth.registerTherapist, {
-      method: "POST",
-      body: {
-        email: input.email,
-        password: input.password,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        phone: input.phone,
-        title: input.title,
-        mainSpecialty: input.mainSpecialty,
-        bio: input.bio,
-        personalPhrase: input.personalPhrase
-      },
-      auth: false
-    });
-  }
+export type UpdateUserInput = {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  role?: CreateUserInput["role"];
+};
 
-  throw new ApiError("El OpenAPI actual solo expone creacion de pacientes y terapeutas. Admin, super admin y contador requieren un endpoint administrativo dedicado.", 501);
+export async function updateUser(userId: string, input: UpdateUserInput) {
+  return apiRequest<unknown>(ENDPOINTS.users.updateAdmin.replace(":userId", userId), {
+    method: "PATCH",
+    body: cleanInput(input as Record<string, unknown>)
+  });
+}
+
+export async function deleteUser(userId: string) {
+  return apiRequest<unknown>(ENDPOINTS.users.delete.replace(":userId", userId), { method: "DELETE" });
+}
+
+/**
+ * Restablecimiento hecho por administración para el caso «me creé un usuario y no
+ * recuerdo la contraseña». No pide la anterior y revoca las sesiones abiertas.
+ */
+export async function resetUserPassword(userId: string, newPassword: string) {
+  return apiRequest<unknown>(ENDPOINTS.users.resetPassword.replace(":userId", userId), {
+    method: "POST",
+    body: { newPassword }
+  });
 }
 
 export type UpdateTherapistProfileInput = {

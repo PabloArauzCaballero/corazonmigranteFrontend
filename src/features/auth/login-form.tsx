@@ -123,6 +123,9 @@ function LoginFormFields({ defaultRole = "PACIENTE" as LoginInput["roleHint"], t
             {mutation.isPending ? "Ingresando..." : "Ingresar"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
+            <Link className="font-semibold text-primary" href="/recuperar-clave">¿Olvidaste tu contraseña?</Link>
+          </p>
+          <p className="text-center text-sm text-muted-foreground">
             ¿No tienes cuenta? <Link className="font-semibold text-primary" href="/registro">Regístrate</Link>
           </p>
         </form>

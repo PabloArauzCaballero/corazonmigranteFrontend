@@ -64,6 +64,7 @@ export const STATIC_ROUTES: readonly string[] = [
   "/paciente/perfil",
   "/paciente/premium",
   "/privacidad",
+  "/recuperar-clave",
   "/registro",
   "/terapeuta",
   "/terapeuta/agenda",

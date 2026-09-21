@@ -30,7 +30,7 @@ describe("Otras áreas administrativas: la función real detrás de cada botón"
     process.env = originalEnv;
   });
 
-  it("usuarios: createUser registra un paciente vía /auth/register/patient", async () => {
+  it("usuarios: createUser da de alta un paciente vía /admin/users", async () => {
     const fetchMock = jest.fn(async () => jsonResponse({ id: "user-1", email: "paciente@correo.com" }, 201));
     global.fetch = fetchMock;
 
@@ -44,17 +44,34 @@ describe("Otras áreas administrativas: la función real detrás de cada botón"
     });
 
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toContain("/auth/register/patient");
+    expect(url).toContain("/admin/users");
     expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toMatchObject({ role: "PACIENTE", email: "paciente@correo.com" });
   });
 
-  it("usuarios: createUser para ADMIN/SUPER_ADMIN/CONTADOR falla con un ApiError legible (gap de backend conocido)", async () => {
-    const { createUser } = await import("@/features/users/users.api");
-    const { ApiError } = await import("@/shared/api/errors");
+  it("usuarios: createUser también da de alta ADMIN/SUPER_ADMIN/CONTADOR", async () => {
+    const fetchMock = jest.fn(async () => jsonResponse({ id: "user-2", email: "admin@correo.com" }, 201));
+    global.fetch = fetchMock;
 
-    await expect(
-      createUser({ role: "ADMIN", email: "admin@correo.com", password: "Demo123456!", firstName: "A", lastName: "B" })
-    ).rejects.toBeInstanceOf(ApiError);
+    const { createUser } = await import("@/features/users/users.api");
+    await createUser({ role: "ADMIN", email: "admin@correo.com", password: "Demo123456!", firstName: "A", lastName: "B" });
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toContain("/admin/users");
+    expect(JSON.parse(String(init.body))).toMatchObject({ role: "ADMIN" });
+  });
+
+  it("usuarios: resetUserPassword envía la contraseña nueva al usuario correcto", async () => {
+    const fetchMock = jest.fn(async () => jsonResponse({ success: true }, 200));
+    global.fetch = fetchMock;
+
+    const { resetUserPassword } = await import("@/features/users/users.api");
+    await resetUserPassword("user-9", "NuevaClave123!");
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toContain("/admin/users/user-9/password");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ newPassword: "NuevaClave123!" });
   });
 
   it("usuarios: updateUserStatus envía PATCH al endpoint del usuario correcto", async () => {
@@ -88,12 +105,12 @@ describe("Otras áreas administrativas: la función real detrás de cada botón"
     expect(init.method).toBe("POST");
   });
 
-  it("horarios: deactivateAdminTherapistSchedule envía DELETE al horario correcto", async () => {
+  it("horarios: deleteAdminTherapistSchedule envía DELETE al horario correcto", async () => {
     const fetchMock = jest.fn(async () => jsonResponse({ ok: true }, 200));
     global.fetch = fetchMock;
 
-    const { deactivateAdminTherapistSchedule } = await import("@/features/therapy/therapy.api");
-    await deactivateAdminTherapistSchedule("therapist-1", "sched-1");
+    const { deleteAdminTherapistSchedule } = await import("@/features/therapy/therapy.api");
+    await deleteAdminTherapistSchedule("therapist-1", "sched-1");
 
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toContain("therapist-1");

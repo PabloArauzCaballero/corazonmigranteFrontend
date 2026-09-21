@@ -6,4 +6,14 @@ node_modules
 .pnp.loader.mjs
 .yarn/install-state.gz
 coverage
+# `.env` es local y no está versionado: lleva credenciales de las cuentas de prueba.
+# La imagen se configura con --build-arg sobre los valores de `.env.example`.
+.env
 .env*.local
+logs
+tests
+docs
+graphify-out
+.playwright-mcp
+playwright-report
+test-results

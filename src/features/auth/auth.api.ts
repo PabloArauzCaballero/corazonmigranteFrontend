@@ -61,6 +61,28 @@ export async function login(input: LoginInput): Promise<NormalizedSession> {
   );
 }
 
+/**
+ * Paso 1 de «olvidé mi contraseña»: el servidor envía un PIN al correo. Responde
+ * siempre con éxito, exista o no la cuenta, para no revelar qué correos están
+ * registrados; la interfaz refleja ese mismo mensaje neutro.
+ */
+export async function requestPasswordResetPin(email: string) {
+  return apiRequest<{ success: boolean }>(ENDPOINTS.auth.requestPin, {
+    method: "POST",
+    body: { email },
+    auth: false
+  });
+}
+
+/** Paso 2: se canjea el PIN por la contraseña nueva. */
+export async function confirmPasswordReset(input: { email: string; pin: string; newPassword: string }) {
+  return apiRequest<{ success: boolean }>(ENDPOINTS.auth.resetPassword, {
+    method: "POST",
+    body: input,
+    auth: false
+  });
+}
+
 export async function registerPatient(input: RegisterPatientInput) {
   const { firstName, lastName } = splitFullName(input.fullName);
 

@@ -139,6 +139,7 @@ nav:
 
   - Operación:
       - Despliegue: operations/deployment.md
+      - Docker: operations/docker.md
       - Entornos: operations/environments.md
       - Build: operations/build.md
       - Configuración: operations/configuration.md
